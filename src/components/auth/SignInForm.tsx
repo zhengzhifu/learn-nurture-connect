@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from "@/components/ui/input";
 import { 
   Form, 
@@ -26,13 +26,21 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const SignInForm: React.FC = () => {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isAuthenticated } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   
   // Get the return URL from location state
   const from = (location.state as any)?.from || '/dashboard';
+  
+  // If user is already authenticated, redirect to dashboard
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,11 +53,13 @@ const SignInForm: React.FC = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       setError(null);
+      setIsLoading(true);
       await signIn(values.email, values.password);
-      // Navigate to the return URL after successful login
-      navigate(from, { replace: true });
+      // Navigation is handled by the useEffect above
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
+    } finally {
+      setIsLoading(false);
     }
   };
 
