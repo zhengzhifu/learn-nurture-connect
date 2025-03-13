@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
