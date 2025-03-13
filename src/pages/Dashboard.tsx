@@ -7,8 +7,23 @@ import Button from '@/components/ui-custom/Button';
 import { Calendar, Users, Book, Clock, Star, Settings, Bell, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Dashboard = () => {
+  const { profile, isLoading } = useAuth();
+
+  // Helper to get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <PageWrapper>
       <Navbar />
@@ -22,12 +37,31 @@ const Dashboard = () => {
               <Card>
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
-                    <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <User className="h-12 w-12 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-xl mb-1">Sarah Johnson</h3>
-                    <p className="text-muted-foreground text-sm mb-4">Parent</p>
-                    <Button variant="outline" size="sm" className="w-full">
+                    {isLoading ? (
+                      <>
+                        <Skeleton className="h-24 w-24 rounded-full mb-4" />
+                        <Skeleton className="h-6 w-32 mb-1" />
+                        <Skeleton className="h-4 w-20 mb-4" />
+                      </>
+                    ) : (
+                      <>
+                        {profile?.avatar_url ? (
+                          <Avatar className="h-24 w-24 mb-4">
+                            <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
+                            <AvatarFallback>{getInitials(profile?.full_name || "User")}</AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                            <User className="h-12 w-12 text-primary" />
+                          </div>
+                        )}
+                        <h3 className="font-semibold text-xl mb-1">{profile?.full_name || "User"}</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          {profile?.user_type ? profile.user_type.charAt(0).toUpperCase() + profile.user_type.slice(1) : "User"}
+                        </p>
+                      </>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/profile"}>
                       Edit Profile
                     </Button>
                   </div>
@@ -73,7 +107,13 @@ const Dashboard = () => {
             {/* Header */}
             <div>
               <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, Sarah. Here's what's happening with your tutoring services.</p>
+              <p className="text-muted-foreground">
+                Welcome back, {isLoading ? (
+                  <Skeleton className="inline-block h-4 w-24" />
+                ) : (
+                  profile?.full_name?.split(' ')[0] || "User"
+                )}. Here's what's happening with your tutoring services.
+              </p>
             </div>
             
             {/* Stats Overview */}
