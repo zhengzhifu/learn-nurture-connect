@@ -8,7 +8,7 @@ import FeatureCard from '@/components/ui-custom/FeatureCard';
 import RoleSelectionCard from '@/components/ui-custom/RoleSelectionCard';
 import ServiceCard from '@/components/ui-custom/ServiceCard';
 import Button from '@/components/ui-custom/Button';
-import { Shield, Calendar, Search, Star, Book, Heart, Graduation, Users } from 'lucide-react';
+import { Shield, Calendar, Search, Star, Book, Heart, GraduationCap, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {

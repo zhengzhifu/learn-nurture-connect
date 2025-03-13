@@ -4,7 +4,7 @@ import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceCard from '@/components/ui-custom/ServiceCard';
-import { Search, Filter, MapPin, BookOpen, Calendar, ChevronDown, CheckCircle } from 'lucide-react';
+import { Search, Filter, MapPin, BookOpen, Calendar, ChevronDown, CheckCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
