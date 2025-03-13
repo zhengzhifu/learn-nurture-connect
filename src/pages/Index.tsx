@@ -112,7 +112,7 @@ const Index = () => {
             
             <RoleSelectionCard 
               title="For Students"
-              icon={<Graduation className="h-6 w-6" />}
+              icon={<GraduationCap className="h-6 w-6" />}
               description="Offer your tutoring or babysitting services to families."
               benefits={[
                 "Create a professional profile",
