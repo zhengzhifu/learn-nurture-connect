@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -12,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { profile, isLoading, error } = useAuth();
+  const { profile, user, isLoading, error } = useAuth();
   const [timeoutExpired, setTimeoutExpired] = useState(false);
   
   useEffect(() => {
@@ -26,6 +27,13 @@ const Dashboard = () => {
       setTimeoutExpired(false);
     }
   }, [isLoading]);
+
+  // Attempt to use profile data, fallback to user metadata if profile is unavailable
+  const userData = profile || (user ? {
+    full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+    user_type: user.user_metadata?.role || 'user',
+    avatar_url: user.user_metadata?.avatar_url,
+  } : null);
 
   const getInitials = (name: string) => {
     return name
@@ -90,19 +98,19 @@ const Dashboard = () => {
                       </>
                     ) : (
                       <>
-                        {profile?.avatar_url ? (
+                        {userData?.avatar_url ? (
                           <Avatar className="h-24 w-24 mb-4">
-                            <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                            <AvatarFallback>{getInitials(profile?.full_name || "User")}</AvatarFallback>
+                            <AvatarImage src={userData.avatar_url} alt={userData.full_name} />
+                            <AvatarFallback>{getInitials(userData?.full_name || "User")}</AvatarFallback>
                           </Avatar>
                         ) : (
                           <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                             <User className="h-12 w-12 text-primary" />
                           </div>
                         )}
-                        <h3 className="font-semibold text-xl mb-1">{profile?.full_name || "User"}</h3>
+                        <h3 className="font-semibold text-xl mb-1">{userData?.full_name || "User"}</h3>
                         <p className="text-muted-foreground text-sm mb-4">
-                          {profile?.user_type ? profile.user_type.charAt(0).toUpperCase() + profile.user_type.slice(1) : "User"}
+                          {userData?.user_type ? userData.user_type.charAt(0).toUpperCase() + userData.user_type.slice(1) : "User"}
                         </p>
                       </>
                     )}
@@ -153,7 +161,7 @@ const Dashboard = () => {
                 Welcome back, {isLoading ? (
                   <Skeleton className="inline-block h-4 w-24" />
                 ) : (
-                  profile?.full_name?.split(' ')[0] || "User"
+                  userData?.full_name?.split(' ')[0] || "User"
                 )}. Here's what's happening with your tutoring services.
               </p>
             </div>
