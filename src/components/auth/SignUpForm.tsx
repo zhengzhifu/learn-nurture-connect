@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Button from '@/components/ui-custom/Button';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -35,6 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignUpForm: React.FC = () => {
   const { signUp, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>(null);
   
   const form = useForm<FormValues>({
@@ -50,9 +53,10 @@ const SignUpForm: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setError(null);
       await signUp(values.email, values.password, values.role, values.name);
-    } catch (error) {
-      // Error is already handled in the auth context
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign up');
     }
   };
 
@@ -65,6 +69,13 @@ const SignUpForm: React.FC = () => {
     <div className="w-full max-w-md mx-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <FormField
             control={form.control}
             name="name"

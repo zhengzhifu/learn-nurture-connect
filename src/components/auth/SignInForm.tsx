@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from "@/components/ui/input";
 import { 
@@ -15,6 +15,8 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import Button from '@/components/ui-custom/Button';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -25,6 +27,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignInForm: React.FC = () => {
   const { signIn, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get the return URL from location state
+  const from = (location.state as any)?.from || '/dashboard';
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -36,9 +44,12 @@ const SignInForm: React.FC = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setError(null);
       await signIn(values.email, values.password);
-    } catch (error) {
-      // Error is already handled in the auth context
+      // Navigate to the return URL after successful login
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in');
     }
   };
 
@@ -46,6 +57,13 @@ const SignInForm: React.FC = () => {
     <div className="w-full max-w-md mx-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <FormField
             control={form.control}
             name="email"
