@@ -25,6 +25,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role: UserRole, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -38,12 +39,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
 
   // Fetch user profile data from Supabase
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -52,12 +55,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching profile:', error);
+        setError(`Error fetching profile: ${error.message}`);
         return null;
       }
 
+      console.log('Profile data fetched:', data);
       return data as Profile;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+    } catch (error: any) {
+      console.error('Exception fetching profile:', error);
+      setError(`Exception fetching profile: ${error.message}`);
       return null;
     }
   };
@@ -66,18 +72,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
+      setError(null);
       
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      
-      if (session?.user) {
-        setUser(session.user);
-        const userProfile = await fetchProfile(session.user.id);
-        setProfile(userProfile);
+      try {
+        console.log('Initializing auth...');
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          setError(`Error getting session: ${sessionError.message}`);
+          setIsLoading(false);
+          return;
+        }
+        
+        setSession(session);
+        
+        if (session?.user) {
+          console.log('User found in session:', session.user.id);
+          setUser(session.user);
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+        } else {
+          console.log('No user found in session');
+        }
+      } catch (error: any) {
+        console.error('Exception during auth initialization:', error);
+        setError(`Exception during auth initialization: ${error.message}`);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -85,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, 'User ID:', session?.user?.id);
         setSession(session);
         setUser(session?.user || null);
         
@@ -109,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -126,6 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error('Error signing in:', error);
+      setError(`Error signing in: ${error.message}`);
       toast.error(error.message || 'Failed to sign in');
       throw error;
     } finally {
@@ -137,6 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
     try {
       setIsLoading(true);
+      setError(null);
       console.log(`Signing up with email: ${email}, role: ${role}, name: ${fullName}`);
       
       const { data, error } = await supabase.auth.signUp({
@@ -160,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       navigate('/signin');
     } catch (error: any) {
       console.error('Error signing up:', error);
+      setError(`Error signing up: ${error.message}`);
       toast.error(error.message || 'Failed to sign up');
       throw error;
     } finally {
@@ -171,6 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const { error } = await supabase.auth.signOut();
       
       if (error) throw error;
@@ -181,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       navigate('/');
     } catch (error: any) {
       console.error('Error signing out:', error);
+      setError(`Error signing out: ${error.message}`);
       toast.error(error.message || 'Failed to sign out');
     } finally {
       setIsLoading(false);
@@ -193,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!user) throw new Error('No user logged in');
       
       setIsLoading(true);
+      setError(null);
       
       const { error } = await supabase
         .from('profiles')
@@ -206,6 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Profile updated successfully');
     } catch (error: any) {
       console.error('Error updating profile:', error);
+      setError(`Error updating profile: ${error.message}`);
       toast.error(error.message || 'Failed to update profile');
       throw error;
     } finally {
@@ -219,6 +252,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       profile,
       isAuthenticated: !!user, 
       isLoading, 
+      error,
       signIn, 
       signUp, 
       signOut,

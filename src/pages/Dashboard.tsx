@@ -1,20 +1,32 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui-custom/Button';
-import { Calendar, Users, Book, Clock, Star, Settings, Bell, User } from 'lucide-react';
+import { Calendar, Users, Book, Clock, Star, Settings, Bell, User, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { profile, isLoading } = useAuth();
+  const { profile, isLoading, error } = useAuth();
+  const [timeoutExpired, setTimeoutExpired] = useState(false);
+  
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setTimeoutExpired(true);
+      }, 10000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setTimeoutExpired(false);
+    }
+  }, [isLoading]);
 
-  // Helper to get initials from name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -24,16 +36,49 @@ const Dashboard = () => {
       .substring(0, 2);
   };
 
+  if (error) {
+    return (
+      <PageWrapper>
+        <Navbar />
+        <div className="container mx-auto px-4 py-24 min-h-screen flex flex-col items-center justify-center">
+          <AlertCircle className="h-16 w-16 text-destructive mb-4" />
+          <h2 className="text-2xl font-bold mb-4">Error Loading Dashboard</h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-md">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="mr-2" /> Retry
+          </Button>
+        </div>
+        <Footer />
+      </PageWrapper>
+    );
+  }
+
+  if (isLoading && timeoutExpired) {
+    return (
+      <PageWrapper>
+        <Navbar />
+        <div className="container mx-auto px-4 py-24 min-h-screen flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-bold mb-4">Taking longer than expected...</h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-md">
+            The dashboard is taking a while to load. This might be due to a network issue.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="mr-2" /> Reload Page
+          </Button>
+        </div>
+        <Footer />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper>
       <Navbar />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 min-h-screen">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
           <div className="lg:w-1/4">
             <div className="sticky top-24 space-y-6">
-              {/* Profile Card */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center text-center">
@@ -68,7 +113,6 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
               
-              {/* Navigation */}
               <Card>
                 <CardContent className="p-4">
                   <nav className="space-y-1">
@@ -102,9 +146,7 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Main Content */}
           <div className="lg:w-3/4 space-y-8">
-            {/* Header */}
             <div>
               <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
               <p className="text-muted-foreground">
@@ -116,7 +158,6 @@ const Dashboard = () => {
               </p>
             </div>
             
-            {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardContent className="pt-6">
@@ -161,7 +202,6 @@ const Dashboard = () => {
               </Card>
             </div>
             
-            {/* Main Dashboard Content */}
             <Tabs defaultValue="upcoming">
               <TabsList className="mb-6 bg-muted">
                 <TabsTrigger value="upcoming">Upcoming Sessions</TabsTrigger>
@@ -170,7 +210,6 @@ const Dashboard = () => {
               </TabsList>
               
               <TabsContent value="upcoming" className="space-y-4">
-                {/* Session Cards */}
                 <Card className="hover-lift">
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row overflow-hidden">
