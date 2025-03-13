@@ -9,8 +9,8 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ServiceBrowse from "./pages/ServiceBrowse";
 import NotFound from "./pages/NotFound";
-import SignIn from "@/pages/SignIn";
-import SignUp from "@/pages/SignUp";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 import RequireAuth from "./components/auth/RequireAuth";
 
 const queryClient = new QueryClient();
