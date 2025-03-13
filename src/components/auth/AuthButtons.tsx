@@ -42,11 +42,12 @@ const AuthButtons: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 w-full md:w-auto">
       <Button 
         variant="ghost" 
         size="sm" 
         onClick={() => navigate('/signin')}
+        fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
         Sign In
       </Button>
@@ -55,6 +56,7 @@ const AuthButtons: React.FC = () => {
         size="sm" 
         onClick={() => navigate('/signup')}
         icon={<LogIn className="h-4 w-4" />}
+        fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
         Sign Up
       </Button>

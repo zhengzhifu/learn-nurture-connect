@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from '../ui-custom/Button';
 import { Menu, X, User } from 'lucide-react';
+import AuthButtons from '../auth/AuthButtons';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -62,16 +63,7 @@ const Navbar: React.FC = () => {
 
           {/* Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/register">
-              <Button variant="outline" size="sm">
-                Sign Up
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="primary" size="sm">
-                Log In
-              </Button>
-            </Link>
+            <AuthButtons />
           </div>
 
           {/* Mobile Menu Button */}
@@ -104,16 +96,7 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
             <div className="mt-4 flex flex-col space-y-2 pt-3 border-t">
-              <Link to="/register">
-                <Button variant="outline" fullWidth>
-                  Sign Up
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="primary" fullWidth>
-                  Log In
-                </Button>
-              </Link>
+              <AuthButtons />
             </div>
           </div>
         </div>
