@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui-custom/Button';
 import { LogIn, LogOut, User } from 'lucide-react';
 
