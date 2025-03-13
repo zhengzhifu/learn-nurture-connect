@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Button from '@/components/ui-custom/Button';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -54,8 +55,13 @@ const SignUpForm: React.FC = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       setError(null);
+      console.log('Submitting form with values:', values);
       await signUp(values.email, values.password, values.role, values.name);
+      toast.success('Account created! Please check your email for verification.', {
+        duration: 5000
+      });
     } catch (err: any) {
+      console.error('Signup error:', err);
       setError(err.message || 'Failed to sign up');
     }
   };

@@ -137,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
     try {
       setIsLoading(true);
+      console.log(`Signing up with email: ${email}, role: ${role}, name: ${fullName}`);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -149,8 +150,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase signup error:', error);
+        throw error;
+      }
       
+      console.log('Signup successful:', data);
       toast.success('Account created successfully! Please check your email for verification.');
       navigate('/signin');
     } catch (error: any) {
