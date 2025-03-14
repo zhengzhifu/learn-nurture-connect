@@ -17,6 +17,8 @@ import {
 import Button from '@/components/ui-custom/Button';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -25,10 +27,18 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const emailSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+});
+
+type EmailFormValue = z.infer<typeof emailSchema>;
+
 const SignInForm: React.FC = () => {
   const { signIn, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -50,6 +60,13 @@ const SignInForm: React.FC = () => {
     },
   });
 
+  const resetPasswordForm = useForm<EmailFormValue>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: '',
+    },
+  });
+
   const onSubmit = async (values: FormValues) => {
     try {
       setError(null);
@@ -62,6 +79,90 @@ const SignInForm: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const handleResetPassword = async (values: EmailFormValue) => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setResetEmailSent(true);
+      toast.success('Password reset email sent. Please check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
+      toast.error(err.message || 'Failed to send reset email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleForgotPassword = () => {
+    setIsForgotPassword(!isForgotPassword);
+    setError(null);
+    setResetEmailSent(false);
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <Form {...resetPasswordForm}>
+          <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {resetEmailSent && (
+              <Alert>
+                <AlertDescription>
+                  Password reset email sent. Please check your inbox.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <FormField
+              control={resetPasswordForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your email address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button type="submit" fullWidth disabled={isLoading || resetEmailSent}>
+              {isLoading ? 'Sending...' : 'Send Reset Link'}
+            </Button>
+            
+            <div className="text-center text-sm">
+              <p className="text-muted-foreground">
+                <button 
+                  type="button" 
+                  onClick={toggleForgotPassword} 
+                  className="text-primary font-medium hover:underline"
+                >
+                  Back to Sign In
+                </button>
+              </p>
+            </div>
+          </form>
+        </Form>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -93,7 +194,16 @@ const SignInForm: React.FC = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <div className="flex justify-between items-center">
+                  <FormLabel>Password</FormLabel>
+                  <button 
+                    type="button" 
+                    onClick={toggleForgotPassword} 
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <FormControl>
                   <Input type="password" placeholder="Your password" {...field} />
                 </FormControl>
