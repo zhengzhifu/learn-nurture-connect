@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="inline-block">
               <span className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-                Tutor Connect
+                JumEcole
               </span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground max-w-xs">
@@ -95,7 +95,7 @@ const Footer: React.FC = () => {
 
         <div className="mt-12 pt-8 border-t border-gray-100">
           <p className="text-xs text-muted-foreground text-center">
-            © {currentYear} Tutor Connect. All rights reserved.
+            © {currentYear} JumEcole. All rights reserved.
           </p>
         </div>
       </div>
