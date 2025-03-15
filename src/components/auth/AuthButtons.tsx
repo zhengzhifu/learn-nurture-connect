@@ -66,7 +66,7 @@ const AuthButtons: React.FC = () => {
           className="border-destructive text-destructive hover:bg-destructive/10"
           icon={<LogOut className="h-4 w-4" />}
         >
-          <span className="hidden sm:inline">退出</span>
+          <span className="hidden sm:inline">Sign out</span>
         </Button>
       </div>
     );
