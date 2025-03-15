@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Book, Calendar, Users, Star, Bell, Settings, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -56,9 +57,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userData, isLoading
                   </p>
                 </>
               )}
-              <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/profile"}>
-                Edit Profile
-              </Button>
+              <Link to="/profile">
+                <Button variant="outline" size="sm" className="w-full">
+                  Edit Profile
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

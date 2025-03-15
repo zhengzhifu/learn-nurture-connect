@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthProvider";
 import RequireAuth from "./components/auth/RequireAuth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import ServiceBrowse from "./pages/ServiceBrowse";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/SignIn";
@@ -28,6 +29,11 @@ const App = () => (
             <Route path="/dashboard" element={
               <RequireAuth>
                 <Dashboard />
+              </RequireAuth>
+            } />
+            <Route path="/profile" element={
+              <RequireAuth>
+                <Profile />
               </RequireAuth>
             } />
             <Route path="/browse" element={<ServiceBrowse />} />
