@@ -14,10 +14,17 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userData, isLoading }) => {
+  // Create a safe version of userData to prevent recursion issues
+  const safeUserData = userData ? {
+    full_name: userData.full_name || 'User',
+    user_type: userData.user_type || 'parent',
+    avatar_url: userData.avatar_url,
+  } : null;
+
   return (
     <div className="lg:w-1/4">
       <div className="sticky top-24 space-y-6">
-        <UserProfileCard userData={userData} isLoading={isLoading} />
+        <UserProfileCard userData={safeUserData} isLoading={isLoading} />
         <SidebarNavigation />
       </div>
     </div>

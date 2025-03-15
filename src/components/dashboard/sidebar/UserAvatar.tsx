@@ -16,12 +16,14 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   isLoading 
 }) => {
   const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'U';
     return name
       .split(' ')
-      .map(part => part[0])
+      .map(part => part && part[0])
+      .filter(Boolean)
       .join('')
       .toUpperCase()
-      .substring(0, 2);
+      .substring(0, 2) || 'U';
   };
 
   if (isLoading) {
@@ -31,8 +33,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   if (avatarUrl) {
     return (
       <Avatar className="h-24 w-24 mb-4">
-        <AvatarImage src={avatarUrl} alt={fullName} />
-        <AvatarFallback>{getInitials(fullName)}</AvatarFallback>
+        <AvatarImage src={avatarUrl} alt={fullName || 'User'} />
+        <AvatarFallback>{getInitials(fullName || 'User')}</AvatarFallback>
       </Avatar>
     );
   }
