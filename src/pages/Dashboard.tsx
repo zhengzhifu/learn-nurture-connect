@@ -52,7 +52,7 @@ const Dashboard = () => {
     }
   }, [isLoading]);
 
-  // Create a safe user data object to prevent recursion issues
+  // Create a safe user data object to prevent any circular references
   const userData = profile ? {
     full_name: profile.full_name || 'User',
     user_type: profile.user_type || 'parent',

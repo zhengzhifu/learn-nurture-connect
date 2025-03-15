@@ -8,7 +8,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile for user:', userId);
     
-    // Use a simple direct query to avoid any potential recursion issues
+    // Make sure we're using the Supabase client which includes the API key headers
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
@@ -25,7 +25,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       return null;
     }
 
-    console.log('Profile data fetched:', data);
+    console.log('Profile data fetched successfully:', data);
     return data as Profile;
   } catch (error: any) {
     console.error('Exception fetching profile:', error);

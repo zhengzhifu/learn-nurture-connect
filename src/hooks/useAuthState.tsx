@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
-import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
+import { createFallbackProfile } from '@/utils/profileUtils';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -19,6 +19,7 @@ export const useAuthState = () => {
       
       try {
         console.log('Initializing auth...');
+        // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -34,8 +35,8 @@ export const useAuthState = () => {
           console.log('User found in session:', session.user.id);
           setUser(session.user);
           
+          // Fetch user profile, using the supabase client that automatically includes API key
           try {
-            // Use a direct, simple query to avoid recursion issues
             const { data, error: profileError } = await supabase
               .from('profiles')
               .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
@@ -71,6 +72,7 @@ export const useAuthState = () => {
 
     initializeAuth();
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, 'User ID:', session?.user?.id);
@@ -79,7 +81,7 @@ export const useAuthState = () => {
         
         if (session?.user) {
           try {
-            // Direct query to avoid using the utility function that might cause recursion
+            // Direct query using supabase client (includes API key)
             const { data, error: profileError } = await supabase
               .from('profiles')
               .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
