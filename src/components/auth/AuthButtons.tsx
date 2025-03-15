@@ -30,32 +30,45 @@ const AuthButtons: React.FC = () => {
 
   if (isAuthenticated && profile) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="flex items-center gap-2" aria-label="User menu">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name} />
-              <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
-            </Avatar>
-            <span className="hidden md:inline">{profile.full_name}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-            Dashboard
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/profile')}>
-            Profile Settings
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={signOut} className="text-destructive">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2" aria-label="User menu">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name} />
+                <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
+              </Avatar>
+              <span className="hidden md:inline truncate max-w-[100px]">{profile.full_name}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+              Dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={signOut} className="text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Add a clear logout button */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={signOut}
+          className="border-destructive text-destructive hover:bg-destructive/10"
+          icon={<LogOut className="h-4 w-4" />}
+        >
+          <span className="hidden sm:inline">退出</span>
+        </Button>
+      </div>
     );
   }
 
