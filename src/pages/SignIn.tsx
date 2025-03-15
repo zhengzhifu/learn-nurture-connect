@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageWrapper from '@/components/utils/PageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SignInForm from '@/components/auth/SignInForm';
+import Button from '@/components/ui-custom/Button';
 
 const SignIn: React.FC = () => {
   return (
@@ -19,6 +21,13 @@ const SignIn: React.FC = () => {
           </CardHeader>
           <CardContent>
             <SignInForm />
+            <div className="mt-6 text-center">
+              <Link to="/">
+                <Button variant="outline" icon={<Home size={16} />}>
+                  Return to Home
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
