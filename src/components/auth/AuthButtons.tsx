@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/ui-custom/Button';
 import { LogIn, LogOut, User } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +57,17 @@ const AuthButtons: React.FC = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        {/* Add a clear logout button */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={signOut}
+          className="border-destructive text-destructive hover:bg-destructive/10"
+          icon={<LogOut className="h-4 w-4" />}
+        >
+          <span className="hidden sm:inline">Sign out</span>
+        </Button>
       </div>
     );
   }
