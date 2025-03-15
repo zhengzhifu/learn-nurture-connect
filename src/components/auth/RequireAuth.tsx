@@ -15,10 +15,36 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [manualAuthCheck, setManualAuthCheck] = useState(false);
+  const [directSessionCheck, setDirectSessionCheck] = useState<string | null>(null);
 
   // Add additional debugging for authentication issues
   useEffect(() => {
     console.log('Auth status:', { isAuthenticated, isLoading, error, userId: user?.id });
+    
+    // Perform a direct session check immediately
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        const sessionStatus = data.session ? `Active (${data.session.user.id})` : 'No session';
+        setDirectSessionCheck(sessionStatus);
+        
+        console.log('Direct session check:', { 
+          session: data.session ? 'exists' : 'null', 
+          user: data.session?.user?.id, 
+          error 
+        });
+        
+        // If we have a direct session but isAuthenticated is false, force reload
+        if (data.session && !isAuthenticated && !isLoading) {
+          console.log('Session exists but not authenticated in context, forcing reload');
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+      }
+    };
+    
+    checkSession();
   }, [isAuthenticated, isLoading, error, user]);
 
   useEffect(() => {
@@ -66,6 +92,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   // If we're not loading and not authenticated, redirect to signin
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !user) {
+      console.log('Not authenticated, redirecting to signin');
       // Redirect to sign in page with the return URL
       navigate('/signin', { 
         state: { from: location.pathname },
@@ -97,7 +124,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           <div className="mt-4 max-w-md text-center">
             <p className="text-muted-foreground mb-4">
               {manualAuthCheck 
-                ? "Authentication is taking longer than expected. Checking session status..."
+                ? `Authentication is taking longer than expected. Direct session check: ${directSessionCheck || 'Checking...'}`
                 : "This is taking longer than expected. There might be an issue with the authentication service."}
             </p>
             <button 
