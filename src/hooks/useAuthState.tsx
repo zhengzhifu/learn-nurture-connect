@@ -33,8 +33,31 @@ export const useAuthState = () => {
         if (session?.user) {
           console.log('User found in session:', session.user.id);
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile || createFallbackProfile(session.user));
+          
+          try {
+            // Use a direct, simple query to avoid recursion issues
+            const { data, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error fetching profile directly:', profileError);
+              // Fall back to user metadata if profile fetch fails
+              setProfile(createFallbackProfile(session.user));
+            } else if (data) {
+              console.log('Profile data fetched directly:', data);
+              setProfile(data as Profile);
+            } else {
+              console.log('No profile found, using fallback');
+              setProfile(createFallbackProfile(session.user));
+            }
+          } catch (profileError: any) {
+            console.error('Exception fetching profile directly:', profileError);
+            // Still use fallback on error
+            setProfile(createFallbackProfile(session.user));
+          }
         } else {
           console.log('No user found in session');
         }
@@ -55,8 +78,28 @@ export const useAuthState = () => {
         setUser(session?.user || null);
         
         if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile || createFallbackProfile(session.user));
+          try {
+            // Direct query to avoid using the utility function that might cause recursion
+            const { data, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error('Error fetching profile on auth change:', profileError);
+              setProfile(createFallbackProfile(session.user));
+            } else if (data) {
+              console.log('Profile data fetched on auth change:', data);
+              setProfile(data as Profile);
+            } else {
+              console.log('No profile found on auth change, using fallback');
+              setProfile(createFallbackProfile(session.user));
+            }
+          } catch (profileError: any) {
+            console.error('Exception fetching profile on auth change:', profileError);
+            setProfile(createFallbackProfile(session.user));
+          }
         } else {
           setProfile(null);
         }

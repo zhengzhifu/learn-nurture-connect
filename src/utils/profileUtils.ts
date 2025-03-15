@@ -7,11 +7,13 @@ import { User } from '@supabase/supabase-js';
 export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile for user:', userId);
+    
+    // Use a simple direct query to avoid any potential recursion issues
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
       .eq('id', userId)
-      .maybeSingle(); // Using maybeSingle instead of single to avoid errors when no data is found
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching profile:', error);

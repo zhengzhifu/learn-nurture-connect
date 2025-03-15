@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
@@ -52,10 +52,14 @@ const Dashboard = () => {
     }
   }, [isLoading]);
 
-  // Attempt to use profile data, fallback to user metadata if profile is unavailable
-  const userData = profile || (user ? {
+  // Create a safe user data object to prevent recursion issues
+  const userData = profile ? {
+    full_name: profile.full_name || 'User',
+    user_type: profile.user_type || 'parent',
+    avatar_url: profile.avatar_url
+  } : (user ? {
     full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-    user_type: user.user_metadata?.role || 'user',
+    user_type: user.user_metadata?.role || 'parent',
     avatar_url: user.user_metadata?.avatar_url,
   } : null);
 
