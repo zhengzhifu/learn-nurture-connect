@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Save, Loader2 } from 'lucide-react';
+import { User, Save, Loader2, ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui-custom/Button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,16 +19,30 @@ const Profile: React.FC = () => {
   const { profile, user, updateProfile, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
-  
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || user?.user_metadata?.full_name || '',
-    email: profile?.email || user?.email || '',
-    phone: profile?.phone || '',
-    avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
-    school_name: profile?.school_name || '',
-    school_address: profile?.school_address || '',
-    home_address: profile?.home_address || '',
+    full_name: '',
+    email: '',
+    phone: '',
+    avatar_url: '',
+    school_name: '',
+    school_address: '',
+    home_address: '',
   });
+
+  // Initialize form data from profile when it becomes available
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        email: profile.email || user?.email || '',
+        phone: profile.phone || '',
+        avatar_url: profile.avatar_url || '',
+        school_name: profile.school_name || '',
+        school_address: profile.school_address || '',
+        home_address: profile.home_address || '',
+      });
+    }
+  }, [profile, user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,7 +59,9 @@ const Profile: React.FC = () => {
       
       await updateProfile(updateData);
       toast.success('Profile updated successfully');
+      setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error: any) {
+      console.error('Profile update error:', error);
       toast.error(error.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
@@ -84,7 +100,17 @@ const Profile: React.FC = () => {
       
       <div className="container mx-auto px-4 py-24 min-h-screen">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
+          <div className="flex items-center mb-8">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="mr-4"
+              icon={<ArrowLeft className="h-4 w-4" />}
+            >
+              Back to Dashboard
+            </Button>
+            <h1 className="text-3xl font-bold">Profile Settings</h1>
+          </div>
           
           <form onSubmit={handleSubmit}>
             <Card className="mb-8">
@@ -98,7 +124,7 @@ const Profile: React.FC = () => {
                     <div className="relative">
                       <Avatar className="h-24 w-24">
                         <AvatarImage src={formData.avatar_url || ''} alt={formData.full_name} />
-                        <AvatarFallback>{getInitials(formData.full_name)}</AvatarFallback>
+                        <AvatarFallback>{getInitials(formData.full_name || 'User')}</AvatarFallback>
                       </Avatar>
                     </div>
                   </div>
@@ -132,7 +158,7 @@ const Profile: React.FC = () => {
                       <Input 
                         id="phone" 
                         name="phone" 
-                        value={formData.phone}
+                        value={formData.phone || ''}
                         onChange={handleChange}
                         placeholder="Enter your phone number"
                       />
@@ -151,7 +177,7 @@ const Profile: React.FC = () => {
                       <Textarea 
                         id="home_address" 
                         name="home_address" 
-                        value={formData.home_address}
+                        value={formData.home_address || ''}
                         onChange={handleChange}
                         placeholder="Enter your home address"
                         rows={3}
@@ -163,7 +189,7 @@ const Profile: React.FC = () => {
                       <Input 
                         id="school_name" 
                         name="school_name" 
-                        value={formData.school_name}
+                        value={formData.school_name || ''}
                         onChange={handleChange}
                         placeholder="Enter your school name"
                       />
@@ -174,7 +200,7 @@ const Profile: React.FC = () => {
                       <Textarea 
                         id="school_address" 
                         name="school_address" 
-                        value={formData.school_address}
+                        value={formData.school_address || ''}
                         onChange={handleChange}
                         placeholder="Enter your school address"
                         rows={3}

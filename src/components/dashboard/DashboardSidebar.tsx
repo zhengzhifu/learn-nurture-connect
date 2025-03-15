@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Book, Calendar, Users, Star, Bell, Settings, User } from 'lucide-react';
+import { Book, Calendar, Users, Star, Bell, Settings, User, Edit } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,7 +43,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userData, isLoading
                 <>
                   {userData?.avatar_url ? (
                     <Avatar className="h-24 w-24 mb-4">
-                      <AvatarImage src={userData.avatar_url} alt={userData.full_name} />
+                      <AvatarImage src={userData.avatar_url} alt={userData?.full_name || "User"} />
                       <AvatarFallback>{getInitials(userData?.full_name || "User")}</AvatarFallback>
                     </Avatar>
                   ) : (
@@ -57,8 +57,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userData, isLoading
                   </p>
                 </>
               )}
-              <Link to="/profile">
-                <Button variant="outline" size="sm" className="w-full">
+              <Link to="/profile" className="w-full">
+                <Button variant="outline" size="sm" className="w-full" icon={<Edit className="h-4 w-4 mr-2" />}>
                   Edit Profile
                 </Button>
               </Link>
@@ -69,10 +69,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ userData, isLoading
         <Card>
           <CardContent className="p-4">
             <nav className="space-y-1">
-              <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-md bg-primary/10 text-primary">
+              <Link to="/dashboard" className="flex items-center space-x-3 px-3 py-2 rounded-md bg-primary/10 text-primary">
                 <Book className="h-5 w-5" />
                 <span className="font-medium">Dashboard</span>
-              </a>
+              </Link>
               <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-md text-foreground hover:bg-gray-100 transition-colors">
                 <Calendar className="h-5 w-5" />
                 <span>Bookings</span>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,7 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from './AuthContext';
 import { Profile, UserRole } from '@/types/auth';
-import { fetchProfile } from '@/utils/profileUtils';
+import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -16,7 +15,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
 
-  // Check for existing session on mount
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
@@ -24,7 +22,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       try {
         console.log('Initializing auth...');
-        // Get current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -40,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('User found in session:', session.user.id);
           setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          setProfile(userProfile || createFallbackProfile(session.user));
         } else {
           console.log('No user found in session');
         }
@@ -54,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, 'User ID:', session?.user?.id);
@@ -63,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          setProfile(userProfile || createFallbackProfile(session.user));
         } else {
           setProfile(null);
         }
@@ -72,13 +68,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -92,9 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       if (data.user) {
-        // After successful login, fetch profile
         const userProfile = await fetchProfile(data.user.id);
-        setProfile(userProfile);
+        setProfile(userProfile || createFallbackProfile(data.user));
         toast.success('Signed in successfully!');
         navigate('/dashboard');
       }
@@ -108,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign up with email and password
   const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
     try {
       setIsLoading(true);
@@ -144,7 +136,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign out
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -166,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Update user profile
   const updateProfile = async (data: Partial<Profile>) => {
     try {
       if (!user) throw new Error('No user logged in');
@@ -174,20 +164,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
       
+      console.log('Updating profile for user:', user.id, 'with data:', data);
+      
       const { error } = await supabase
         .from('profiles')
         .update(data)
         .eq('id', user.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error updating profile:', error);
+        throw error;
+      }
       
-      // Update local profile state
-      setProfile(prev => prev ? { ...prev, ...data } : null);
+      const updatedProfile = await fetchProfile(user.id);
+      
+      setProfile(prev => {
+        const newProfile = updatedProfile || (prev ? { ...prev, ...data } : null);
+        console.log('Updated profile:', newProfile);
+        return newProfile;
+      });
+      
       toast.success('Profile updated successfully');
     } catch (error: any) {
       console.error('Error updating profile:', error);
       setError(`Error updating profile: ${error.message}`);
-      toast.error(error.message || 'Failed to update profile');
+      toast.error(`Failed to update profile: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);

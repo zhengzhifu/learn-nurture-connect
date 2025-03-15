@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { User } from '@supabase/supabase-js';
 
-// Fetch user profile data from Supabase
+// Fetch user profile data from Supabase with improved error handling
 export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile for user:', userId);
@@ -11,10 +11,15 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Using maybeSingle instead of single to avoid errors when no data is found
 
     if (error) {
       console.error('Error fetching profile:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log('No profile found for user:', userId);
       return null;
     }
 
