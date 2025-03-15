@@ -22,7 +22,7 @@ export const signIn = async (email: string, password: string) => {
     console.log('Sign in successful, user data:', data.user?.id);
     
     if (data.user) {
-      // Fetch profile using the supabase client (which includes API key headers)
+      // Fetch profile
       const userProfile = await fetchProfile(data.user.id);
       console.log('User profile fetched:', userProfile);
       
@@ -95,7 +95,6 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
     
     console.log('Updating profile for user:', userId, 'with data:', data);
     
-    // Use supabase client which includes API key in headers
     const { error } = await supabase
       .from('profiles')
       .update(data)
@@ -106,7 +105,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
       throw error;
     }
     
-    // Fetch updated profile using utility function that uses supabase client
+    // Fetch updated profile
     const updatedProfile = await fetchProfile(userId);
     
     toast.success('Profile updated successfully');

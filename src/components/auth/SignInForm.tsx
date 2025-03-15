@@ -48,6 +48,7 @@ const SignInForm: React.FC = () => {
   // If user is already authenticated, redirect to dashboard
   React.useEffect(() => {
     if (isAuthenticated) {
+      console.log('User already authenticated, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -75,7 +76,7 @@ const SignInForm: React.FC = () => {
       console.log('Attempting to sign in with:', values.email);
       await signIn(values.email, values.password);
       
-      // Navigation is handled by the useEffect above
+      // Navigation is handled by the useEffect above when isAuthenticated becomes true
     } catch (err: any) {
       console.error('Sign in error:', err);
       setError(err.message || 'Failed to sign in');

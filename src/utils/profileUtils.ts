@@ -8,7 +8,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile for user:', userId);
     
-    // Using the supabase client which automatically includes API key headers
+    // Make sure we're using the correct supabase client instance that includes API key headers
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')

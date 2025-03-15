@@ -35,7 +35,7 @@ export const useAuthState = () => {
           console.log('User found in session:', session.user.id);
           setUser(session.user);
           
-          // Use the fetchProfile utility function which uses the supabase client with API key headers
+          // Fetch profile data
           const profileData = await fetchProfile(session.user.id);
           
           if (profileData) {
@@ -43,7 +43,8 @@ export const useAuthState = () => {
             setProfile(profileData);
           } else {
             console.log('Using fallback profile from user metadata');
-            setProfile(createFallbackProfile(session.user));
+            const fallbackProfile = createFallbackProfile(session.user);
+            setProfile(fallbackProfile);
           }
         } else {
           console.log('No user found in session');
@@ -68,7 +69,7 @@ export const useAuthState = () => {
         setUser(session?.user || null);
         
         if (session?.user) {
-          // Use the fetchProfile utility function
+          // Fetch profile data
           const profileData = await fetchProfile(session.user.id);
           
           if (profileData) {
@@ -76,7 +77,8 @@ export const useAuthState = () => {
             setProfile(profileData);
           } else {
             console.log('Using fallback profile on auth change');
-            setProfile(createFallbackProfile(session.user));
+            const fallbackProfile = createFallbackProfile(session.user);
+            setProfile(fallbackProfile);
           }
         } else {
           setProfile(null);
