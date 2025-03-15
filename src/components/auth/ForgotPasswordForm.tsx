@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/integrations/supabase/client';
+import { resetPasswordForEmail } from '@/services/auth';
 import { Input } from "@/components/ui/input";
 import { 
   Form, 
@@ -45,13 +44,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
       setError(null);
       setIsLoading(true);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) {
-        throw error;
-      }
+      await resetPasswordForEmail(values.email, `${window.location.origin}/reset-password`);
       
       setResetEmailSent(true);
       toast.success('Password reset email sent. Please check your inbox.');

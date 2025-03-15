@@ -4,7 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import { Profile, UserRole } from '@/types/auth';
 import { useAuthState } from '@/hooks/useAuthState';
-import { signIn, signUp, signOut, updateUserProfile } from '@/services/authService';
+import { 
+  signIn, 
+  signUp, 
+  signOut, 
+  updateUserProfile 
+} from '@/services/auth';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();

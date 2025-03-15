@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
-import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
+import { fetchProfile } from '@/services/auth';
+import { createFallbackProfile } from '@/utils/profileUtils';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
