@@ -8,7 +8,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('Fetching profile for user:', userId);
     
-    // Make sure we're using the Supabase client which includes the API key headers
+    // Using the supabase client which automatically includes API key headers
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
@@ -36,6 +36,8 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
 // Create a fallback profile based on user metadata if actual profile fetching fails
 export const createFallbackProfile = (user: User | null): Profile | null => {
   if (!user) return null;
+  
+  console.log('Creating fallback profile from user metadata:', user.id);
   
   const metadata = user.user_metadata;
   return {

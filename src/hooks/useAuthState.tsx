@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
-import { createFallbackProfile } from '@/utils/profileUtils';
+import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -35,32 +35,20 @@ export const useAuthState = () => {
           console.log('User found in session:', session.user.id);
           setUser(session.user);
           
-          // Fetch user profile, using the supabase client that automatically includes API key
-          try {
-            const { data, error: profileError } = await supabase
-              .from('profiles')
-              .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
-              .eq('id', session.user.id)
-              .maybeSingle();
-              
-            if (profileError) {
-              console.error('Error fetching profile directly:', profileError);
-              // Fall back to user metadata if profile fetch fails
-              setProfile(createFallbackProfile(session.user));
-            } else if (data) {
-              console.log('Profile data fetched directly:', data);
-              setProfile(data as Profile);
-            } else {
-              console.log('No profile found, using fallback');
-              setProfile(createFallbackProfile(session.user));
-            }
-          } catch (profileError: any) {
-            console.error('Exception fetching profile directly:', profileError);
-            // Still use fallback on error
+          // Use the fetchProfile utility function which uses the supabase client with API key headers
+          const profileData = await fetchProfile(session.user.id);
+          
+          if (profileData) {
+            console.log('Profile data fetched:', profileData);
+            setProfile(profileData);
+          } else {
+            console.log('Using fallback profile from user metadata');
             setProfile(createFallbackProfile(session.user));
           }
         } else {
           console.log('No user found in session');
+          setUser(null);
+          setProfile(null);
         }
       } catch (error: any) {
         console.error('Exception during auth initialization:', error);
@@ -80,26 +68,14 @@ export const useAuthState = () => {
         setUser(session?.user || null);
         
         if (session?.user) {
-          try {
-            // Direct query using supabase client (includes API key)
-            const { data, error: profileError } = await supabase
-              .from('profiles')
-              .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
-              .eq('id', session.user.id)
-              .maybeSingle();
-              
-            if (profileError) {
-              console.error('Error fetching profile on auth change:', profileError);
-              setProfile(createFallbackProfile(session.user));
-            } else if (data) {
-              console.log('Profile data fetched on auth change:', data);
-              setProfile(data as Profile);
-            } else {
-              console.log('No profile found on auth change, using fallback');
-              setProfile(createFallbackProfile(session.user));
-            }
-          } catch (profileError: any) {
-            console.error('Exception fetching profile on auth change:', profileError);
+          // Use the fetchProfile utility function
+          const profileData = await fetchProfile(session.user.id);
+          
+          if (profileData) {
+            console.log('Profile data fetched on auth change:', profileData);
+            setProfile(profileData);
+          } else {
+            console.log('Using fallback profile on auth change');
             setProfile(createFallbackProfile(session.user));
           }
         } else {

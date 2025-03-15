@@ -1,6 +1,5 @@
 
 import { toast } from 'sonner';
-import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, UserRole } from '@/types/auth';
 import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
@@ -8,15 +7,25 @@ import { fetchProfile, createFallbackProfile } from '@/utils/profileUtils';
 // Sign in with email and password
 export const signIn = async (email: string, password: string) => {
   try {
+    console.log(`Attempting to sign in with email: ${email}`);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Auth error during sign in:', error);
+      throw error;
+    }
+    
+    console.log('Sign in successful, user data:', data.user?.id);
     
     if (data.user) {
+      // Fetch profile using the supabase client (which includes API key headers)
       const userProfile = await fetchProfile(data.user.id);
+      console.log('User profile fetched:', userProfile);
+      
       toast.success('Signed in successfully!');
       return { 
         user: data.user, 
@@ -86,6 +95,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
     
     console.log('Updating profile for user:', userId, 'with data:', data);
     
+    // Use supabase client which includes API key in headers
     const { error } = await supabase
       .from('profiles')
       .update(data)
@@ -96,6 +106,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
       throw error;
     }
     
+    // Fetch updated profile using utility function that uses supabase client
     const updatedProfile = await fetchProfile(userId);
     
     toast.success('Profile updated successfully');
@@ -109,12 +120,17 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
 
 // Get current session
 export const getCurrentSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  
-  if (error) {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting session:', error);
+      throw error;
+    }
+    
+    return data.session;
+  } catch (error: any) {
     console.error('Error getting session:', error);
     throw error;
   }
-  
-  return data.session;
 };

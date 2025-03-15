@@ -71,9 +71,13 @@ const SignInForm: React.FC = () => {
     try {
       setError(null);
       setIsLoading(true);
+      
+      console.log('Attempting to sign in with:', values.email);
       await signIn(values.email, values.password);
+      
       // Navigation is handled by the useEffect above
     } catch (err: any) {
+      console.error('Sign in error:', err);
       setError(err.message || 'Failed to sign in');
     } finally {
       setIsLoading(false);
