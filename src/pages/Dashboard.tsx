@@ -9,10 +9,36 @@ import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import DashboardError from '@/components/dashboard/DashboardError';
 import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { profile, user, isLoading, error } = useAuth();
   const [timeoutExpired, setTimeoutExpired] = useState(false);
+  const [authStatus, setAuthStatus] = useState<string | null>(null);
+  
+  // Check direct session status for debugging
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          setAuthStatus(`Error: ${error.message}`);
+        } else {
+          setAuthStatus(data.session ? 'Authenticated' : 'Not authenticated');
+          console.log('Direct session check:', {
+            session: data.session ? 'exists' : 'null',
+            user: data.session?.user?.id
+          });
+        }
+      } catch (e) {
+        console.error('Session check exception:', e);
+        setAuthStatus('Check failed');
+      }
+    };
+    
+    checkAuthStatus();
+  }, []);
   
   useEffect(() => {
     if (isLoading) {
@@ -37,7 +63,10 @@ const Dashboard = () => {
     return (
       <PageWrapper>
         <Navbar />
-        <DashboardError error={error} onRetry={() => window.location.reload()} />
+        <DashboardError 
+          error={`${error} (Auth status: ${authStatus})`} 
+          onRetry={() => window.location.reload()} 
+        />
         <Footer />
       </PageWrapper>
     );
@@ -47,7 +76,10 @@ const Dashboard = () => {
     return (
       <PageWrapper>
         <Navbar />
-        <LoadingTimeout onRetry={() => window.location.reload()} />
+        <LoadingTimeout 
+          onRetry={() => window.location.reload()} 
+          message={`Auth status: ${authStatus || 'Checking...'}`}
+        />
         <Footer />
       </PageWrapper>
     );
