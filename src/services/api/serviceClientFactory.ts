@@ -1,4 +1,3 @@
-
 import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { mockServiceClient } from './mockServiceClient';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +9,7 @@ import { toast } from 'sonner';
 export class RealServiceClient implements ServiceClient {
   async fetchUserProfile(userId: string): Promise<Profile | null> {
     try {
-      console.log('RealServiceClient: Fetching profile for user:', userId);
+      console.log('RealServiceClient: fetchUserProfile called with userId:', userId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -23,6 +22,7 @@ export class RealServiceClient implements ServiceClient {
         return null;
       }
 
+      console.log('RealServiceClient: fetchUserProfile returning:', data);
       return data as Profile;
     } catch (error) {
       console.error('Exception fetching profile:', error);
@@ -32,7 +32,7 @@ export class RealServiceClient implements ServiceClient {
   
   async updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile | null> {
     try {
-      console.log('RealServiceClient: Updating profile for user:', userId, 'with data:', data);
+      console.log('RealServiceClient: updateUserProfile called with userId:', userId, 'and data:', data);
       
       const { data: updatedData, error } = await supabase
         .from('profiles')
@@ -46,6 +46,7 @@ export class RealServiceClient implements ServiceClient {
         throw error;
       }
       
+      console.log('RealServiceClient: updateUserProfile returning:', updatedData);
       toast.success('Profile updated successfully');
       return updatedData as Profile;
     } catch (error: any) {
@@ -57,7 +58,7 @@ export class RealServiceClient implements ServiceClient {
 
   async getServices(): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceClient: Fetching all services');
+      console.log('RealServiceClient: getServices called');
       
       // Using tutor_services table as the source for our service data
       const { data, error } = await supabase
@@ -84,6 +85,7 @@ export class RealServiceClient implements ServiceClient {
         subjects: item.tutoring_subjects || []
       }));
       
+      console.log(`RealServiceClient: getServices returning ${services.length} services`);
       return services;
     } catch (error) {
       console.error('Exception fetching services:', error);
@@ -120,7 +122,7 @@ export class RealServiceClient implements ServiceClient {
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceClient: Filtering services with:', filters);
+      console.log('RealServiceClient: filterServices called with filters:', JSON.stringify(filters, null, 2));
       
       // Get all services first, then apply filters in memory
       // This is a workaround until we have a proper filtering mechanism
@@ -168,6 +170,7 @@ export class RealServiceClient implements ServiceClient {
         );
       }
       
+      console.log(`RealServiceClient: filterServices returning filtered results`);
       return filteredServices;
     } catch (error) {
       console.error('Error filtering services:', error);
@@ -177,9 +180,10 @@ export class RealServiceClient implements ServiceClient {
   
   async searchServices(query: string): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceClient: Searching for services with query:', query);
+      console.log('RealServiceClient: searchServices called with query:', query);
       
       if (!query.trim()) {
+        console.log('RealServiceClient: searchServices returning all services (empty query)');
         return this.getServices();
       }
       
@@ -211,11 +215,15 @@ export class ServiceClientFactory {
   
   // Get the current client instance
   static getClient(): ServiceClient {
+    console.log('ServiceClientFactory: getClient called, returning:', 
+      this.instance === mockServiceClient ? 'mockServiceClient' : 'realServiceClient');
     return this.instance;
   }
   
   // Set a different client implementation
   static setClient(client: ServiceClient): void {
+    console.log('ServiceClientFactory: setClient called, switching to:', 
+      client === mockServiceClient ? 'mockServiceClient' : 'realServiceClient');
     this.instance = client;
   }
 }

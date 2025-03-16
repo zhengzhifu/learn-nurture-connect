@@ -1,3 +1,4 @@
+
 import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { Profile } from '@/types/auth';
 import { toast } from 'sonner';
@@ -79,13 +80,13 @@ const MOCK_SERVICES: ServiceData[] = [
 // Mock implementation for development and testing
 class MockServiceClient implements ServiceClient {
   async fetchUserProfile(userId: string): Promise<Profile | null> {
-    console.log('MockServiceClient: Fetching profile for user:', userId);
+    console.log('MockServiceClient: fetchUserProfile called with userId:', userId);
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Mock profile data
-    return {
+    const result = {
       id: userId,
       full_name: 'Mock User',
       email: 'mock@example.com',
@@ -97,10 +98,13 @@ class MockServiceClient implements ServiceClient {
       school_address: '123 School St, City',
       home_address: '456 Home St, City'
     };
+    
+    console.log('MockServiceClient: fetchUserProfile returning:', result);
+    return result;
   }
   
   async updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile | null> {
-    console.log('MockServiceClient: Updating profile for user:', userId, 'with data:', data);
+    console.log('MockServiceClient: updateUserProfile called with userId:', userId, 'and data:', data);
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -119,21 +123,23 @@ class MockServiceClient implements ServiceClient {
       home_address: data.home_address || '456 Home St, City'
     };
     
+    console.log('MockServiceClient: updateUserProfile returning:', updatedProfile);
     toast.success('Profile updated successfully (Mock)');
     return updatedProfile;
   }
 
   async getServices(): Promise<ServiceData[]> {
-    console.log('MockServiceClient: Fetching all services');
+    console.log('MockServiceClient: getServices called');
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
+    console.log(`MockServiceClient: getServices returning ${MOCK_SERVICES.length} services`);
     return MOCK_SERVICES;
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
-    console.log('MockServiceClient: Filtering services with:', filters);
+    console.log('MockServiceClient: filterServices called with filters:', JSON.stringify(filters, null, 2));
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 600));
@@ -177,27 +183,32 @@ class MockServiceClient implements ServiceClient {
       );
     }
     
+    console.log(`MockServiceClient: filterServices returning ${results.length} filtered services`);
     return results;
   }
   
   async searchServices(query: string): Promise<ServiceData[]> {
-    console.log('MockServiceClient: Searching for services with query:', query);
+    console.log('MockServiceClient: searchServices called with query:', query);
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (!query.trim()) {
+      console.log(`MockServiceClient: searchServices returning all ${MOCK_SERVICES.length} services (empty query)`);
       return MOCK_SERVICES;
     }
     
     // Search in title, description and location
     const lowerQuery = query.toLowerCase();
-    return MOCK_SERVICES.filter(service => 
+    const results = MOCK_SERVICES.filter(service => 
       service.title.toLowerCase().includes(lowerQuery) ||
       (service.description && service.description.toLowerCase().includes(lowerQuery)) ||
       service.location.toLowerCase().includes(lowerQuery) ||
       service.subjects?.some(subject => subject.toLowerCase().includes(lowerQuery))
     );
+    
+    console.log(`MockServiceClient: searchServices returning ${results.length} matching services for query "${query}"`);
+    return results;
   }
 }
 
