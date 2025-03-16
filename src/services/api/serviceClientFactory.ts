@@ -5,8 +5,8 @@ import { realServiceClient } from './realServiceClient';
 
 // This factory will help us switch between mock and real implementations
 export class ServiceClientFactory {
-  // Start with the real client for profile functionality since we have the Supabase backend setup
-  private static instance: ServiceClient = realServiceClient;
+  // Use the mock client by default for development
+  private static instance: ServiceClient = mockServiceClient;
   
   // Get the current client instance
   static getClient(): ServiceClient {

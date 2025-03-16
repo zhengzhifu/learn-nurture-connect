@@ -27,7 +27,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   return (
     <div 
       className={cn(
-        "overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover-lift",
+        "overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200",
         className
       )}
     >
@@ -69,6 +69,12 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             <span>{availabilityText}</span>
           </div>
         </div>
+        
+        {service.description && (
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+            {service.description}
+          </p>
+        )}
         
         <div className="flex items-center justify-between mt-5 pt-4 border-t">
           <p className="font-medium">
