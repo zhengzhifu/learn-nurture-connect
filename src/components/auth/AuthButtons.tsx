@@ -33,6 +33,7 @@ const AuthButtons: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log('Sign out button clicked');
       await signOut();
       // Navigation is handled in AuthProvider
     } catch (error) {
@@ -77,7 +78,7 @@ const AuthButtons: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Add a clear logout button */}
+        {/* Sign out button */}
         <Button 
           variant="outline" 
           size="sm" 

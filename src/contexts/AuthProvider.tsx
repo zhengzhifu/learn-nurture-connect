@@ -45,6 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('User signed out, clearing state');
           setUser(null);
           setProfile(null);
+          // Force navigate to home page on sign out
+          navigate('/', { replace: true });
         }
         
         // Make sure we're not stuck in loading state
@@ -59,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [setUser, setProfile, isLoading, setIsLoading]);
+  }, [setUser, setProfile, isLoading, setIsLoading, navigate]);
 
   // Safeguard against infinite loading
   useEffect(() => {
@@ -129,11 +131,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       
       await signOut();
+      
+      // Clear state immediately, don't wait for the auth state change event
       setUser(null);
       setProfile(null);
-      navigate('/');
+      
+      // Force redirect to home page
+      navigate('/', { replace: true });
+      
+      console.log('Sign out and navigation complete');
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
+      console.error('Sign out error:', error);
     } finally {
       setIsLoading(false);
     }

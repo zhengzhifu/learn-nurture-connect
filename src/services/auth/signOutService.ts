@@ -6,6 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 export const signOut = async () => {
   try {
     console.log('Attempting to sign out');
+    
+    // Clear any stored session first to prevent caching issues
+    localStorage.removeItem('supabase.auth.token');
+    
     const { error } = await supabase.auth.signOut();
     
     if (error) {
@@ -14,7 +18,7 @@ export const signOut = async () => {
     }
     
     console.log('Sign out successful');
-    toast.info('Successfully signed out');
+    toast.success('Successfully signed out');
     return true;
   } catch (error: any) {
     console.error('Error signing out:', error);
