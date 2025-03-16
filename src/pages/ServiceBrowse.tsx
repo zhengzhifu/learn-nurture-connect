@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -22,73 +22,109 @@ import {
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { ServiceClientFactory } from '@/services/api/serviceClientFactory';
+import { ServiceData, ServiceFilters } from '@/services/api/serviceClient';
+import { ServiceType } from '@/types/service';
 
 const ServiceBrowse = () => {
-  const [priceRange, setPriceRange] = useState([0, 50]);
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [filteredServices, setFilteredServices] = useState<ServiceData[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [location, setLocation] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<{
+    types: ServiceType[];
+    location?: string;
+  }>({
+    types: ['tutoring', 'babysitting'],
+  });
   
-  // Mock data for services
-  const services = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Math Tutoring - All Levels',
-      type: 'tutoring' as const,
-      rating: 4.9,
-      location: 'Boston University',
-      price: '$25-40/hr',
-      availability: 'Weekdays & Weekends'
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Evening Babysitting',
-      type: 'babysitting' as const,
-      rating: 4.8,
-      location: 'Northwestern Area',
-      price: '$20/hr',
-      availability: 'Evenings & Weekends'
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Language Arts & Writing',
-      type: 'tutoring' as const,
-      rating: 4.7,
-      location: 'Berkeley Area',
-      price: '$30/hr',
-      availability: 'Flexible Schedule'
-    },
-    {
-      id: 4,
-      image: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Chemistry & Physics Tutoring',
-      type: 'tutoring' as const,
-      rating: 4.6,
-      location: 'Stanford Area',
-      price: '$35/hr',
-      availability: 'Weekday Afternoons'
-    },
-    {
-      id: 5,
-      image: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Daytime Childcare',
-      type: 'babysitting' as const,
-      rating: 4.9,
-      location: 'Downtown Area',
-      price: '$22/hr',
-      availability: 'Weekday Mornings'
-    },
-    {
-      id: 6,
-      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      title: 'Computer Science & Coding',
-      type: 'tutoring' as const,
-      rating: 4.8,
-      location: 'MIT Area',
-      price: '$40/hr',
-      availability: 'Evenings & Weekends'
+  // Get the service client from the factory
+  const serviceClient = ServiceClientFactory.getClient();
+  
+  // Fetch services on component mount
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setIsLoading(true);
+        const data = await serviceClient.getServices();
+        setServices(data);
+        setFilteredServices(data);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchServices();
+  }, []);
+  
+  // Apply filters to services
+  const applyFilters = async () => {
+    try {
+      setIsLoading(true);
+      
+      const filters: ServiceFilters = {
+        types: activeFilters.types,
+        location: location || undefined,
+        priceRange: priceRange
+      };
+      
+      const filteredData = await serviceClient.filterServices(filters);
+      setFilteredServices(filteredData);
+    } catch (error) {
+      console.error('Error applying filters:', error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+  
+  // Handle search
+  const handleSearch = async () => {
+    try {
+      setIsLoading(true);
+      const searchResults = await serviceClient.searchServices(searchTerm);
+      setFilteredServices(searchResults);
+    } catch (error) {
+      console.error('Error searching services:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Toggle service type filter
+  const toggleTypeFilter = (type: ServiceType) => {
+    setActiveFilters(prev => {
+      const types = prev.types.includes(type)
+        ? prev.types.filter(t => t !== type)
+        : [...prev.types, type];
+      
+      return { ...prev, types };
+    });
+  };
+  
+  // Remove location filter
+  const removeLocationFilter = () => {
+    setLocation('');
+    setActiveFilters(prev => ({ ...prev, location: undefined }));
+  };
+  
+  // Apply filters when the Apply button is clicked
+  const handleApplyFilters = () => {
+    setActiveFilters(prev => ({
+      ...prev,
+      location: location || undefined
+    }));
+    
+    applyFilters();
+  };
+  
+  // Apply filters when activeFilters change
+  useEffect(() => {
+    applyFilters();
+  }, [activeFilters]);
 
   return (
     <PageWrapper>
@@ -122,7 +158,17 @@ const ServiceBrowse = () => {
             <div className="sticky top-24 bg-white rounded-xl border shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-semibold text-lg">Filters</h3>
-                <Button variant="ghost" size="sm" className="text-muted-foreground text-sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground text-sm"
+                  onClick={() => {
+                    setActiveFilters({ types: ['tutoring', 'babysitting'] });
+                    setPriceRange([0, 50]);
+                    setLocation('');
+                    setSearchTerm('');
+                  }}
+                >
                   Reset
                 </Button>
               </div>
@@ -135,6 +181,11 @@ const ServiceBrowse = () => {
                     type="search"
                     placeholder="Search keyword..."
                     className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSearch();
+                    }}
                   />
                 </div>
               </div>
@@ -146,7 +197,11 @@ const ServiceBrowse = () => {
                   <h4 className="font-medium">Location</h4>
                 </div>
                 <div className="relative">
-                  <Input placeholder="Enter your location" />
+                  <Input 
+                    placeholder="Enter your location" 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
                 </div>
               </div>
               
@@ -162,13 +217,21 @@ const ServiceBrowse = () => {
                   <AccordionContent>
                     <div className="space-y-3 pt-1">
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="tutoring" defaultChecked />
+                        <Checkbox 
+                          id="tutoring" 
+                          checked={activeFilters.types.includes('tutoring')}
+                          onCheckedChange={() => toggleTypeFilter('tutoring')}
+                        />
                         <label htmlFor="tutoring" className="text-sm font-medium leading-none cursor-pointer">
                           Tutoring
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="babysitting" defaultChecked />
+                        <Checkbox 
+                          id="babysitting" 
+                          checked={activeFilters.types.includes('babysitting')}
+                          onCheckedChange={() => toggleTypeFilter('babysitting')}
+                        />
                         <label htmlFor="babysitting" className="text-sm font-medium leading-none cursor-pointer">
                           Babysitting
                         </label>
@@ -285,7 +348,8 @@ const ServiceBrowse = () => {
                         defaultValue={[0, 50]} 
                         max={100}
                         step={5}
-                        onValueChange={(value) => setPriceRange(value)}
+                        value={priceRange}
+                        onValueChange={(value) => setPriceRange(value as [number, number])}
                       />
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>${priceRange[0]}/hr</span>
@@ -296,7 +360,12 @@ const ServiceBrowse = () => {
                 </AccordionItem>
               </Accordion>
               
-              <Button className="w-full mt-6">Apply Filters</Button>
+              <Button 
+                className="w-full mt-6"
+                onClick={handleApplyFilters}
+              >
+                Apply Filters
+              </Button>
             </div>
           </div>
           
@@ -304,63 +373,92 @@ const ServiceBrowse = () => {
           <div className="lg:w-3/4">
             {/* Active Filters */}
             <div className="flex flex-wrap gap-2 mb-6">
-              <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                Service: Tutoring
-                <button className="ml-2">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-              <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                Service: Babysitting
-                <button className="ml-2">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-              <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                Within 10 miles
-                <button className="ml-2">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+              {activeFilters.types.includes('tutoring') && (
+                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
+                  Service: Tutoring
+                  <button className="ml-2" onClick={() => toggleTypeFilter('tutoring')}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {activeFilters.types.includes('babysitting') && (
+                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
+                  Service: Babysitting
+                  <button className="ml-2" onClick={() => toggleTypeFilter('babysitting')}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {location && (
+                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
+                  Location: {location}
+                  <button className="ml-2" onClick={removeLocationFilter}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* Results */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  image={service.image}
-                  title={service.title}
-                  type={service.type}
-                  rating={service.rating}
-                  location={service.location}
-                  price={service.price}
-                  availability={service.availability}
-                  onClick={() => console.log(`View service ${service.id}`)}
-                />
-              ))}
-            </div>
-            
-            {/* Pagination */}
-            <div className="mt-12 flex justify-center">
-              <div className="flex space-x-1">
-                <Button variant="outline" size="sm" disabled>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm" className="bg-primary text-white">
-                  1
-                </Button>
-                <Button variant="outline" size="sm">
-                  2
-                </Button>
-                <Button variant="outline" size="sm">
-                  3
-                </Button>
-                <Button variant="outline" size="sm">
-                  Next
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading services...</p>
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="text-center py-12 bg-muted/20 rounded-lg">
+                <div className="text-5xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold mb-2">No services found</h3>
+                <p className="text-muted-foreground mb-4">Try adjusting your filters or search criteria</p>
+                <Button onClick={() => {
+                  setActiveFilters({ types: ['tutoring', 'babysitting'] });
+                  setPriceRange([0, 50]);
+                  setLocation('');
+                  setSearchTerm('');
+                }}>
+                  Reset All Filters
                 </Button>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    image={service.image}
+                    title={service.title}
+                    type={service.type}
+                    rating={service.rating}
+                    location={service.location}
+                    price={service.price}
+                    availability={service.availability}
+                    onClick={() => console.log(`View service ${service.id}`)}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Pagination */}
+            {filteredServices.length > 0 && (
+              <div className="mt-12 flex justify-center">
+                <div className="flex space-x-1">
+                  <Button variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                  <Button variant="outline" size="sm" className="bg-primary text-white">
+                    1
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    2
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    3
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
