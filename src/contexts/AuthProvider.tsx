@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -10,6 +11,7 @@ import {
   updateUserProfile 
 } from '@/services/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
@@ -61,18 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, [setUser, setProfile, isLoading, setIsLoading, navigate]);
-
-  // Safeguard against infinite loading - only use a brief timeout
-  useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => {
-        console.log('Force clearing loading state after timeout');
-        setIsLoading(false);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, setIsLoading]);
 
   // Direct session check to ensure UI is in sync with auth state
   useEffect(() => {
@@ -151,20 +141,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleUpdateProfile = async (data: Partial<Profile>) => {
     try {
-      if (!user) throw new Error('Not logged in');
+      if (!user) {
+        toast.error('Not logged in');
+        throw new Error('Not logged in');
+      }
       
       setIsLoading(true);
       setError(null);
       
+      console.log('AuthProvider: Updating profile with data:', data);
+      
       const updatedProfile = await updateUserProfile(user.id, data);
       
-      setProfile(prev => {
-        const newProfile = updatedProfile || (prev ? { ...prev, ...data } : null);
-        console.log('Updated profile:', newProfile);
-        return newProfile;
-      });
+      if (updatedProfile) {
+        console.log('AuthProvider: Profile updated successfully:', updatedProfile);
+        setProfile(updatedProfile);
+        toast.success('Profile updated successfully');
+      } else {
+        console.error('AuthProvider: Profile update returned null');
+        toast.error('Failed to update profile');
+      }
     } catch (error: any) {
+      console.error('AuthProvider: Profile update error:', error);
       setError(`Profile update error: ${error.message}`);
+      toast.error(`Profile update error: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);

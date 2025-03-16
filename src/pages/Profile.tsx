@@ -79,11 +79,9 @@ const Profile: React.FC = () => {
       
       console.log('Calling updateProfile with:', updateData);
       await updateProfile(updateData);
-      console.log('Profile update successful');
-      toast.success('Profile updated successfully');
       
-      // Don't navigate away immediately to show the success message
-      setTimeout(() => navigate('/dashboard'), 1500);
+      // Stay on profile page but show success message
+      toast.success('Profile updated successfully');
     } catch (error: any) {
       console.error('Profile update error:', error);
       toast.error(error.message || 'Failed to update profile');
