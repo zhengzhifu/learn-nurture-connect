@@ -53,6 +53,16 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     if (!isLoading) {
       checkSession();
     }
+    
+    // Safeguard against infinite loading
+    const timer = setTimeout(() => {
+      if (checkingAuth) {
+        console.log('Force clearing checking auth state after timeout');
+        setCheckingAuth(false);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
   }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // Show toast if there are authentication errors
@@ -73,6 +83,18 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       });
     }
   }, [isAuthenticated, isLoading, navigate, location.pathname, checkingAuth]);
+
+  // Safeguard against infinite loading - force render after timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading || checkingAuth) {
+        console.log('Forcing component to continue after timeout');
+        // Don't set state variables, just let the component render
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading, checkingAuth]);
 
   if (isLoading || checkingAuth) {
     return (

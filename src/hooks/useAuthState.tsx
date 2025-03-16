@@ -76,6 +76,7 @@ export const useAuthState = () => {
         }
       } finally {
         if (isMounted) {
+          console.log('Auth initialization complete, setting isLoading to false');
           setIsLoading(false);
         }
       }
@@ -95,6 +96,7 @@ export const useAuthState = () => {
           setProfile(null);
           setSession(null);
           console.log('User signed out, state cleared');
+          setIsLoading(false);
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setSession(session);
           
@@ -121,11 +123,19 @@ export const useAuthState = () => {
                 const fallbackProfile = createFallbackProfile(session.user);
                 setProfile(fallbackProfile);
               }
+            } finally {
+              if (isMounted) {
+                console.log('Auth state change handling complete, setting isLoading to false');
+                setIsLoading(false);
+              }
             }
+          } else {
+            setIsLoading(false);
           }
+        } else {
+          // For other auth events, make sure loading state is cleared
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 

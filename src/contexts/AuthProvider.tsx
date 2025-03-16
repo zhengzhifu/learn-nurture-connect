@@ -36,13 +36,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
           setProfile(null);
         }
+        
+        // Make sure we're not stuck in loading state
+        if (isLoading) {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 3000); // Set a timeout to ensure loading state gets cleared
+        }
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [setUser, setProfile]);
+  }, [setUser, setProfile, isLoading, setIsLoading]);
+
+  // Safeguard against infinite loading
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        console.log('Force clearing loading state after timeout');
+        setIsLoading(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, setIsLoading]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {

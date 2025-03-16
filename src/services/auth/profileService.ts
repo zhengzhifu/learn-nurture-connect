@@ -17,6 +17,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
 
     if (error) {
       console.error('Error fetching profile:', error);
+      // Don't throw error, return null and use fallback profile
       return null;
     }
 
@@ -29,6 +30,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     return data as Profile;
   } catch (error: any) {
     console.error('Exception fetching profile:', error);
+    // Don't throw error, return null and use fallback profile
     return null;
   }
 };
