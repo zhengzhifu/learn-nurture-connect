@@ -30,9 +30,13 @@ const Profile: React.FC = () => {
     home_address: '',
   });
 
+  console.log('Profile page rendering with profile data:', profile);
+  console.log('User data:', user);
+
   // Initialize form data from profile when it becomes available
   useEffect(() => {
     if (profile) {
+      console.log('Setting form data from profile:', profile);
       setFormData({
         full_name: profile.full_name || '',
         email: profile.email || user?.email || '',
@@ -41,6 +45,18 @@ const Profile: React.FC = () => {
         school_name: profile.school_name || '',
         school_address: profile.school_address || '',
         home_address: profile.home_address || '',
+      });
+    } else if (user) {
+      console.log('No profile data available, using user data:', user);
+      // Fallback to user data if no profile
+      setFormData({
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+        email: user.email || '',
+        phone: '',
+        avatar_url: '',
+        school_name: '',
+        school_address: '',
+        home_address: '',
       });
     }
   }, [profile, user]);
@@ -55,12 +71,15 @@ const Profile: React.FC = () => {
     setIsSaving(true);
     
     try {
+      console.log('Submitting profile update with data:', formData);
+      
       // Filter out email as it can't be updated through profile
       const { email, ...updateData } = formData;
       
       await updateProfile(updateData);
       toast.success('Profile updated successfully');
-      setTimeout(() => navigate('/dashboard'), 1000);
+      // Don't navigate away immediately to show the success message
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (error: any) {
       console.error('Profile update error:', error);
       toast.error(error.message || 'Failed to update profile');
@@ -71,6 +90,7 @@ const Profile: React.FC = () => {
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name
       .split(' ')
       .map(part => part[0])
