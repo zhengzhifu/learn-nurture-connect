@@ -45,6 +45,46 @@ export class RealProfileService {
         throw new Error('Unauthorized: Cannot update another user\'s profile');
       }
       
+      // Check if the profile exists first
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking if profile exists:', checkError);
+        throw new Error('Failed to verify profile existence');
+      }
+      
+      if (!existingProfile) {
+        console.log('Profile does not exist, creating a new one');
+        // Create profile if it doesn't exist
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId,
+            full_name: data.full_name || userData.user.user_metadata?.full_name || 'User',
+            email: userData.user.email || '',
+            user_type: data.user_type || userData.user.user_metadata?.role || 'parent',
+            ...data
+          })
+          .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+          .maybeSingle();
+          
+        if (insertError) {
+          console.error('Error creating new profile:', insertError);
+          console.error('Error code:', insertError.code);
+          console.error('Error message:', insertError.message);
+          console.error('Error details:', insertError.details);
+          throw new Error(`Failed to create profile: ${insertError.message}`);
+        }
+        
+        console.log('RealProfileService: Created new profile:', newProfile);
+        toast.success('Profile created successfully');
+        return newProfile as Profile;
+      }
+      
       // Proceed with the update
       console.log('RealProfileService: Proceeding with update - sending to Supabase:', data);
       const { data: updatedData, error } = await supabase
