@@ -3,30 +3,27 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import Button from './Button';
 import { Star, MapPin, Clock } from 'lucide-react';
+import { ServiceData } from '@/services/api/serviceClient';
 
 interface ServiceCardProps {
-  image: string;
-  title: string;
-  type: 'tutoring' | 'babysitting';
-  rating: number;
-  location: string;
-  price: string;
-  availability: string;
+  service: ServiceData;
   className?: string;
   onClick?: () => void;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({
-  image,
-  title,
-  type,
-  rating,
-  location,
-  price,
-  availability,
+  service,
   className = '',
   onClick,
 }) => {
+  // Format price as a string (e.g. "$25/hr")
+  const priceFormatted = `$${service.price}/hr`;
+  
+  // Format the availability as a string
+  const availabilityText = service.availability && service.availability.length > 0 
+    ? service.availability.join(', ') 
+    : 'Flexible';
+
   return (
     <div 
       className={cn(
@@ -37,16 +34,16 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={image} 
-          alt={title} 
+          src={service.image || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop'} 
+          alt={service.title} 
           className="w-full h-full object-cover"
         />
         <div className="absolute top-3 left-3">
           <span className={cn(
             "text-xs font-medium px-2 py-1 rounded-full",
-            type === 'tutoring' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+            service.type === 'tutoring' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
           )}>
-            {type === 'tutoring' ? 'Tutoring' : 'Babysitting'}
+            {service.type === 'tutoring' ? 'Tutoring' : 'Babysitting'}
           </span>
         </div>
       </div>
@@ -55,27 +52,27 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       <div className="p-5">
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold text-lg">{title}</h3>
+            <h3 className="font-semibold text-lg">{service.title}</h3>
             <div className="flex items-center">
               <Star className="w-4 h-4 text-yellow-500 mr-1" />
-              <span className="text-sm">{rating}</span>
+              <span className="text-sm">{service.rating}</span>
             </div>
           </div>
           
           <div className="flex items-center text-muted-foreground text-sm mb-3">
             <MapPin className="w-4 h-4 mr-1" />
-            <span>{location}</span>
+            <span>{service.location}</span>
           </div>
           
           <div className="flex items-center text-muted-foreground text-sm">
             <Clock className="w-4 h-4 mr-1" />
-            <span>{availability}</span>
+            <span>{availabilityText}</span>
           </div>
         </div>
         
         <div className="flex items-center justify-between mt-5 pt-4 border-t">
           <p className="font-medium">
-            {price}
+            {priceFormatted}
           </p>
           <Button onClick={onClick} variant="primary" size="sm">
             View Details

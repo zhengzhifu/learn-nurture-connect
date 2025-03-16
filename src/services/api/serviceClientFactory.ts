@@ -72,10 +72,10 @@ export class RealServiceClient implements ServiceClient {
       // Transform the data into ServiceData format
       const services: ServiceData[] = data.map(item => ({
         id: item.id,
-        title: `${item.service_type === 'tutoring' ? 'Tutoring' : 'Babysitting'} Service`,
+        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
         description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
         type: this.mapServiceType(item.service_type),
-        price: item.hourly_rate || 0,
+        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
         rating: 4.5, // Default rating since we don't have this in tutor_services
         location: item.location_address || 'Various locations',
         image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
@@ -92,7 +92,7 @@ export class RealServiceClient implements ServiceClient {
   }
   
   private mapServiceType(type: string): ServiceType {
-    if (type === 'tutoring_paid' || type === 'tutoring_voluntary') {
+    if (type.includes('tutoring')) {
       return 'tutoring';
     } else if (type === 'babysitting') {
       return 'babysitting';
@@ -123,7 +123,7 @@ export class RealServiceClient implements ServiceClient {
       console.log('RealServiceClient: Filtering services with:', filters);
       
       // Get all services first, then apply filters in memory
-      // This is a workaround until we have a proper services table
+      // This is a workaround until we have a proper filtering mechanism
       const allServices = await this.getServices();
       
       let filteredServices = [...allServices];
