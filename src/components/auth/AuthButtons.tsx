@@ -52,18 +52,18 @@ const AuthButtons: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>我的账户</DropdownMenuLabel>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-              控制面板
+              Dashboard
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/profile')}>
-              个人设置
+              Profile Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              退出登录
+              Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -76,7 +76,7 @@ const AuthButtons: React.FC = () => {
           className="border-destructive text-destructive hover:bg-destructive/10"
           icon={<LogOut className="h-4 w-4" />}
         >
-          <span className="hidden sm:inline">退出</span>
+          <span className="hidden sm:inline">Sign Out</span>
         </Button>
       </div>
     );
@@ -90,7 +90,7 @@ const AuthButtons: React.FC = () => {
         onClick={() => navigate('/signin')}
         fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
-        登录
+        Sign In
       </Button>
       <Button 
         variant="primary" 
@@ -99,7 +99,7 @@ const AuthButtons: React.FC = () => {
         icon={<LogIn className="h-4 w-4" />}
         fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
-        注册
+        Sign Up
       </Button>
     </div>
   );

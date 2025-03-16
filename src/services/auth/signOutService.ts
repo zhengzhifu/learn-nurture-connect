@@ -14,11 +14,11 @@ export const signOut = async () => {
     }
     
     console.log('Sign out successful');
-    toast.info('已退出登录');
+    toast.info('Successfully signed out');
     return true;
   } catch (error: any) {
     console.error('Error signing out:', error);
-    toast.error(error.message || '退出登录失败');
+    toast.error(error.message || 'Failed to sign out');
     throw error;
   }
 };
