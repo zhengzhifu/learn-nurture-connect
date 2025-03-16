@@ -1,3 +1,4 @@
+
 import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { mockServiceClient } from './mockServiceClient';
 import { supabase } from '@/integrations/supabase/client';
@@ -210,8 +211,8 @@ export const realServiceClient = new RealServiceClient();
 
 // This factory will help us switch between mock and real implementations
 export class ServiceClientFactory {
-  // Start with the mock client for service functionality since we don't have the backend tables yet
-  private static instance: ServiceClient = mockServiceClient;
+  // Start with the real client for profile functionality since we have the Supabase backend setup
+  private static instance: ServiceClient = realServiceClient;
   
   // Get the current client instance
   static getClient(): ServiceClient {
