@@ -5,7 +5,7 @@ import { mockTutorService, Tutor } from '@/services/api/mockTutorService';
 import TutorCard from '@/components/tutors/TutorCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { PageWrapper } from '@/components/utils/PageWrapper';
+import PageWrapper from '@/components/utils/PageWrapper';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 
 const MyTutorsPage: React.FC = () => {
