@@ -12,6 +12,8 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     
     // Use the service client to fetch the profile
     const client = ServiceClientFactory.getClient();
+    console.log('ProfileService: Using client type:', client === realServiceClient ? 'realServiceClient' : 'other');
+    
     const profile = await client.fetchUserProfile(userId);
     
     if (!profile) {
@@ -56,6 +58,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
     // Verify we're using realServiceClient
     const client = ServiceClientFactory.getClient();
     console.log('ProfileService: Using client type:', client === realServiceClient ? 'realServiceClient' : 'other');
+    console.log('ProfileService: Is user authenticated?', (await supabase.auth.getUser()).data?.user ? 'Yes' : 'No');
     
     // Direct Supabase update as a fallback if the service client fails
     let updatedProfile: Profile | null = null;
@@ -77,6 +80,9 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
       
       if (directError) {
         console.error('ProfileService: Direct Supabase update failed:', directError);
+        console.error('Error code:', directError.code);
+        console.error('Error message:', directError.message);
+        console.error('Error details:', directError.details);
         throw directError;
       }
       

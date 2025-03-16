@@ -56,10 +56,20 @@ export class RealProfileService {
       
       if (error) {
         console.error('Error updating profile in Supabase:', error);
+        // Log more details about the error
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        
+        // Check if this is a permissions error
+        if (error.code === 'PGRST301' || error.message.includes('permission denied')) {
+          throw new Error('Permission denied: You may not have rights to update this profile');
+        }
+        
         throw error;
       }
       
-      console.log('RealProfileService: updateUserProfile returning:', updatedData);
+      console.log('RealProfileService: updateUserProfile successful! Returning:', updatedData);
       toast.success('Profile updated successfully');
       return updatedData as Profile;
     } catch (error: any) {
