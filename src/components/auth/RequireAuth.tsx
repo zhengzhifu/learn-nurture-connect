@@ -78,7 +78,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <span className="text-lg mb-2">加载中...</span>
+        <span className="text-lg mb-2">Loading...</span>
       </div>
     );
   }
@@ -87,20 +87,20 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center text-destructive">
         <AlertCircle className="h-12 w-12 mb-4" />
-        <h2 className="text-xl font-bold mb-2">认证错误</h2>
+        <h2 className="text-xl font-bold mb-2">Authentication Error</h2>
         <p className="text-center max-w-md mb-4">{error}</p>
         <div className="flex space-x-4">
           <button 
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md"
             onClick={() => navigate('/signin')}
           >
-            返回登录
+            Back to Login
           </button>
           <button 
             className="px-4 py-2 border border-destructive text-destructive rounded-md"
             onClick={() => window.location.reload()}
           >
-            重试
+            Retry
           </button>
         </div>
       </div>
