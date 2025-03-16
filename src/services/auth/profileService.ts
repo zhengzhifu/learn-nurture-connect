@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { ServiceClientFactory } from '../api/serviceClientFactory';
+import { realServiceClient } from '../api/realServiceClient';
 
 // Fetch user profile data using the service client
 export const fetchProfile = async (userId: string): Promise<Profile | null> => {
