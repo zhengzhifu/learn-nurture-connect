@@ -17,31 +17,28 @@ import { ServiceData, ServiceFilters } from '@/services/api/serviceClient';
 import { ServiceType } from '@/types/service';
 import { toast } from 'sonner';
 import PageWrapper from '@/components/utils/PageWrapper';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 
-// Function to format price range text
 const formatPriceRange = (range: [number, number]): string => {
   return `$${range[0]} - $${range[1]}`;
 };
 
 const ServiceBrowse: React.FC = () => {
-  // State variables
   const [serviceList, setServiceList] = useState<ServiceData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Filter states
   const [selectedTypes, setSelectedTypes] = useState<ServiceType[]>([]);
   const [locationFilter, setLocationFilter] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
 
-  // Mock subjects and availability options
   const subjects = ['Mathematics', 'Science', 'English', 'History', 'Computer Science'];
   const availabilityOptions = ['Weekdays', 'Weekends', 'Mornings', 'Afternoons', 'Evenings'];
 
-  // Derive active filters and hasActiveFilters
   const activeFilters: ServiceFilters = {
     types: selectedTypes,
     location: locationFilter,
@@ -58,15 +55,12 @@ const ServiceBrowse: React.FC = () => {
     selectedSubjects.length > 0 ||
     selectedAvailability.length > 0;
 
-  // Function to fetch services
   const fetchServices = async () => {
     setIsLoading(true);
     try {
-      // Get the service client from the factory
       const serviceClient = ServiceClientFactory.getClient();
       let services: ServiceData[] = [];
       
-      // Determine which service method to call based on user input
       if (searchQuery) {
         services = await serviceClient.searchServices(searchQuery);
       } else if (hasActiveFilters) {
@@ -85,25 +79,21 @@ const ServiceBrowse: React.FC = () => {
     }
   };
 
-  // Fetch services on initial load
   useEffect(() => {
     fetchServices();
   }, []);
 
-  // Handle filter application
   const applyFilters = () => {
     fetchServices();
     setIsFilterOpen(false);
   };
 
-  // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchServices();
     setIsFilterOpen(false);
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setSelectedTypes([]);
     setLocationFilter('');
@@ -112,17 +102,16 @@ const ServiceBrowse: React.FC = () => {
     setSelectedAvailability([]);
   };
 
-  // Handle service card click
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
   };
 
   return (
     <PageWrapper>
-      <div className="container mx-auto py-8">
+      <Navbar />
+      <div className="container mx-auto py-8 pt-24">
         <h1 className="text-2xl font-semibold mb-4">Browse Services</h1>
 
-        {/* Search and Filter Section */}
         <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
           <form onSubmit={handleSearch} className="flex items-center w-full md:w-auto">
             <Input
@@ -149,7 +138,6 @@ const ServiceBrowse: React.FC = () => {
               <div className="p-4">
                 <h2 className="text-lg font-semibold mb-4">Filter Services</h2>
 
-                {/* Service Type Filter */}
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Service Type</h3>
                   <div className="flex flex-wrap gap-2">
@@ -182,7 +170,6 @@ const ServiceBrowse: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Location Filter */}
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Location</h3>
                   <Input
@@ -193,7 +180,6 @@ const ServiceBrowse: React.FC = () => {
                   />
                 </div>
 
-                {/* Price Range Filter */}
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Price Range</h3>
                   <Slider
@@ -205,7 +191,6 @@ const ServiceBrowse: React.FC = () => {
                   <p className="text-sm mt-1">{formatPriceRange(priceRange)}</p>
                 </div>
 
-                {/* Subjects Filter */}
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Subjects</h3>
                   <div className="flex flex-wrap gap-2">
@@ -228,7 +213,6 @@ const ServiceBrowse: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Availability Filter */}
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Availability</h3>
                   <div className="flex flex-wrap gap-2">
@@ -251,7 +235,6 @@ const ServiceBrowse: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex justify-between mt-6">
                   <Button variant="ghost" size="sm" onClick={clearFilters}>
                     Clear Filters
@@ -265,7 +248,6 @@ const ServiceBrowse: React.FC = () => {
           </Popover>
         </div>
 
-        {/* Service List */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
@@ -296,8 +278,10 @@ const ServiceBrowse: React.FC = () => {
           </Card>
         )}
       </div>
+      <Footer />
     </PageWrapper>
   );
 };
 
 export default ServiceBrowse;
+
