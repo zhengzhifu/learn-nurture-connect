@@ -1,4 +1,3 @@
-
 import React from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -10,39 +9,40 @@ import ServiceCard from '@/components/ui-custom/ServiceCard';
 import Button from '@/components/ui-custom/Button';
 import { Shield, Calendar, Search, Star, Book, Heart, GraduationCap, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ServiceData } from '@/services/api/serviceClient';
 
 const Index = () => {
-  // Featured services
-  const featuredServices = [
+  // Featured services converted to ServiceData format
+  const featuredServices: ServiceData[] = [
     {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      id: "1",
       title: 'Math Tutoring - All Levels',
-      type: 'tutoring' as const,
+      type: 'tutoring',
       rating: 4.9,
       location: 'Boston University',
-      price: '$25-40/hr',
-      availability: 'Weekdays & Weekends'
+      price: 35,
+      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      availability: ['Weekdays', 'Weekends']
     },
     {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      id: "2",
       title: 'Evening Babysitting',
-      type: 'babysitting' as const,
+      type: 'babysitting',
       rating: 4.8,
       location: 'Northwestern Area',
-      price: '$20/hr',
-      availability: 'Evenings & Weekends'
+      price: 20,
+      image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      availability: ['Evenings', 'Weekends']
     },
     {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      id: "3",
       title: 'Language Arts & Writing',
-      type: 'tutoring' as const,
+      type: 'tutoring',
       rating: 4.7,
       location: 'Berkeley Area',
-      price: '$30/hr',
-      availability: 'Flexible Schedule'
+      price: 30,
+      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      availability: ['Flexible Schedule']
     }
   ];
 
@@ -149,13 +149,7 @@ const Index = () => {
             {featuredServices.map((service) => (
               <ServiceCard
                 key={service.id}
-                image={service.image}
-                title={service.title}
-                type={service.type}
-                rating={service.rating}
-                location={service.location}
-                price={service.price}
-                availability={service.availability}
+                service={service}
                 onClick={() => console.log(`View service ${service.id}`)}
               />
             ))}
