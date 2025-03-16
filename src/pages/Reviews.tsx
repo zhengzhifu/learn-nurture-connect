@@ -16,11 +16,11 @@ import Footer from '@/components/layout/Footer';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 
 const Reviews: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const userId = user?.id || 'user123'; // Fallback for development
   
-  const { data: reviews, isLoading, error } = useQuery({
+  const { data: reviews, isLoading: reviewsLoading, error } = useQuery({
     queryKey: ['reviews', userId],
     queryFn: async () => {
       const client = ServiceClientFactory.getClient();
@@ -32,6 +32,20 @@ const Reviews: React.FC = () => {
     toast.error('Failed to load reviews');
     console.error('Error loading reviews:', error);
   }
+  
+  // Combine loading states
+  const isLoading = authLoading || reviewsLoading;
+  
+  // Create a safe user data object to prevent any circular references
+  const userData = profile ? {
+    full_name: profile.full_name || 'User',
+    user_type: profile.user_type || 'parent',
+    avatar_url: profile.avatar_url
+  } : (user ? {
+    full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+    user_type: user.user_metadata?.role || 'parent',
+    avatar_url: user.user_metadata?.avatar_url,
+  } : null);
   
   // Filter reviews based on the active tab
   const filteredReviews = reviews?.filter(review => {
@@ -66,7 +80,7 @@ const Reviews: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
           <div className="md:w-1/4">
-            <DashboardSidebar />
+            <DashboardSidebar userData={userData} isLoading={isLoading} />
           </div>
           
           {/* Main Content */}
