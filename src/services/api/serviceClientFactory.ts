@@ -3,6 +3,7 @@ import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { mockServiceClient } from './mockServiceClient';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
+import { ServiceType } from '@/types/service';
 import { toast } from 'sonner';
 
 // Real implementation using Supabase
@@ -58,9 +59,10 @@ export class RealServiceClient implements ServiceClient {
     try {
       console.log('RealServiceClient: Fetching all services');
       
+      // Using tutor_services table as the source for our service data
       const { data, error } = await supabase
-        .from('services')
-        .select('*');
+        .from('tutor_services')
+        .select('*, profiles(full_name)');
         
       if (error) {
         console.error('Error fetching services from Supabase:', error);
@@ -68,18 +70,18 @@ export class RealServiceClient implements ServiceClient {
       }
       
       // Transform the data into ServiceData format
-      const services = data.map(item => ({
+      const services: ServiceData[] = data.map(item => ({
         id: item.id,
-        title: item.title,
-        description: item.description,
-        type: item.type as ServiceType,
-        price: parseFloat(item.price),
-        rating: parseFloat(item.rating),
-        location: item.location,
-        image: item.image,
-        availability: item.availability || [],
-        provider_id: item.provider_id,
-        subjects: item.subjects || []
+        title: `${item.service_type === 'tutoring' ? 'Tutoring' : 'Babysitting'} Service`,
+        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+        type: this.mapServiceType(item.service_type),
+        price: item.hourly_rate || 0,
+        rating: 4.5, // Default rating since we don't have this in tutor_services
+        location: item.location_address || 'Various locations',
+        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+        availability: item.availability ? this.parseAvailability(item.availability) : [],
+        provider_id: item.tutor_id,
+        subjects: item.tutoring_subjects || []
       }));
       
       return services;
@@ -89,59 +91,84 @@ export class RealServiceClient implements ServiceClient {
     }
   }
   
+  private mapServiceType(type: string): ServiceType {
+    if (type === 'tutoring_paid' || type === 'tutoring_voluntary') {
+      return 'tutoring';
+    } else if (type === 'babysitting') {
+      return 'babysitting';
+    } else {
+      return 'tutoring'; // Default
+    }
+  }
+  
+  private parseAvailability(availabilityJson: any): string[] {
+    try {
+      if (Array.isArray(availabilityJson)) {
+        return availabilityJson.map(item => item.toString());
+      } else if (typeof availabilityJson === 'object') {
+        // If it's a JSON object, extract values that might represent availability
+        return Object.values(availabilityJson)
+          .filter(Boolean)
+          .map(item => item.toString());
+      }
+      return [];
+    } catch (e) {
+      console.error('Error parsing availability:', e);
+      return [];
+    }
+  }
+  
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
       console.log('RealServiceClient: Filtering services with:', filters);
       
-      let query = supabase.from('services').select('*');
+      // Get all services first, then apply filters in memory
+      // This is a workaround until we have a proper services table
+      const allServices = await this.getServices();
       
+      let filteredServices = [...allServices];
+      
+      // Filter by service type
       if (filters.types && filters.types.length > 0) {
-        query = query.in('type', filters.types);
+        filteredServices = filteredServices.filter(service => 
+          filters.types?.includes(service.type)
+        );
       }
       
+      // Filter by location
       if (filters.location) {
-        query = query.ilike('location', `%${filters.location}%`);
+        filteredServices = filteredServices.filter(service => 
+          service.location.toLowerCase().includes(filters.location?.toLowerCase() || '')
+        );
       }
       
+      // Filter by price range
       if (filters.priceRange) {
         const [min, max] = filters.priceRange;
-        query = query.gte('price', min).lte('price', max);
+        filteredServices = filteredServices.filter(service => 
+          service.price >= min && service.price <= max
+        );
       }
       
-      // Handle subject filtering
+      // Filter by subjects
       if (filters.subjects && filters.subjects.length > 0) {
-        // Using overlap operator for array contains
-        query = query.overlaps('subjects', filters.subjects);
+        filteredServices = filteredServices.filter(service => 
+          service.subjects?.some(subject => 
+            filters.subjects?.includes(subject)
+          )
+        );
       }
       
-      // Handle availability filtering
+      // Filter by availability
       if (filters.availability && filters.availability.length > 0) {
-        query = query.overlaps('availability', filters.availability);
+        filteredServices = filteredServices.filter(service => 
+          service.availability.some(slot => 
+            filters.availability?.includes(slot)
+          )
+        );
       }
       
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error filtering services in Supabase:', error);
-        return [];
-      }
-      
-      // Transform the data into ServiceData format
-      const services = data.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        type: item.type as ServiceType,
-        price: parseFloat(item.price),
-        rating: parseFloat(item.rating),
-        location: item.location,
-        image: item.image,
-        availability: item.availability || [],
-        provider_id: item.provider_id,
-        subjects: item.subjects || []
-      }));
-      
-      return services;
+      return filteredServices;
     } catch (error) {
       console.error('Error filtering services:', error);
       return [];
@@ -156,32 +183,17 @@ export class RealServiceClient implements ServiceClient {
         return this.getServices();
       }
       
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%`);
+      // Get all services and filter in memory
+      const allServices = await this.getServices();
       
-      if (error) {
-        console.error('Error searching services in Supabase:', error);
-        return [];
-      }
-      
-      // Transform the data into ServiceData format
-      const services = data.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        type: item.type as ServiceType,
-        price: parseFloat(item.price),
-        rating: parseFloat(item.rating),
-        location: item.location,
-        image: item.image,
-        availability: item.availability || [],
-        provider_id: item.provider_id,
-        subjects: item.subjects || []
-      }));
-      
-      return services;
+      // Search in title, description and location
+      const lowerQuery = query.toLowerCase();
+      return allServices.filter(service => 
+        service.title.toLowerCase().includes(lowerQuery) ||
+        (service.description && service.description.toLowerCase().includes(lowerQuery)) ||
+        service.location.toLowerCase().includes(lowerQuery) ||
+        service.subjects?.some(subject => subject.toLowerCase().includes(lowerQuery))
+      );
     } catch (error) {
       console.error('Error searching services:', error);
       return [];

@@ -1,450 +1,296 @@
 import React, { useState, useEffect } from 'react';
-import PageWrapper from '@/components/utils/PageWrapper';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import ServiceCard from '@/components/ui-custom/ServiceCard';
-import { Search, Filter, MapPin, BookOpen, Calendar, ChevronDown, CheckCircle, X } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Search, Filter, ChevronDown, X, Check } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import ServiceCard from '@/components/ui-custom/ServiceCard';
 import { ServiceClientFactory } from '@/services/api/serviceClientFactory';
 import { ServiceData, ServiceFilters } from '@/services/api/serviceClient';
 import { ServiceType } from '@/types/service';
 
-const ServiceBrowse = () => {
-  const [services, setServices] = useState<ServiceData[]>([]);
-  const [filteredServices, setFilteredServices] = useState<ServiceData[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [location, setLocation] = useState('');
+// Function to format price range text
+const formatPriceRange = (range: [number, number]): string => {
+  return `$${range[0]} - $${range[1]}`;
+};
+
+const ServiceBrowse: React.FC = () => {
+  const { category } = useParams<{ category?: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // State variables
+  const [serviceList, setServiceList] = useState<ServiceData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<{
-    types: ServiceType[];
-    location?: string;
-  }>({
-    types: ['tutoring', 'babysitting'],
-  });
-  
-  const serviceClient = ServiceClientFactory.getClient();
-  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Filter states
+  const [selectedTypes, setSelectedTypes] = useState<ServiceType[]>([]);
+  const [locationFilter, setLocationFilter] = useState('');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
+
+  // Mock subjects and availability options
+  const subjects = ['Mathematics', 'Science', 'English', 'History', 'Computer Science'];
+  const availabilityOptions = ['Weekdays', 'Weekends', 'Mornings', 'Afternoons', 'Evenings'];
+
+  // Derive active filters and hasActiveFilters
+  const activeFilters: ServiceFilters = {
+    types: selectedTypes,
+    location: locationFilter,
+    priceRange: priceRange,
+    subjects: selectedSubjects,
+    availability: selectedAvailability,
+  };
+
+  const hasActiveFilters =
+    selectedTypes.length > 0 ||
+    locationFilter !== '' ||
+    priceRange[0] !== 0 ||
+    priceRange[1] !== 100 ||
+    selectedSubjects.length > 0 ||
+    selectedAvailability.length > 0;
+
+  // Fetch services
   useEffect(() => {
     const fetchServices = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const data = await serviceClient.getServices();
-        setServices(data);
-        setFilteredServices(data);
+        let services: ServiceData[] = [];
+        const serviceClient = ServiceClientFactory.getClient();
+        
+        if (searchQuery) {
+          services = await serviceClient.searchServices(searchQuery);
+        } else if (hasActiveFilters) {
+          services = await serviceClient.filterServices(activeFilters);
+        } else {
+          services = await serviceClient.getServices();
+        }
+        
+        setServiceList(services);
       } catch (error) {
         console.error('Error fetching services:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchServices();
-  }, []);
-  
-  const applyFilters = async () => {
-    try {
-      setIsLoading(true);
-      
-      const filters: ServiceFilters = {
-        types: activeFilters.types,
-        location: location || undefined,
-        priceRange: priceRange
-      };
-      
-      const filteredData = await serviceClient.filterServices(filters);
-      setFilteredServices(filteredData);
-    } catch (error) {
-      console.error('Error applying filters:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  }, [searchQuery, hasActiveFilters, activeFilters]);
+
+  // Handle filter application
+  const applyFilters = () => {
+    setIsFilterOpen(false);
   };
-  
-  const handleSearch = async () => {
-    try {
-      setIsLoading(true);
-      const searchResults = await serviceClient.searchServices(searchTerm);
-      setFilteredServices(searchResults);
-    } catch (error) {
-      console.error('Error searching services:', error);
-    } finally {
-      setIsLoading(false);
-    }
+
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsFilterOpen(false);
   };
-  
-  const toggleTypeFilter = (type: ServiceType) => {
-    setActiveFilters(prev => {
-      const types = prev.types.includes(type)
-        ? prev.types.filter(t => t !== type)
-        : [...prev.types, type];
-      
-      return { ...prev, types };
-    });
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedTypes([]);
+    setLocationFilter('');
+    setPriceRange([0, 100]);
+    setSelectedSubjects([]);
+    setSelectedAvailability([]);
   };
-  
-  const removeLocationFilter = () => {
-    setLocation('');
-    setActiveFilters(prev => ({ ...prev, location: undefined }));
-  };
-  
-  const handleApplyFilters = () => {
-    setActiveFilters(prev => ({
-      ...prev,
-      location: location || undefined
-    }));
-    
-    applyFilters();
-  };
-  
-  useEffect(() => {
-    applyFilters();
-  }, [activeFilters]);
 
   return (
-    <PageWrapper>
-      <Navbar />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 min-h-screen">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Browse Services</h1>
-            <p className="text-muted-foreground">Find tutors and babysitters that match your needs</p>
-          </div>
-          
-          <div className="mt-4 md:mt-0 flex items-center">
-            <Select defaultValue="newest">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="rating">Highest Rating</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-1/4">
-            <div className="sticky top-24 bg-white rounded-xl border shadow-sm p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-lg">Filters</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-muted-foreground text-sm"
-                  onClick={() => {
-                    setActiveFilters({ types: ['tutoring', 'babysitting'] });
-                    setPriceRange([0, 50]);
-                    setLocation('');
-                    setSearchTerm('');
-                  }}
-                >
-                  Reset
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-semibold mb-4">Browse Services</h1>
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
+        <form onSubmit={handleSearch} className="flex items-center w-full md:w-auto">
+          <Input
+            type="search"
+            placeholder="Search for services..."
+            className="mr-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button type="submit" variant="outline" size="sm">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </form>
+
+        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4">Filter Services</h2>
+
+              {/* Service Type Filter */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Service Type</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={selectedTypes.includes('tutoring') ? 'default' : 'secondary'}
+                    onClick={() =>
+                      setSelectedTypes(
+                        selectedTypes.includes('tutoring')
+                          ? selectedTypes.filter((type) => type !== 'tutoring')
+                          : [...selectedTypes, 'tutoring']
+                      )
+                    }
+                    className="cursor-pointer"
+                  >
+                    Tutoring
+                  </Badge>
+                  <Badge
+                    variant={selectedTypes.includes('babysitting') ? 'default' : 'secondary'}
+                    onClick={() =>
+                      setSelectedTypes(
+                        selectedTypes.includes('babysitting')
+                          ? selectedTypes.filter((type) => type !== 'babysitting')
+                          : [...selectedTypes, 'babysitting']
+                      )
+                    }
+                    className="cursor-pointer"
+                  >
+                    Babysitting
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Location Filter */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Location</h3>
+                <Input
+                  type="text"
+                  placeholder="Enter location"
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                />
+              </div>
+
+              {/* Price Range Filter */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Price Range</h3>
+                <Slider
+                  defaultValue={priceRange}
+                  max={100}
+                  step={10}
+                  onValueChange={(value) => setPriceRange([value[0], value[1]])}
+                />
+                <p className="text-sm mt-1">{formatPriceRange(priceRange)}</p>
+              </div>
+
+              {/* Subjects Filter */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Subjects</h3>
+                <div className="flex flex-wrap gap-2">
+                  {subjects.map((subject) => (
+                    <Badge
+                      key={subject}
+                      variant={selectedSubjects.includes(subject) ? 'default' : 'secondary'}
+                      onClick={() =>
+                        setSelectedSubjects(
+                          selectedSubjects.includes(subject)
+                            ? selectedSubjects.filter((s) => s !== subject)
+                            : [...selectedSubjects, subject]
+                        )
+                      }
+                      className="cursor-pointer"
+                    >
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Availability Filter */}
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-2">Availability</h3>
+                <div className="flex flex-wrap gap-2">
+                  {availabilityOptions.map((option) => (
+                    <Badge
+                      key={option}
+                      variant={selectedAvailability.includes(option) ? 'default' : 'secondary'}
+                      onClick={() =>
+                        setSelectedAvailability(
+                          selectedAvailability.includes(option)
+                            ? selectedAvailability.filter((a) => a !== option)
+                            : [...selectedAvailability, option]
+                        )
+                      }
+                      className="cursor-pointer"
+                    >
+                      {option}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between mt-6">
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+                <Button size="sm" onClick={applyFilters}>
+                  Apply Filters
                 </Button>
               </div>
-              
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search keyword..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSearch();
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <h4 className="font-medium">Location</h4>
-                </div>
-                <div className="relative">
-                  <Input 
-                    placeholder="Enter your location" 
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <Accordion type="single" collapsible defaultValue="service-type">
-                <AccordionItem value="service-type" className="border-0">
-                  <AccordionTrigger className="py-3 px-0">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Service Type</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-1">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="tutoring" 
-                          checked={activeFilters.types.includes('tutoring')}
-                          onCheckedChange={() => toggleTypeFilter('tutoring')}
-                        />
-                        <label htmlFor="tutoring" className="text-sm font-medium leading-none cursor-pointer">
-                          Tutoring
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="babysitting" 
-                          checked={activeFilters.types.includes('babysitting')}
-                          onCheckedChange={() => toggleTypeFilter('babysitting')}
-                        />
-                        <label htmlFor="babysitting" className="text-sm font-medium leading-none cursor-pointer">
-                          Babysitting
-                        </label>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              
-              <Accordion type="single" collapsible defaultValue="subjects">
-                <AccordionItem value="subjects" className="border-0">
-                  <AccordionTrigger className="py-3 px-0">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Subjects</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-1">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="math" />
-                        <label htmlFor="math" className="text-sm font-medium leading-none cursor-pointer">
-                          Mathematics
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="science" />
-                        <label htmlFor="science" className="text-sm font-medium leading-none cursor-pointer">
-                          Science
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="english" />
-                        <label htmlFor="english" className="text-sm font-medium leading-none cursor-pointer">
-                          English & Literature
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="history" />
-                        <label htmlFor="history" className="text-sm font-medium leading-none cursor-pointer">
-                          History
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="coding" />
-                        <label htmlFor="coding" className="text-sm font-medium leading-none cursor-pointer">
-                          Computer Science
-                        </label>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              
-              <Accordion type="single" collapsible defaultValue="availability">
-                <AccordionItem value="availability" className="border-0">
-                  <AccordionTrigger className="py-3 px-0">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Availability</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-1">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="weekdays" />
-                        <label htmlFor="weekdays" className="text-sm font-medium leading-none cursor-pointer">
-                          Weekdays
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="weekends" />
-                        <label htmlFor="weekends" className="text-sm font-medium leading-none cursor-pointer">
-                          Weekends
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="mornings" />
-                        <label htmlFor="mornings" className="text-sm font-medium leading-none cursor-pointer">
-                          Mornings
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="afternoons" />
-                        <label htmlFor="afternoons" className="text-sm font-medium leading-none cursor-pointer">
-                          Afternoons
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="evenings" />
-                        <label htmlFor="evenings" className="text-sm font-medium leading-none cursor-pointer">
-                          Evenings
-                        </label>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              
-              <Accordion type="single" collapsible defaultValue="price">
-                <AccordionItem value="price" className="border-0">
-                  <AccordionTrigger className="py-3 px-0">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-primary">$</div>
-                      <span className="font-medium">Price Range</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-5 pt-1 px-1">
-                      <Slider 
-                        defaultValue={[0, 50]} 
-                        max={100}
-                        step={5}
-                        value={priceRange}
-                        onValueChange={(value) => setPriceRange(value as [number, number])}
-                      />
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>${priceRange[0]}/hr</span>
-                        <span>${priceRange[1]}/hr</span>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              
-              <Button 
-                className="w-full mt-6"
-                onClick={handleApplyFilters}
-              >
-                Apply Filters
-              </Button>
             </div>
-          </div>
-          
-          <div className="lg:w-3/4">
-            <div className="flex flex-wrap gap-2 mb-6">
-              {activeFilters.types.includes('tutoring') && (
-                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                  Service: Tutoring
-                  <button className="ml-2" onClick={() => toggleTypeFilter('tutoring')}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              {activeFilters.types.includes('babysitting') && (
-                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                  Service: Babysitting
-                  <button className="ml-2" onClick={() => toggleTypeFilter('babysitting')}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              {location && (
-                <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
-                  Location: {location}
-                  <button className="ml-2" onClick={removeLocationFilter}>
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading services...</p>
-              </div>
-            ) : filteredServices.length === 0 ? (
-              <div className="text-center py-12 bg-muted/20 rounded-lg">
-                <div className="text-5xl mb-4">🔍</div>
-                <h3 className="text-xl font-semibold mb-2">No services found</h3>
-                <p className="text-muted-foreground mb-4">Try adjusting your filters or search criteria</p>
-                <Button onClick={() => {
-                  setActiveFilters({ types: ['tutoring', 'babysitting'] });
-                  setPriceRange([0, 50]);
-                  setLocation('');
-                  setSearchTerm('');
-                }}>
-                  Reset All Filters
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredServices.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    image={service.image}
-                    title={service.title}
-                    type={service.type}
-                    rating={service.rating}
-                    location={service.location}
-                    price={service.price}
-                    availability={service.availability}
-                    onClick={() => console.log(`View service ${service.id}`)}
-                  />
-                ))}
-              </div>
-            )}
-            
-            {filteredServices.length > 0 && (
-              <div className="mt-12 flex justify-center">
-                <div className="flex space-x-1">
-                  <Button variant="outline" size="sm" disabled>
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-primary text-white">
-                    1
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    2
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    3
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          </PopoverContent>
+        </Popover>
       </div>
-      
-      <Footer />
-    </PageWrapper>
+
+      {/* Service List */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <Skeleton className="h-40 w-full mb-2" />
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : serviceList.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {serviceList.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-4">
+            <p>No services found.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
