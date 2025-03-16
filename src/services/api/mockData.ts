@@ -11,7 +11,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'tutoring',
     price: 25,
     rating: 4.8,
-    location: 'New York, NY',
+    location: 'Montmartre, Paris',
     image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop',
     availability: ['Weekdays', 'Evenings'],
     subjects: ['Mathematics', 'Algebra', 'Calculus']
@@ -23,7 +23,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'tutoring',
     price: 30,
     rating: 4.7,
-    location: 'Boston, MA',
+    location: 'Le Marais, Paris',
     image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop',
     availability: ['Weekends', 'Afternoons'],
     subjects: ['Physics', 'Chemistry']
@@ -35,7 +35,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'babysitting',
     price: 20,
     rating: 4.9,
-    location: 'San Francisco, CA',
+    location: 'Saint-Germain-des-Prés, Paris',
     image: 'https://images.unsplash.com/photo-1544642899-f0d6e5f6ed6f?w=800&auto=format&fit=crop',
     availability: ['Weekends', 'Evenings']
   },
@@ -46,7 +46,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'tutoring',
     price: 35,
     rating: 4.6,
-    location: 'Chicago, IL',
+    location: 'Latin Quarter, Paris',
     image: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop',
     availability: ['Weekdays', 'Mornings'],
     subjects: ['English', 'Literature', 'Writing']
@@ -58,7 +58,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'babysitting',
     price: 22,
     rating: 4.9,
-    location: 'Seattle, WA',
+    location: 'Bastille, Paris',
     image: 'https://images.unsplash.com/photo-1596656226630-05c1ab390ab1?w=800&auto=format&fit=crop',
     availability: ['Weekdays', 'Weekends', 'Evenings']
   },
@@ -69,7 +69,7 @@ export const MOCK_SERVICES: ServiceData[] = [
     type: 'tutoring',
     price: 40,
     rating: 4.8,
-    location: 'Austin, TX',
+    location: 'Champs-Élysées, Paris',
     image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop',
     availability: ['Weekends'],
     subjects: ['Computer Science', 'Programming']
@@ -86,8 +86,8 @@ export const generateMockProfile = (userId: string): Profile => {
     phone: '123-456-7890',
     avatar_url: undefined,
     verified: true,
-    school_name: 'Mock School',
-    school_address: '123 School St, City',
-    home_address: '456 Home St, City'
+    school_name: 'École Internationale de Paris',
+    school_address: '123 Rue de l\'École, Paris',
+    home_address: '456 Avenue des Parisiens, Paris'
   };
 };
