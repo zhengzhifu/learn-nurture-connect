@@ -26,7 +26,7 @@ export const signIn = async (email: string, password: string) => {
       const userProfile = await fetchProfile(data.user.id);
       console.log('User profile fetched:', userProfile);
       
-      toast.success('登录成功！');
+      toast.success('Login successful!');
       return { 
         user: data.user, 
         profile: userProfile || createFallbackProfile(data.user)
@@ -36,7 +36,7 @@ export const signIn = async (email: string, password: string) => {
     return { user: null, profile: null };
   } catch (error: any) {
     console.error('Error signing in:', error);
-    toast.error(error.message || '登录失败');
+    toast.error(error.message || 'Login failed');
     throw error;
   }
 };

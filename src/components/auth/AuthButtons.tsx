@@ -16,7 +16,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const AuthButtons: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, signOut, profile } = useAuth();
+  const { isAuthenticated, signOut, profile, user } = useAuth();
+
+  console.log('AuthButtons: Auth state:', { isAuthenticated, hasProfile: !!profile, hasUser: !!user });
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -38,17 +40,24 @@ const AuthButtons: React.FC = () => {
     }
   };
 
-  if (isAuthenticated && profile) {
+  if (isAuthenticated && (profile || user)) {
+    const displayName = profile?.full_name || 
+                        user?.user_metadata?.full_name || 
+                        user?.user_metadata?.name || 
+                        'User';
+    
+    const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
+    
     return (
       <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex items-center gap-2" aria-label="User menu">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name} />
-                <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline truncate max-w-[100px]">{profile.full_name}</span>
+              <span className="hidden md:inline truncate max-w-[100px]">{displayName}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

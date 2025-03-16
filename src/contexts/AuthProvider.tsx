@@ -25,6 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError 
   } = useAuthState();
 
+  // Log auth state for debugging
+  useEffect(() => {
+    console.log('AuthProvider: auth state updated', {
+      isAuthenticated: !!user,
+      hasProfile: !!profile,
+      isLoading,
+      hasError: !!error
+    });
+  }, [user, profile, isLoading, error]);
+
   // Listen for auth state changes directly in the provider
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -62,6 +72,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return () => clearTimeout(timer);
     }
   }, [isLoading, setIsLoading]);
+
+  // Direct session check to ensure UI is in sync with auth state
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session && !user) {
+          console.log('Session exists but no user in state, updating...');
+          setUser(data.session.user);
+        }
+      } catch (err) {
+        console.error('Session check error:', err);
+      }
+    };
+    
+    checkSession();
+  }, [user, setUser]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {
