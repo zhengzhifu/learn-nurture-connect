@@ -1,6 +1,6 @@
 
 import { Profile } from '@/types/auth';
-import { ServiceType, ServiceSubject } from '@/types/service';
+import { ServiceType } from '@/types/service';
 
 // Define the ServiceData interface
 export interface ServiceData {

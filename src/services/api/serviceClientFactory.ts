@@ -1,3 +1,4 @@
+
 import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { mockServiceClient } from './mockServiceClient';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,7 +67,22 @@ export class RealServiceClient implements ServiceClient {
         return [];
       }
       
-      return data as ServiceData[];
+      // Transform the data into ServiceData format
+      const services = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        type: item.type as ServiceType,
+        price: parseFloat(item.price),
+        rating: parseFloat(item.rating),
+        location: item.location,
+        image: item.image,
+        availability: item.availability || [],
+        provider_id: item.provider_id,
+        subjects: item.subjects || []
+      }));
+      
+      return services;
     } catch (error) {
       console.error('Exception fetching services:', error);
       return [];
@@ -92,6 +108,17 @@ export class RealServiceClient implements ServiceClient {
         query = query.gte('price', min).lte('price', max);
       }
       
+      // Handle subject filtering
+      if (filters.subjects && filters.subjects.length > 0) {
+        // Using overlap operator for array contains
+        query = query.overlaps('subjects', filters.subjects);
+      }
+      
+      // Handle availability filtering
+      if (filters.availability && filters.availability.length > 0) {
+        query = query.overlaps('availability', filters.availability);
+      }
+      
       const { data, error } = await query;
       
       if (error) {
@@ -99,7 +126,22 @@ export class RealServiceClient implements ServiceClient {
         return [];
       }
       
-      return data as ServiceData[];
+      // Transform the data into ServiceData format
+      const services = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        type: item.type as ServiceType,
+        price: parseFloat(item.price),
+        rating: parseFloat(item.rating),
+        location: item.location,
+        image: item.image,
+        availability: item.availability || [],
+        provider_id: item.provider_id,
+        subjects: item.subjects || []
+      }));
+      
+      return services;
     } catch (error) {
       console.error('Error filtering services:', error);
       return [];
@@ -124,7 +166,22 @@ export class RealServiceClient implements ServiceClient {
         return [];
       }
       
-      return data as ServiceData[];
+      // Transform the data into ServiceData format
+      const services = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        type: item.type as ServiceType,
+        price: parseFloat(item.price),
+        rating: parseFloat(item.rating),
+        location: item.location,
+        image: item.image,
+        availability: item.availability || [],
+        provider_id: item.provider_id,
+        subjects: item.subjects || []
+      }));
+      
+      return services;
     } catch (error) {
       console.error('Error searching services:', error);
       return [];

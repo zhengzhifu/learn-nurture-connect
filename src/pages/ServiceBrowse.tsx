@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -40,10 +39,8 @@ const ServiceBrowse = () => {
     types: ['tutoring', 'babysitting'],
   });
   
-  // Get the service client from the factory
   const serviceClient = ServiceClientFactory.getClient();
   
-  // Fetch services on component mount
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -61,7 +58,6 @@ const ServiceBrowse = () => {
     fetchServices();
   }, []);
   
-  // Apply filters to services
   const applyFilters = async () => {
     try {
       setIsLoading(true);
@@ -81,7 +77,6 @@ const ServiceBrowse = () => {
     }
   };
   
-  // Handle search
   const handleSearch = async () => {
     try {
       setIsLoading(true);
@@ -94,7 +89,6 @@ const ServiceBrowse = () => {
     }
   };
   
-  // Toggle service type filter
   const toggleTypeFilter = (type: ServiceType) => {
     setActiveFilters(prev => {
       const types = prev.types.includes(type)
@@ -105,13 +99,11 @@ const ServiceBrowse = () => {
     });
   };
   
-  // Remove location filter
   const removeLocationFilter = () => {
     setLocation('');
     setActiveFilters(prev => ({ ...prev, location: undefined }));
   };
   
-  // Apply filters when the Apply button is clicked
   const handleApplyFilters = () => {
     setActiveFilters(prev => ({
       ...prev,
@@ -121,7 +113,6 @@ const ServiceBrowse = () => {
     applyFilters();
   };
   
-  // Apply filters when activeFilters change
   useEffect(() => {
     applyFilters();
   }, [activeFilters]);
@@ -153,7 +144,6 @@ const ServiceBrowse = () => {
         </div>
         
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
           <div className="lg:w-1/4">
             <div className="sticky top-24 bg-white rounded-xl border shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
@@ -173,7 +163,6 @@ const ServiceBrowse = () => {
                 </Button>
               </div>
               
-              {/* Search */}
               <div className="mb-6">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -190,7 +179,6 @@ const ServiceBrowse = () => {
                 </div>
               </div>
               
-              {/* Location */}
               <div className="mb-6">
                 <div className="flex items-center space-x-2 mb-4">
                   <MapPin className="h-4 w-4 text-primary" />
@@ -205,7 +193,6 @@ const ServiceBrowse = () => {
                 </div>
               </div>
               
-              {/* Service Type */}
               <Accordion type="single" collapsible defaultValue="service-type">
                 <AccordionItem value="service-type" className="border-0">
                   <AccordionTrigger className="py-3 px-0">
@@ -241,7 +228,6 @@ const ServiceBrowse = () => {
                 </AccordionItem>
               </Accordion>
               
-              {/* Subjects */}
               <Accordion type="single" collapsible defaultValue="subjects">
                 <AccordionItem value="subjects" className="border-0">
                   <AccordionTrigger className="py-3 px-0">
@@ -287,7 +273,6 @@ const ServiceBrowse = () => {
                 </AccordionItem>
               </Accordion>
               
-              {/* Availability */}
               <Accordion type="single" collapsible defaultValue="availability">
                 <AccordionItem value="availability" className="border-0">
                   <AccordionTrigger className="py-3 px-0">
@@ -333,7 +318,6 @@ const ServiceBrowse = () => {
                 </AccordionItem>
               </Accordion>
               
-              {/* Price Range */}
               <Accordion type="single" collapsible defaultValue="price">
                 <AccordionItem value="price" className="border-0">
                   <AccordionTrigger className="py-3 px-0">
@@ -369,9 +353,7 @@ const ServiceBrowse = () => {
             </div>
           </div>
           
-          {/* Services Grid */}
           <div className="lg:w-3/4">
-            {/* Active Filters */}
             <div className="flex flex-wrap gap-2 mb-6">
               {activeFilters.types.includes('tutoring') && (
                 <div className="bg-primary/5 text-primary text-sm py-1 px-3 rounded-full flex items-center">
@@ -399,7 +381,6 @@ const ServiceBrowse = () => {
               )}
             </div>
             
-            {/* Results */}
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -437,7 +418,6 @@ const ServiceBrowse = () => {
               </div>
             )}
             
-            {/* Pagination */}
             {filteredServices.length > 0 && (
               <div className="mt-12 flex justify-center">
                 <div className="flex space-x-1">
