@@ -32,11 +32,6 @@ const Hero: React.FC = () => {
                 Verified profiles, secure scheduling, and seamless booking.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link to="/register">
-                  <Button variant="primary" size="lg" icon={<ArrowRight className="w-4 h-4" />}>
-                    Get Started
-                  </Button>
-                </Link>
                 <Link to="/browse">
                   <Button variant="outline" size="lg">
                     Browse Services

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -10,8 +11,11 @@ import Button from '@/components/ui-custom/Button';
 import { Shield, Calendar, Search, Star, Book, Heart, GraduationCap, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ServiceData } from '@/services/api/serviceClient';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  
   // Featured services converted to ServiceData format
   const featuredServices: ServiceData[] = [
     {
@@ -84,49 +88,51 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Role Selection Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Our Community</h2>
-            <p className="text-muted-foreground text-lg">
-              Whether you're a parent looking for quality education support or a student offering tutoring services,
-              we've got you covered.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <RoleSelectionCard 
-              title="For Parents"
-              icon={<Users className="h-6 w-6" />}
-              description="Find qualified tutors and babysitters for your children."
-              benefits={[
-                "Access to verified student profiles",
-                "Secure booking and scheduling system",
-                "Read reviews from other parents",
-                "Flexible payment options"
-              ]}
-              buttonText="Find a Tutor"
-              buttonLink="/register?role=parent"
-            />
+      {/* Role Selection Section - Only show when not authenticated */}
+      {!isAuthenticated && (
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Our Community</h2>
+              <p className="text-muted-foreground text-lg">
+                Whether you're a parent looking for quality education support or a student offering tutoring services,
+                we've got you covered.
+              </p>
+            </div>
             
-            <RoleSelectionCard 
-              title="For Students"
-              icon={<GraduationCap className="h-6 w-6" />}
-              description="Offer your tutoring or babysitting services to families."
-              benefits={[
-                "Create a professional profile",
-                "Set your own availability and rates",
-                "Receive booking requests",
-                "Build your reputation with reviews"
-              ]}
-              buttonText="Become a Tutor"
-              buttonLink="/register?role=student"
-              variant="primary"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <RoleSelectionCard 
+                title="For Parents"
+                icon={<Users className="h-6 w-6" />}
+                description="Find qualified tutors and babysitters for your children."
+                benefits={[
+                  "Access to verified student profiles",
+                  "Secure booking and scheduling system",
+                  "Read reviews from other parents",
+                  "Flexible payment options"
+                ]}
+                buttonText="Find a Tutor"
+                buttonLink="/register?role=parent"
+              />
+              
+              <RoleSelectionCard 
+                title="For Students"
+                icon={<GraduationCap className="h-6 w-6" />}
+                description="Offer your tutoring or babysitting services to families."
+                benefits={[
+                  "Create a professional profile",
+                  "Set your own availability and rates",
+                  "Receive booking requests",
+                  "Build your reputation with reviews"
+                ]}
+                buttonText="Become a Tutor"
+                buttonLink="/register?role=student"
+                variant="primary"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
       
       {/* Featured Services Section */}
       <section className="py-20 bg-white">
