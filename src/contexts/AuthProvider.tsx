@@ -127,14 +127,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignOut = async () => {
     try {
+      console.log('handleSignOut called in AuthProvider');
       setIsLoading(true);
       setError(null);
       
-      await signOut();
-      
-      // Clear state immediately, don't wait for the auth state change event
+      // Clear state first for immediate UI feedback
       setUser(null);
       setProfile(null);
+      
+      // Then actually perform the signout
+      await signOut();
+      
+      // Verify session is gone
+      const { data } = await supabase.auth.getSession();
+      console.log('Session check after signout:', data.session ? 'Session still exists' : 'No session');
+      
+      if (data.session) {
+        // Force another sign out if session still exists
+        console.log('Forcing additional sign out...');
+        await supabase.auth.signOut({ scope: 'global' });
+      }
       
       // Force redirect to home page
       navigate('/', { replace: true });

@@ -20,21 +20,15 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        setCheckingAuth(true);
         const { data } = await supabase.auth.getSession();
         console.log('Direct session check in RequireAuth:', { 
           hasSession: !!data.session,
           userId: data.session?.user?.id
         });
         
-        // If we have a direct session but isAuthenticated is false and not loading
-        if (data.session && !isAuthenticated && !isLoading) {
-          console.log('Session exists but not authenticated in context, force reload');
-          window.location.reload();
-          return;
-        }
-        
-        // If no session and not on auth page, redirect to signin
-        if (!data.session && !isLoading && !isAuthenticated) {
+        // If no session found, redirect to signin
+        if (!data.session) {
           console.log('No session found, redirecting to signin');
           navigate('/signin', { 
             state: { from: location.pathname },
@@ -42,10 +36,9 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           });
           return;
         }
-        
-        setCheckingAuth(false);
       } catch (err) {
         console.error('Session check error:', err);
+      } finally {
         setCheckingAuth(false);
       }
     };
@@ -53,16 +46,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     if (!isLoading) {
       checkSession();
     }
-    
-    // Safeguard against infinite loading
-    const timer = setTimeout(() => {
-      if (checkingAuth) {
-        console.log('Force clearing checking auth state after timeout');
-        setCheckingAuth(false);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
   }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // Show toast if there are authentication errors
@@ -89,7 +72,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     const timer = setTimeout(() => {
       if (isLoading || checkingAuth) {
         console.log('Forcing component to continue after timeout');
-        // Don't set state variables, just let the component render
+        setCheckingAuth(false);
       }
     }, 3000);
     
@@ -129,7 +112,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     );
   }
 
-  // Let the user proceed if authenticated, even if profile loading failed
+  // Let the user proceed if authenticated
   return isAuthenticated ? <>{children}</> : null;
 };
 
