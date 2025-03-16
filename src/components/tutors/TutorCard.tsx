@@ -23,8 +23,8 @@ const TutorCard: React.FC<TutorCardProps> = ({
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
           {/* Tutor Image and Basic Info */}
-          <div className="md:w-1/3 relative">
-            <div className="aspect-square md:h-full">
+          <div className="md:w-1/3 relative h-full max-h-48 md:max-h-none">
+            <div className="w-full h-40 md:h-full">
               <img 
                 src={tutor.avatar_url || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400'} 
                 alt={`${tutor.full_name}`} 
