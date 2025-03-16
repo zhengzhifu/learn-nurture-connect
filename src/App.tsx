@@ -15,6 +15,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import About from "./pages/About";
 import MyTutors from "./pages/MyTutors";
+import Reviews from "./pages/Reviews";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,11 @@ const App = () => (
             <Route path="/my-tutors" element={
               <RequireAuth>
                 <MyTutors />
+              </RequireAuth>
+            } />
+            <Route path="/reviews" element={
+              <RequireAuth>
+                <Reviews />
               </RequireAuth>
             } />
             <Route path="/browse" element={<ServiceBrowse />} />

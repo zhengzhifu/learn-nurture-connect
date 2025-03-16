@@ -1,6 +1,7 @@
 
 import { Profile } from '@/types/auth';
 import { ServiceType } from '@/types/service';
+import { Review } from '@/types/review';
 
 // Define the ServiceData interface
 export interface ServiceData {
@@ -37,5 +38,9 @@ export interface ServiceClient {
   filterServices(filters: ServiceFilters): Promise<ServiceData[]>;
   searchServices(query: string): Promise<ServiceData[]>;
   
-  // Add other service methods here as needed
+  // Review operations
+  getUserReviews(userId: string): Promise<Review[]>;
+  addReview(review: Omit<Review, 'id' | 'created_at'>): Promise<Review>;
+  deleteReview(reviewId: string): Promise<void>;
+  updateReview(reviewId: string, updatedData: Partial<Review>): Promise<Review>;
 }
