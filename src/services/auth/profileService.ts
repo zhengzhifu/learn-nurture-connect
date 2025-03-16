@@ -17,7 +17,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     const profile = await client.fetchUserProfile(userId);
     
     if (!profile) {
-      console.log('No profile found for user:', userId);
+      console.log('ProfileService: No profile found for user:', userId);
       // Try direct Supabase query as fallback
       const { data, error } = await supabase
         .from('profiles')
@@ -26,24 +26,25 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error in fallback profile fetch:', error);
+        console.error('ProfileService: Error in fallback profile fetch:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         return null;
       }
 
       if (!data) {
-        console.log('No profile found in fallback query');
+        console.log('ProfileService: No profile found in fallback query');
         return null;
       }
 
-      console.log('Profile data fetched from fallback:', data);
+      console.log('ProfileService: Profile data fetched from fallback:', data);
       return data as Profile;
     }
 
-    console.log('Profile data fetched successfully:', profile);
+    console.log('ProfileService: Profile data fetched successfully:', profile);
     return profile;
   } catch (error: any) {
-    console.error('Exception fetching profile:', error);
-    // Don't throw error, return null and use fallback profile
+    console.error('ProfileService: Exception fetching profile:', error);
     return null;
   }
 };
@@ -60,17 +61,63 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
     console.log('ProfileService: Using client type:', client === realServiceClient ? 'realServiceClient' : 'other');
     console.log('ProfileService: Is user authenticated?', (await supabase.auth.getUser()).data?.user ? 'Yes' : 'No');
     
-    // Direct Supabase update as a fallback if the service client fails
-    let updatedProfile: Profile | null = null;
-    
     try {
       // Try using the service client first
-      updatedProfile = await client.updateUserProfile(userId, data);
+      console.log('ProfileService: Calling client.updateUserProfile with:', userId, data);
+      const updatedProfile = await client.updateUserProfile(userId, data);
       console.log('ProfileService: Profile updated via service client:', updatedProfile);
+      
+      if (updatedProfile) {
+        toast.success('Profile updated successfully');
+        return updatedProfile;
+      } else {
+        throw new Error('Profile update returned null result');
+      }
     } catch (serviceError: any) {
-      console.error('ProfileService: Service client update failed, trying direct Supabase:', serviceError);
+      console.error('ProfileService: Service client update failed, details:', serviceError);
       
       // If service client fails, try direct Supabase update
+      console.log('ProfileService: Trying direct Supabase update as fallback');
+      
+      // First check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking if profile exists:', checkError);
+        throw new Error('Failed to verify profile existence');
+      }
+      
+      if (!existingProfile) {
+        console.log('Profile does not exist, creating a new one via direct API');
+        const userDetails = await supabase.auth.getUser();
+        const userData = userDetails.data.user;
+        
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId,
+            full_name: data.full_name || userData?.user_metadata?.full_name || 'User',
+            email: userData?.email || '',
+            user_type: data.user_type || userData?.user_metadata?.role || 'parent',
+            ...data
+          })
+          .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+          .maybeSingle();
+          
+        if (insertError) {
+          console.error('Error creating new profile directly:', insertError);
+          throw insertError;
+        }
+        
+        console.log('ProfileService: Created new profile directly:', newProfile);
+        toast.success('Profile created successfully');
+        return newProfile as Profile;
+      }
+      
       const { data: directUpdateData, error: directError } = await supabase
         .from('profiles')
         .update(data)
@@ -86,16 +133,10 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
         throw directError;
       }
       
-      updatedProfile = directUpdateData as Profile;
-      console.log('ProfileService: Profile updated via direct Supabase:', updatedProfile);
+      console.log('ProfileService: Profile updated via direct Supabase:', directUpdateData);
+      toast.success('Profile updated successfully');
+      return directUpdateData as Profile;
     }
-    
-    if (!updatedProfile) {
-      throw new Error('Failed to update profile - no data returned');
-    }
-    
-    toast.success('Profile updated successfully');
-    return updatedProfile;
   } catch (error: any) {
     console.error('Error updating profile:', error);
     toast.error(`Failed to update profile: ${error.message}`);

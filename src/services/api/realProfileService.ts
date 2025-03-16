@@ -16,6 +16,8 @@ export class RealProfileService {
 
       if (error) {
         console.error('Error fetching profile from Supabase:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         return null;
       }
 
@@ -46,6 +48,7 @@ export class RealProfileService {
       }
       
       // Check if the profile exists first
+      console.log('RealProfileService: Checking if profile exists for user ID:', userId);
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id')
@@ -54,11 +57,13 @@ export class RealProfileService {
         
       if (checkError) {
         console.error('Error checking if profile exists:', checkError);
+        console.error('Error code:', checkError.code);
+        console.error('Error message:', checkError.message);
         throw new Error('Failed to verify profile existence');
       }
       
       if (!existingProfile) {
-        console.log('Profile does not exist, creating a new one');
+        console.log('RealProfileService: Profile does not exist, creating a new one');
         // Create profile if it doesn't exist
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
