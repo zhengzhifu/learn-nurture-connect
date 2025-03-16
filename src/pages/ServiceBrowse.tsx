@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -115,8 +114,7 @@ const ServiceBrowse: React.FC = () => {
 
   // Handle service card click
   const handleServiceClick = (serviceId: string) => {
-    toast.info(`Service details would open here for ID: ${serviceId}`);
-    console.log('Viewing service details for:', serviceId);
+    console.log('Service clicked:', serviceId);
   };
 
   return (
