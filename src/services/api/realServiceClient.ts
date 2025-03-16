@@ -42,12 +42,12 @@ export class RealServiceClient implements ServiceClient {
         .select(`
           id,
           rating,
-          comment as content,
+          comment,
           created_at,
-          reviewee_id as tutor_id,
-          reviewer_id as user_id,
-          profiles:reviewee_id (full_name, avatar_url),
-          bookings:booking_id (tutor_services:service_id (service_type, tutoring_subjects))
+          reviewee_id,
+          reviewer_id,
+          profiles!reviewee_id(full_name, avatar_url),
+          bookings!booking_id(tutor_services!service_id(service_type, tutoring_subjects))
         `)
         .eq('reviewer_id', userId);
       
@@ -76,10 +76,10 @@ export class RealServiceClient implements ServiceClient {
         return {
           id: item.id,
           rating: item.rating,
-          content: item.content,
+          content: item.comment,
           created_at: item.created_at,
-          tutor_id: item.tutor_id,
-          user_id: item.user_id,
+          tutor_id: item.reviewee_id,
+          user_id: item.reviewer_id,
           tutor_name: tutorName,
           tutor_avatar: tutorAvatar,
           subject: subject

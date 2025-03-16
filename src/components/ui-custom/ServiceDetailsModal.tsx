@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ServiceData } from '@/services/api/serviceClient';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Clock, MapPin, Star } from 'lucide-react';
+import { CalendarIcon, Clock, MapPin, Star, LogIn } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface ServiceDetailsModalProps {
   service: ServiceData;
@@ -23,11 +25,20 @@ const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Format price as a string (e.g. "$25/hr")
   const priceFormatted = `$${service.price}/hr`;
 
   const handleBookSlot = () => {
+    if (!isAuthenticated) {
+      // Redirect to sign in page if not authenticated
+      navigate('/signin', { state: { from: location.pathname } });
+      return;
+    }
+    
     if (!selectedDate) {
       toast.error('Please select a date first');
       return;
@@ -41,10 +52,44 @@ const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
     };
 
     console.log('Booking details:', bookingDetails);
-    toast.success(`Booking requested for ${format(selectedDate, 'PPP')}`);
+    
+    // Show confirmation modal instead of closing right away
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmClose = () => {
+    setShowConfirmation(false);
     setSelectedDate(undefined);
     onClose();
   };
+
+  // If the confirmation dialog is showing
+  if (showConfirmation) {
+    return (
+      <Dialog open={true} onOpenChange={handleConfirmClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-center">Booking Request Sent</DialogTitle>
+            <DialogDescription className="text-center">
+              Your booking request for {service.title} on {selectedDate && format(selectedDate, 'PPP')} has been sent to the tutor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6 text-center space-y-6">
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="font-medium">What happens next?</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                The tutor will review your request and confirm the booking.
+                You'll receive a notification once they respond.
+              </p>
+            </div>
+            <Button onClick={handleConfirmClose} className="w-full">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -111,40 +156,52 @@ const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
           <div className="border-t pt-4 mt-2">
             <h3 className="font-medium mb-3">Book a Slot</h3>
             <div className="flex flex-col sm:flex-row gap-4 items-start">
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal w-full sm:w-[240px]",
-                      !selectedDate && "text-muted-foreground"
-                    )}
+              {isAuthenticated ? (
+                <>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "justify-start text-left font-normal w-full sm:w-[240px]",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, 'PPP') : <span>Select a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setIsCalendarOpen(false);
+                        }}
+                        initialFocus
+                        disabled={(date) => date < new Date()}
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button 
+                    className="w-full sm:flex-1" 
+                    onClick={handleBookSlot}
+                    disabled={!selectedDate}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, 'PPP') : <span>Select a date</span>}
+                    Book Now
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setSelectedDate(date);
-                      setIsCalendarOpen(false);
-                    }}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <Button 
-                className="w-full sm:flex-1" 
-                onClick={handleBookSlot}
-                disabled={!selectedDate}
-              >
-                Book Now
-              </Button>
+                </>
+              ) : (
+                <Button 
+                  className="w-full" 
+                  onClick={handleBookSlot}
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign in to Book
+                </Button>
+              )}
             </div>
           </div>
         </div>
