@@ -1,6 +1,6 @@
 
 import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
-import { Profile } from '@/types/auth';
+import { Profile, UserRole } from '@/types/auth';
 import { toast } from 'sonner';
 
 // Mock services data
@@ -85,12 +85,12 @@ class MockServiceClient implements ServiceClient {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Mock profile data
-    const result = {
+    // Mock profile data - Ensure user_type is of type UserRole
+    const result: Profile = {
       id: userId,
       full_name: 'Mock User',
       email: 'mock@example.com',
-      user_type: 'parent',
+      user_type: 'parent', // This is now correctly typed as UserRole
       phone: '123-456-7890',
       avatar_url: undefined,
       verified: true,
@@ -110,11 +110,12 @@ class MockServiceClient implements ServiceClient {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     // Create updated profile by merging input data
+    // Ensure user_type is of type UserRole
     const updatedProfile: Profile = {
       id: userId,
       full_name: data.full_name || 'Mock User',
       email: 'mock@example.com', // Email can't be changed
-      user_type: 'parent',
+      user_type: 'parent', // Ensuring this is a valid UserRole
       phone: data.phone || '123-456-7890',
       avatar_url: data.avatar_url,
       verified: true,
