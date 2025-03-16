@@ -46,18 +46,45 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
 };
 
 // Update user profile
-export const updateUserProfile = async (userId: string, data: Partial<Profile>) => {
+export const updateUserProfile = async (userId: string, data: Partial<Profile>): Promise<Profile | null> => {
   try {
     if (!userId) throw new Error('No user logged in');
     
     console.log('ProfileService: Updating profile for user:', userId, 'with data:', data);
     
-    // Use the service client to update the profile
+    // Verify we're using realServiceClient
     const client = ServiceClientFactory.getClient();
-    const updatedProfile = await client.updateUserProfile(userId, data);
+    console.log('ProfileService: Using client type:', client === realServiceClient ? 'realServiceClient' : 'other');
+    
+    // Direct Supabase update as a fallback if the service client fails
+    let updatedProfile: Profile | null = null;
+    
+    try {
+      // Try using the service client first
+      updatedProfile = await client.updateUserProfile(userId, data);
+      console.log('ProfileService: Profile updated via service client:', updatedProfile);
+    } catch (serviceError: any) {
+      console.error('ProfileService: Service client update failed, trying direct Supabase:', serviceError);
+      
+      // If service client fails, try direct Supabase update
+      const { data: directUpdateData, error: directError } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', userId)
+        .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+        .maybeSingle();
+      
+      if (directError) {
+        console.error('ProfileService: Direct Supabase update failed:', directError);
+        throw directError;
+      }
+      
+      updatedProfile = directUpdateData as Profile;
+      console.log('ProfileService: Profile updated via direct Supabase:', updatedProfile);
+    }
     
     if (!updatedProfile) {
-      throw new Error('Failed to update profile');
+      throw new Error('Failed to update profile - no data returned');
     }
     
     toast.success('Profile updated successfully');

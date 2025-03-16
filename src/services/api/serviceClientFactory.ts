@@ -34,7 +34,23 @@ export class RealServiceClient implements ServiceClient {
   async updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile | null> {
     try {
       console.log('RealServiceClient: updateUserProfile called with userId:', userId, 'and data:', data);
+      console.log('RealServiceClient: Current user from supabase auth:', await supabase.auth.getUser());
       
+      // First check if we can get the current user to verify authentication
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        console.error('Error getting current user:', userError);
+        throw new Error('Authentication error: No valid session found');
+      }
+      
+      // Check if the authenticated user matches the profile ID being updated
+      if (userData.user.id !== userId) {
+        console.error('User ID mismatch:', userData.user.id, 'vs', userId);
+        throw new Error('Unauthorized: Cannot update another user\'s profile');
+      }
+      
+      // Proceed with the update
+      console.log('RealServiceClient: Proceeding with update - sending to Supabase:', data);
       const { data: updatedData, error } = await supabase
         .from('profiles')
         .update(data)

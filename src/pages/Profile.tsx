@@ -63,6 +63,7 @@ const Profile: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    console.log(`Field "${name}" changed to:`, value);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -76,8 +77,11 @@ const Profile: React.FC = () => {
       // Filter out email as it can't be updated through profile
       const { email, ...updateData } = formData;
       
+      console.log('Calling updateProfile with:', updateData);
       await updateProfile(updateData);
+      console.log('Profile update successful');
       toast.success('Profile updated successfully');
+      
       // Don't navigate away immediately to show the success message
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (error: any) {
