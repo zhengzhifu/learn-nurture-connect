@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 
 const emailSchema = z.object({
-  email: z.string().email({ message: '请输入有效的电子邮箱地址' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
 });
 
 type EmailFormValue = z.infer<typeof emailSchema>;
@@ -48,10 +48,10 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
       await requestPasswordReset(values.email, `${window.location.origin}/reset-password`);
       
       setResetEmailSent(true);
-      toast.success('密码重置邮件已发送，请检查您的邮箱');
+      toast.success('Password reset email sent, please check your inbox');
     } catch (err: any) {
-      setError(err.message || '发送重置邮件失败');
-      toast.error(err.message || '发送重置邮件失败');
+      setError(err.message || 'Failed to send reset email');
+      toast.error(err.message || 'Failed to send reset email');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +71,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
           {resetEmailSent && (
             <Alert>
               <AlertDescription>
-                密码重置邮件已发送。请检查您的邮箱。
+                Password reset email has been sent. Please check your inbox.
               </AlertDescription>
             </Alert>
           )}
@@ -81,9 +81,9 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>邮箱</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="您的邮箱地址" {...field} />
+                  <Input placeholder="Your email address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,7 +91,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
           />
           
           <Button type="submit" fullWidth disabled={isLoading || resetEmailSent}>
-            {isLoading ? '发送中...' : '发送重置链接'}
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
           
           <div className="text-center text-sm">
@@ -101,7 +101,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
                 onClick={onBackToSignIn} 
                 className="text-primary font-medium hover:underline"
               >
-                返回登录
+                Back to Login
               </button>
             </p>
           </div>

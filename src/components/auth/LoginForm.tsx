@@ -19,8 +19,8 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  email: z.string().email({ message: '请输入有效的电子邮箱地址' }),
-  password: z.string().min(6, { message: '密码至少需要6个字符' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,17 +53,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
       // Navigation is handled by the AuthProvider when isAuthenticated becomes true
     } catch (err: any) {
       console.error('Sign in error:', err);
-      let errorMessage = '登录失败';
+      let errorMessage = 'Login failed';
       
       // Provide more user-friendly error messages
       if (err.message.includes('Invalid login credentials')) {
-        errorMessage = '邮箱或密码错误';
+        errorMessage = 'Invalid email or password';
       } else if (err.message.includes('Email not confirmed')) {
-        errorMessage = '请先验证您的邮箱';
+        errorMessage = 'Please verify your email first';
       } else if (err.message.includes('network')) {
-        errorMessage = '网络错误，请检查您的网络连接';
+        errorMessage = 'Network error, please check your connection';
       } else {
-        errorMessage = err.message || '登录失败';
+        errorMessage = err.message || 'Login failed';
       }
       
       setError(errorMessage);
@@ -88,9 +88,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>邮箱</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="您的邮箱地址" {...field} />
+                  <Input placeholder="Your email address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -103,17 +103,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
             render={({ field }) => (
               <FormItem>
                 <div className="flex justify-between items-center">
-                  <FormLabel>密码</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <button 
                     type="button" 
                     onClick={onForgotPassword} 
                     className="text-xs text-primary hover:underline"
                   >
-                    忘记密码?
+                    Forgot password?
                   </button>
                 </div>
                 <FormControl>
-                  <Input type="password" placeholder="您的密码" {...field} />
+                  <Input type="password" placeholder="Your password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,14 +121,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
           />
           
           <Button type="submit" fullWidth disabled={isLoading}>
-            {isLoading ? '登录中...' : '登录'}
+            {isLoading ? 'Signing in...' : 'Sign in'}
           </Button>
           
           <div className="text-center text-sm">
             <p className="text-muted-foreground">
-              还没有账号?{' '}
+              Don't have an account?{' '}
               <Link to="/signup" className="text-primary font-medium hover:underline">
-                注册
+                Sign up
               </Link>
             </p>
           </div>

@@ -17,11 +17,11 @@ export const requestPasswordReset = async (email: string, redirectUrl: string) =
     }
     
     console.log('Password reset email sent successfully');
-    toast.success('密码重置邮件已发送，请检查您的邮箱');
+    toast.success('Password reset email has been sent, please check your inbox');
     return true;
   } catch (error: any) {
     console.error('Error in password reset:', error);
-    toast.error(error.message || '发送密码重置邮件失败');
+    toast.error(error.message || 'Failed to send password reset email');
     throw error;
   }
 };
@@ -41,11 +41,11 @@ export const updatePasswordWithToken = async (newPassword: string) => {
     }
     
     console.log('Password updated successfully');
-    toast.success('密码已成功更新');
+    toast.success('Password has been successfully updated');
     return true;
   } catch (error: any) {
     console.error('Error updating password:', error);
-    toast.error(error.message || '更新密码失败');
+    toast.error(error.message || 'Failed to update password');
     throw error;
   }
 };
