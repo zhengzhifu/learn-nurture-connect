@@ -1,7 +1,80 @@
-
-import { ServiceClient } from './serviceClient';
+import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
 import { Profile } from '@/types/auth';
 import { toast } from 'sonner';
+
+// Mock services data
+const MOCK_SERVICES: ServiceData[] = [
+  {
+    id: '1',
+    title: 'Math Tutoring',
+    description: 'Expert math tutoring for all levels',
+    type: 'tutoring',
+    price: 25,
+    rating: 4.8,
+    location: 'New York, NY',
+    image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop',
+    availability: ['Weekdays', 'Evenings'],
+    subjects: ['Mathematics', 'Algebra', 'Calculus']
+  },
+  {
+    id: '2',
+    title: 'Science Tutoring',
+    description: 'Physics and Chemistry expert',
+    type: 'tutoring',
+    price: 30,
+    rating: 4.7,
+    location: 'Boston, MA',
+    image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop',
+    availability: ['Weekends', 'Afternoons'],
+    subjects: ['Physics', 'Chemistry']
+  },
+  {
+    id: '3',
+    title: 'Experienced Babysitter',
+    description: 'Caring and responsible babysitter',
+    type: 'babysitting',
+    price: 20,
+    rating: 4.9,
+    location: 'San Francisco, CA',
+    image: 'https://images.unsplash.com/photo-1544642899-f0d6e5f6ed6f?w=800&auto=format&fit=crop',
+    availability: ['Weekends', 'Evenings']
+  },
+  {
+    id: '4',
+    title: 'English Literature Tutor',
+    description: 'Specialized in essay writing and literature analysis',
+    type: 'tutoring',
+    price: 35,
+    rating: 4.6,
+    location: 'Chicago, IL',
+    image: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop',
+    availability: ['Weekdays', 'Mornings'],
+    subjects: ['English', 'Literature', 'Writing']
+  },
+  {
+    id: '5',
+    title: 'Certified Childcare Provider',
+    description: 'Professional with 5+ years experience',
+    type: 'babysitting',
+    price: 22,
+    rating: 4.9,
+    location: 'Seattle, WA',
+    image: 'https://images.unsplash.com/photo-1596656226630-05c1ab390ab1?w=800&auto=format&fit=crop',
+    availability: ['Weekdays', 'Weekends', 'Evenings']
+  },
+  {
+    id: '6',
+    title: 'Computer Science Tutor',
+    description: 'Programming and algorithms specialist',
+    type: 'tutoring',
+    price: 40,
+    rating: 4.8,
+    location: 'Austin, TX',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop',
+    availability: ['Weekends'],
+    subjects: ['Computer Science', 'Programming']
+  }
+];
 
 // Mock implementation for development and testing
 class MockServiceClient implements ServiceClient {
@@ -48,6 +121,83 @@ class MockServiceClient implements ServiceClient {
     
     toast.success('Profile updated successfully (Mock)');
     return updatedProfile;
+  }
+
+  async getServices(): Promise<ServiceData[]> {
+    console.log('MockServiceClient: Fetching all services');
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    return MOCK_SERVICES;
+  }
+  
+  async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
+    console.log('MockServiceClient: Filtering services with:', filters);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Apply filters
+    let results = [...MOCK_SERVICES];
+    
+    // Filter by service type
+    if (filters.types && filters.types.length > 0) {
+      results = results.filter(service => filters.types?.includes(service.type));
+    }
+    
+    // Filter by location
+    if (filters.location) {
+      results = results.filter(service => 
+        service.location.toLowerCase().includes(filters.location?.toLowerCase() || '')
+      );
+    }
+    
+    // Filter by price range
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange;
+      results = results.filter(service => service.price >= min && service.price <= max);
+    }
+    
+    // Filter by subjects
+    if (filters.subjects && filters.subjects.length > 0) {
+      results = results.filter(service => 
+        service.subjects?.some(subject => 
+          filters.subjects?.includes(subject)
+        )
+      );
+    }
+    
+    // Filter by availability
+    if (filters.availability && filters.availability.length > 0) {
+      results = results.filter(service => 
+        service.availability.some(slot => 
+          filters.availability?.includes(slot)
+        )
+      );
+    }
+    
+    return results;
+  }
+  
+  async searchServices(query: string): Promise<ServiceData[]> {
+    console.log('MockServiceClient: Searching for services with query:', query);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (!query.trim()) {
+      return MOCK_SERVICES;
+    }
+    
+    // Search in title, description and location
+    const lowerQuery = query.toLowerCase();
+    return MOCK_SERVICES.filter(service => 
+      service.title.toLowerCase().includes(lowerQuery) ||
+      (service.description && service.description.toLowerCase().includes(lowerQuery)) ||
+      service.location.toLowerCase().includes(lowerQuery) ||
+      service.subjects?.some(subject => subject.toLowerCase().includes(lowerQuery))
+    );
   }
 }
 
