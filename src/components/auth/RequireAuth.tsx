@@ -16,15 +16,25 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const location = useLocation();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Perform an immediate direct session check
+  // Perform a direct session check on mount and when auth state changes
   useEffect(() => {
     const checkSession = async () => {
       try {
         setCheckingAuth(true);
-        const { data } = await supabase.auth.getSession();
+        
+        // Get the current session directly from Supabase
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session check error:', sessionError);
+          setCheckingAuth(false);
+          return;
+        }
+        
         console.log('Direct session check in RequireAuth:', { 
           hasSession: !!data.session,
-          userId: data.session?.user?.id
+          userId: data.session?.user?.id,
+          authenticated: isAuthenticated
         });
         
         // If no session found, redirect to signin
@@ -34,7 +44,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
             state: { from: location.pathname },
             replace: true 
           });
-          return;
         }
       } catch (err) {
         console.error('Session check error:', err);
@@ -67,23 +76,23 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     }
   }, [isAuthenticated, isLoading, navigate, location.pathname, checkingAuth]);
 
-  // Safeguard against infinite loading - force render after timeout
+  // Only using a brief timeout as a last resort
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isLoading || checkingAuth) {
-        console.log('Forcing component to continue after timeout');
+      if (checkingAuth) {
+        console.log('Forcing auth check to complete after timeout');
         setCheckingAuth(false);
       }
-    }, 3000);
+    }, 2000);
     
     return () => clearTimeout(timer);
-  }, [isLoading, checkingAuth]);
+  }, [checkingAuth]);
 
   if (isLoading || checkingAuth) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <span className="text-lg mb-2">Loading...</span>
+        <span className="text-lg mb-2">Verifying authentication...</span>
       </div>
     );
   }

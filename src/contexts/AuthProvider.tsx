@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -63,13 +62,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [setUser, setProfile, isLoading, setIsLoading, navigate]);
 
-  // Safeguard against infinite loading
+  // Safeguard against infinite loading - only use a brief timeout
   useEffect(() => {
     if (isLoading) {
       const timer = setTimeout(() => {
         console.log('Force clearing loading state after timeout');
         setIsLoading(false);
-      }, 5000);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
@@ -135,27 +134,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       
-      // Then actually perform the signout
+      // Perform the sign out operation
       await signOut();
       
-      // Verify session is gone
-      const { data } = await supabase.auth.getSession();
-      console.log('Session check after signout:', data.session ? 'Session still exists' : 'No session');
-      
-      if (data.session) {
-        // Force another sign out if session still exists
-        console.log('Forcing additional sign out...');
-        await supabase.auth.signOut({ scope: 'global' });
-      }
-      
-      // Force redirect to home page
+      // Force redirect to home page immediately after sign out
+      console.log('Sign out complete, navigating to home page');
       navigate('/', { replace: true });
-      
-      console.log('Sign out and navigation complete');
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
       console.error('Sign out error:', error);
     } finally {
+      // Make sure loading state is cleared regardless of outcome
       setIsLoading(false);
     }
   };

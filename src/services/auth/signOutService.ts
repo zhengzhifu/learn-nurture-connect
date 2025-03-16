@@ -7,12 +7,14 @@ export const signOut = async () => {
   try {
     console.log('Attempting to sign out');
     
-    // Clear any stored session data
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.expires_at');
-    localStorage.removeItem('supabase.auth.refresh_token');
+    // Clear all auth-related items from localStorage
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('supabase.auth.')) {
+        localStorage.removeItem(key);
+      }
+    }
     
-    // Sign out from Supabase
+    // Sign out from Supabase with global scope to clear all sessions
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     
     if (error) {
@@ -20,7 +22,14 @@ export const signOut = async () => {
       throw error;
     }
     
-    console.log('Sign out successful from Supabase');
+    // Double check the session is cleared
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      console.error('Session still exists after sign out, forcing clear');
+      await supabase.auth.signOut({ scope: 'global' });
+    }
+    
+    console.log('Sign out successful and verified');
     toast.success('Successfully signed out');
     return true;
   } catch (error: any) {
