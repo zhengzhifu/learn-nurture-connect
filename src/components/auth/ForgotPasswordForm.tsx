@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { resetPasswordForEmail } from '@/services/auth';
+import { requestPasswordReset } from '@/services/auth';
 import { Input } from "@/components/ui/input";
 import { 
   Form, 
@@ -18,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 
 const emailSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  email: z.string().email({ message: '请输入有效的电子邮箱地址' }),
 });
 
 type EmailFormValue = z.infer<typeof emailSchema>;
@@ -44,13 +45,13 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
       setError(null);
       setIsLoading(true);
       
-      await resetPasswordForEmail(values.email, `${window.location.origin}/reset-password`);
+      await requestPasswordReset(values.email, `${window.location.origin}/reset-password`);
       
       setResetEmailSent(true);
-      toast.success('Password reset email sent. Please check your inbox.');
+      toast.success('密码重置邮件已发送，请检查您的邮箱');
     } catch (err: any) {
-      setError(err.message || 'Failed to send reset email');
-      toast.error(err.message || 'Failed to send reset email');
+      setError(err.message || '发送重置邮件失败');
+      toast.error(err.message || '发送重置邮件失败');
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +71,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
           {resetEmailSent && (
             <Alert>
               <AlertDescription>
-                Password reset email sent. Please check your inbox.
+                密码重置邮件已发送。请检查您的邮箱。
               </AlertDescription>
             </Alert>
           )}
@@ -80,9 +81,9 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>邮箱</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your email address" {...field} />
+                  <Input placeholder="您的邮箱地址" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -90,7 +91,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
           />
           
           <Button type="submit" fullWidth disabled={isLoading || resetEmailSent}>
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
+            {isLoading ? '发送中...' : '发送重置链接'}
           </Button>
           
           <div className="text-center text-sm">
@@ -100,7 +101,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
                 onClick={onBackToSignIn} 
                 className="text-primary font-medium hover:underline"
               >
-                Back to Sign In
+                返回登录
               </button>
             </p>
           </div>

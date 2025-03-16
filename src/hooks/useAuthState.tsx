@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { fetchProfile } from '@/services/auth';
 import { createFallbackProfile } from '@/utils/profileUtils';
+import { toast } from 'sonner';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -13,7 +14,11 @@ export const useAuthState = () => {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const initializeAuth = async () => {
+      if (!isMounted) return;
+      
       setIsLoading(true);
       setError(null);
       
@@ -24,11 +29,12 @@ export const useAuthState = () => {
         
         if (sessionError) {
           console.error('Error getting session:', sessionError);
-          setError(`Error getting session: ${sessionError.message}`);
+          setError(`获取会话错误: ${sessionError.message}`);
           setIsLoading(false);
           return;
         }
         
+        if (!isMounted) return;
         setSession(session);
         
         if (session?.user) {
@@ -36,26 +42,41 @@ export const useAuthState = () => {
           setUser(session.user);
           
           // Fetch profile data
-          const profileData = await fetchProfile(session.user.id);
-          
-          if (profileData) {
-            console.log('Profile data fetched:', profileData);
-            setProfile(profileData);
-          } else {
-            console.log('Using fallback profile from user metadata');
+          try {
+            const profileData = await fetchProfile(session.user.id);
+            
+            if (!isMounted) return;
+            
+            if (profileData) {
+              console.log('Profile data fetched:', profileData);
+              setProfile(profileData);
+            } else {
+              console.log('Using fallback profile from user metadata');
+              const fallbackProfile = createFallbackProfile(session.user);
+              setProfile(fallbackProfile);
+            }
+          } catch (profileError: any) {
+            console.error('Error fetching profile:', profileError);
+            // Still keep the user logged in but with fallback profile
             const fallbackProfile = createFallbackProfile(session.user);
-            setProfile(fallbackProfile);
+            if (isMounted) setProfile(fallbackProfile);
           }
         } else {
           console.log('No user found in session');
-          setUser(null);
-          setProfile(null);
+          if (isMounted) {
+            setUser(null);
+            setProfile(null);
+          }
         }
       } catch (error: any) {
         console.error('Exception during auth initialization:', error);
-        setError(`Exception during auth initialization: ${error.message}`);
+        if (isMounted) {
+          setError(`初始化认证过程中出错: ${error.message}`);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -65,23 +86,42 @@ export const useAuthState = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, 'User ID:', session?.user?.id);
-        setSession(session);
-        setUser(session?.user || null);
         
-        if (session?.user) {
-          // Fetch profile data
-          const profileData = await fetchProfile(session.user.id);
-          
-          if (profileData) {
-            console.log('Profile data fetched on auth change:', profileData);
-            setProfile(profileData);
-          } else {
-            console.log('Using fallback profile on auth change');
-            const fallbackProfile = createFallbackProfile(session.user);
-            setProfile(fallbackProfile);
-          }
-        } else {
+        if (!isMounted) return;
+        
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
           setProfile(null);
+          setSession(null);
+          console.log('User signed out, state cleared');
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          
+          if (session?.user) {
+            setUser(session.user);
+            
+            try {
+              const profileData = await fetchProfile(session.user.id);
+              
+              if (!isMounted) return;
+              
+              if (profileData) {
+                console.log('Profile data fetched on auth change:', profileData);
+                setProfile(profileData);
+              } else {
+                console.log('Using fallback profile on auth change');
+                const fallbackProfile = createFallbackProfile(session.user);
+                setProfile(fallbackProfile);
+              }
+            } catch (error) {
+              console.error('Error fetching profile on auth change:', error);
+              // Still keep user signed in with fallback profile
+              if (isMounted) {
+                const fallbackProfile = createFallbackProfile(session.user);
+                setProfile(fallbackProfile);
+              }
+            }
+          }
         }
         
         setIsLoading(false);
@@ -89,6 +129,7 @@ export const useAuthState = () => {
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

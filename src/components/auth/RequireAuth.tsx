@@ -14,127 +14,71 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const { isAuthenticated, isLoading, error, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [manualAuthCheck, setManualAuthCheck] = useState(false);
-  const [directSessionCheck, setDirectSessionCheck] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Add additional debugging for authentication issues
+  // Perform an immediate direct session check
   useEffect(() => {
-    console.log('Auth status:', { isAuthenticated, isLoading, error, userId: user?.id });
-    
-    // Perform a direct session check immediately
     const checkSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        const sessionStatus = data.session ? `Active (${data.session.user.id})` : 'No session';
-        setDirectSessionCheck(sessionStatus);
-        
-        console.log('Direct session check:', { 
-          session: data.session ? 'exists' : 'null', 
-          user: data.session?.user?.id, 
-          error 
+        const { data } = await supabase.auth.getSession();
+        console.log('Direct session check in RequireAuth:', { 
+          hasSession: !!data.session,
+          userId: data.session?.user?.id
         });
         
-        // If we have a direct session but isAuthenticated is false, force reload
+        // If we have a direct session but isAuthenticated is false and not loading
         if (data.session && !isAuthenticated && !isLoading) {
-          console.log('Session exists but not authenticated in context, forcing reload');
+          console.log('Session exists but not authenticated in context, force reload');
           window.location.reload();
+          return;
         }
+        
+        // If no session and not on auth page, redirect to signin
+        if (!data.session && !isLoading && !isAuthenticated) {
+          console.log('No session found, redirecting to signin');
+          navigate('/signin', { 
+            state: { from: location.pathname },
+            replace: true 
+          });
+          return;
+        }
+        
+        setCheckingAuth(false);
       } catch (err) {
         console.error('Session check error:', err);
+        setCheckingAuth(false);
       }
     };
     
-    checkSession();
-  }, [isAuthenticated, isLoading, error, user]);
+    if (!isLoading) {
+      checkSession();
+    }
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
+  // Show toast if there are authentication errors
   useEffect(() => {
-    // Show toast if there are authentication errors
     if (error) {
       toast.error(error);
       console.error('Auth error:', error);
     }
   }, [error]);
 
-  // If loading persists too long, perform a manual check
+  // If not loading but not authenticated, redirect to signin
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    if (isLoading) {
-      timer = setTimeout(() => {
-        setManualAuthCheck(true);
-        // Perform a direct session check
-        supabase.auth.getSession().then(({ data, error }) => {
-          console.log('Manual session check:', { 
-            session: data.session ? 'exists' : 'null', 
-            user: data.session?.user?.id, 
-            error 
-          });
-          
-          if (error) {
-            toast.error(`Authentication error: ${error.message}`);
-          } else if (data.session) {
-            // If session exists but we're still loading, force a page reload
-            window.location.reload();
-          } else {
-            // No session, redirect to signin
-            navigate('/signin', { 
-              state: { from: location.pathname },
-              replace: true 
-            });
-          }
-        });
-      }, 5000); // Check after 5 seconds of loading
-    }
-    
-    return () => clearTimeout(timer);
-  }, [isLoading, navigate, location.pathname]);
-
-  // If we're not loading and not authenticated, redirect to signin
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && !user) {
+    if (!isLoading && !isAuthenticated && !checkingAuth) {
       console.log('Not authenticated, redirecting to signin');
-      // Redirect to sign in page with the return URL
       navigate('/signin', { 
         state: { from: location.pathname },
         replace: true 
       });
     }
-  }, [isAuthenticated, isLoading, navigate, location, user]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname, checkingAuth]);
 
-  // If still loading after 3 seconds, show a more informative message
-  const [extendedLoading, setExtendedLoading] = useState(false);
-  
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isLoading) {
-      timer = setTimeout(() => setExtendedLoading(true), 3000);
-    } else {
-      setExtendedLoading(false);
-    }
-    return () => clearTimeout(timer);
-  }, [isLoading]);
-
-  if (isLoading) {
+  if (isLoading || checkingAuth) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <span className="text-lg mb-2">Loading authentication data...</span>
-        
-        {(extendedLoading || manualAuthCheck) && (
-          <div className="mt-4 max-w-md text-center">
-            <p className="text-muted-foreground mb-4">
-              {manualAuthCheck 
-                ? `Authentication is taking longer than expected. Direct session check: ${directSessionCheck || 'Checking...'}`
-                : "This is taking longer than expected. There might be an issue with the authentication service."}
-            </p>
-            <button 
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </button>
-          </div>
-        )}
+        <span className="text-lg mb-2">加载中...</span>
       </div>
     );
   }
@@ -143,20 +87,20 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center text-destructive">
         <AlertCircle className="h-12 w-12 mb-4" />
-        <h2 className="text-xl font-bold mb-2">Authentication Error</h2>
+        <h2 className="text-xl font-bold mb-2">认证错误</h2>
         <p className="text-center max-w-md mb-4">{error}</p>
         <div className="flex space-x-4">
           <button 
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md"
             onClick={() => navigate('/signin')}
           >
-            Return to Sign In
+            返回登录
           </button>
           <button 
             className="px-4 py-2 border border-destructive text-destructive rounded-md"
             onClick={() => window.location.reload()}
           >
-            Retry
+            重试
           </button>
         </div>
       </div>

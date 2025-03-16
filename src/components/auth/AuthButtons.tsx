@@ -20,12 +20,22 @@ const AuthButtons: React.FC = () => {
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
+    if (!name) return 'U';
     return name
       .split(' ')
       .map(part => part[0])
       .join('')
       .toUpperCase()
       .substring(0, 2);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Navigation is handled in AuthProvider
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (isAuthenticated && profile) {
@@ -42,18 +52,18 @@ const AuthButtons: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>我的账户</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-              Dashboard
+              控制面板
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/profile')}>
-              Profile Settings
+              个人设置
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut} className="text-destructive">
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              退出登录
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -62,11 +72,11 @@ const AuthButtons: React.FC = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={signOut}
+          onClick={handleSignOut}
           className="border-destructive text-destructive hover:bg-destructive/10"
           icon={<LogOut className="h-4 w-4" />}
         >
-          <span className="hidden sm:inline">Sign out</span>
+          <span className="hidden sm:inline">退出</span>
         </Button>
       </div>
     );
@@ -80,7 +90,7 @@ const AuthButtons: React.FC = () => {
         onClick={() => navigate('/signin')}
         fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
-        Sign In
+        登录
       </Button>
       <Button 
         variant="primary" 
@@ -89,7 +99,7 @@ const AuthButtons: React.FC = () => {
         icon={<LogIn className="h-4 w-4" />}
         fullWidth={typeof window !== 'undefined' && window.innerWidth < 768}
       >
-        Sign Up
+        注册
       </Button>
     </div>
   );
