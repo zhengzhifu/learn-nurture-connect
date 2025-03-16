@@ -64,7 +64,8 @@ export class RealServiceClient implements ServiceClient {
         
         // Determine the subject
         let subject: string;
-        if (item.bookings?.tutor_services?.service_type === 'tutoring' && 
+        if (item.bookings?.tutor_services?.service_type && 
+            item.bookings?.tutor_services?.service_type.includes('tutoring') && 
             item.bookings?.tutor_services?.tutoring_subjects?.length > 0) {
           subject = item.bookings.tutor_services.tutoring_subjects[0];
         } else if (item.bookings?.tutor_services?.service_type) {
