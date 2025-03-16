@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Make sure we're not stuck in loading state
         if (isLoading) {
           setTimeout(() => {
+            console.log('Force clearing loading state after timeout');
             setIsLoading(false);
           }, 3000); // Set a timeout to ensure loading state gets cleared
         }
