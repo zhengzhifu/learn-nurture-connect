@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +30,7 @@ export const useAuthState = () => {
         
         if (sessionError) {
           console.error('Error getting session:', sessionError);
-          setError(`获取会话错误: ${sessionError.message}`);
+          setError(`Error getting session: ${sessionError.message}`);
           setIsLoading(false);
           return;
         }
@@ -71,7 +72,7 @@ export const useAuthState = () => {
       } catch (error: any) {
         console.error('Exception during auth initialization:', error);
         if (isMounted) {
-          setError(`初始化认证过程中出错: ${error.message}`);
+          setError(`Error during authentication initialization: ${error.message}`);
         }
       } finally {
         if (isMounted) {

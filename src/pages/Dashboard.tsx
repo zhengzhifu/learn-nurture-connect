@@ -20,19 +20,22 @@ const Dashboard = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        console.log('Dashboard: checking auth status...');
         const { data, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('Session check error:', error);
+          console.error('Dashboard: session check error:', error);
           setAuthStatus(`Error: ${error.message}`);
         } else {
-          setAuthStatus(data.session ? 'Authenticated' : 'Not authenticated');
-          console.log('Direct session check:', {
+          const status = data.session ? 'Authenticated' : 'Not authenticated';
+          setAuthStatus(status);
+          console.log('Dashboard: direct session check:', {
+            status,
             session: data.session ? 'exists' : 'null',
             user: data.session?.user?.id
           });
         }
       } catch (e) {
-        console.error('Session check exception:', e);
+        console.error('Dashboard: session check exception:', e);
         setAuthStatus('Check failed');
       }
     };
@@ -40,14 +43,27 @@ const Dashboard = () => {
     checkAuthStatus();
   }, []);
   
+  // Log when auth data changes
+  useEffect(() => {
+    console.log('Dashboard: auth state updated', {
+      isLoading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      hasError: !!error
+    });
+  }, [isLoading, user, profile, error]);
+  
   useEffect(() => {
     if (isLoading) {
+      console.log('Dashboard: loading state is active, setting timeout...');
       const timer = setTimeout(() => {
+        console.log('Dashboard: loading timeout expired');
         setTimeoutExpired(true);
-      }, 10000);
+      }, 5000); // Reducing timeout from 10s to 5s for faster feedback
       
       return () => clearTimeout(timer);
     } else {
+      console.log('Dashboard: loading state cleared');
       setTimeoutExpired(false);
     }
   }, [isLoading]);

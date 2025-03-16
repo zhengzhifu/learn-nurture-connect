@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate('/dashboard');
       }
     } catch (error: any) {
-      setError(`登录错误: ${error.message}`);
+      setError(`Login error: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signUp(email, password, role, fullName);
       navigate('/signin');
     } catch (error: any) {
-      setError(`注册错误: ${error.message}`);
+      setError(`Registration error: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       navigate('/');
     } catch (error: any) {
-      setError(`退出登录错误: ${error.message}`);
+      setError(`Sign out error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleUpdateProfile = async (data: Partial<Profile>) => {
     try {
-      if (!user) throw new Error('未登录');
+      if (!user) throw new Error('Not logged in');
       
       setIsLoading(true);
       setError(null);
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return newProfile;
       });
     } catch (error: any) {
-      setError(`更新个人资料错误: ${error.message}`);
+      setError(`Profile update error: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
