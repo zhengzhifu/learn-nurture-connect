@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Button from './Button';
-import { Star, MapPin, Clock } from 'lucide-react';
+import { Star, MapPin, Clock, User } from 'lucide-react';
 import { ServiceData } from '@/services/api/serviceClient';
 import ServiceDetailsModal from './ServiceDetailsModal';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ServiceCardProps {
   service: ServiceData;
@@ -68,7 +69,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               </div>
             </div>
             
-            <div className="flex items-center text-muted-foreground text-sm mb-3">
+            {/* Provider information */}
+            {service.provider_name && (
+              <div className="flex items-center text-sm mb-2">
+                <Avatar className="h-6 w-6 mr-2">
+                  <AvatarImage src={service.provider_avatar || ''} alt={service.provider_name} />
+                  <AvatarFallback>
+                    {service.provider_name.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{service.provider_name}</span>
+              </div>
+            )}
+            
+            <div className="flex items-center text-muted-foreground text-sm mb-2">
               <MapPin className="w-4 h-4 mr-1" />
               <span>{service.location}</span>
             </div>

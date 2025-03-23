@@ -11,7 +11,7 @@ export class RealServiceListingService {
       // Using tutor_services table as the source for our service data
       const { data, error } = await supabase
         .from('tutor_services')
-        .select('*, profiles(full_name)');
+        .select('*, profiles(full_name, avatar_url)');
         
       if (error) {
         console.error('Error fetching services from Supabase:', error);
@@ -30,7 +30,9 @@ export class RealServiceListingService {
         image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
         availability: item.availability ? this.parseAvailability(item.availability) : [],
         provider_id: item.tutor_id,
-        subjects: item.tutoring_subjects || []
+        subjects: item.tutoring_subjects || [],
+        provider_name: item.profiles?.full_name || 'Unknown Provider',
+        provider_avatar: item.profiles?.avatar_url || undefined
       }));
       
       console.log(`RealServiceListingService: getServices returning ${services.length} services`);
@@ -45,54 +47,73 @@ export class RealServiceListingService {
     try {
       console.log('RealServiceListingService: filterServices called with filters:', JSON.stringify(filters, null, 2));
       
-      // Get all services first, then apply filters in memory
-      // This is a workaround until we have a proper filtering mechanism
-      const allServices = await this.getServices();
-      
-      let filteredServices = [...allServices];
+      let query = supabase
+        .from('tutor_services')
+        .select('*, profiles(full_name, avatar_url)');
       
       // Filter by service type
       if (filters.types && filters.types.length > 0) {
-        filteredServices = filteredServices.filter(service => 
-          filters.types?.includes(service.type)
-        );
+        // Convert types array to SQL-friendly format
+        const typeConditions = filters.types.map(type => `service_type.ilike.%${type}%`).join(',');
+        query = query.or(typeConditions);
       }
       
       // Filter by location
       if (filters.location) {
-        filteredServices = filteredServices.filter(service => 
-          service.location.toLowerCase().includes(filters.location?.toLowerCase() || '')
-        );
+        query = query.ilike('location_address', `%${filters.location}%`);
       }
       
       // Filter by price range
       if (filters.priceRange) {
         const [min, max] = filters.priceRange;
-        filteredServices = filteredServices.filter(service => 
-          service.price >= min && service.price <= max
-        );
+        query = query.gte('hourly_rate', min).lte('hourly_rate', max);
       }
       
-      // Filter by subjects
+      // Execute the query
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error filtering services:', error);
+        return [];
+      }
+      
+      // Transform and further filter the results
+      let services = data.map(item => ({
+        id: item.id,
+        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
+        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+        type: this.mapServiceType(item.service_type),
+        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
+        rating: 4.5, // Default rating
+        location: item.location_address || 'Various locations',
+        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+        availability: item.availability ? this.parseAvailability(item.availability) : [],
+        provider_id: item.tutor_id,
+        subjects: item.tutoring_subjects || [],
+        provider_name: item.profiles?.full_name || 'Unknown Provider',
+        provider_avatar: item.profiles?.avatar_url || undefined
+      }));
+      
+      // Client-side filtering for subjects and availability
+      // These are arrays, so they're harder to filter in the database query
       if (filters.subjects && filters.subjects.length > 0) {
-        filteredServices = filteredServices.filter(service => 
+        services = services.filter(service => 
           service.subjects?.some(subject => 
             filters.subjects?.includes(subject)
           )
         );
       }
       
-      // Filter by availability
       if (filters.availability && filters.availability.length > 0) {
-        filteredServices = filteredServices.filter(service => 
+        services = services.filter(service => 
           service.availability.some(slot => 
             filters.availability?.includes(slot)
           )
         );
       }
       
-      console.log(`RealServiceListingService: filterServices returning filtered results`);
-      return filteredServices;
+      console.log(`RealServiceListingService: filterServices returning ${services.length} filtered results`);
+      return services;
     } catch (error) {
       console.error('Error filtering services:', error);
       return [];
@@ -108,17 +129,36 @@ export class RealServiceListingService {
         return this.getServices();
       }
       
-      // Get all services and filter in memory
-      const allServices = await this.getServices();
+      // Search across multiple fields including the provider's name
+      const { data, error } = await supabase
+        .from('tutor_services')
+        .select('*, profiles(full_name, avatar_url)')
+        .or(`service_type.ilike.%${query}%,location_address.ilike.%${query}%`)
+        .contains('tutoring_subjects', [query]);
       
-      // Search in title, description and location
-      const lowerQuery = query.toLowerCase();
-      return allServices.filter(service => 
-        service.title.toLowerCase().includes(lowerQuery) ||
-        (service.description && service.description.toLowerCase().includes(lowerQuery)) ||
-        service.location.toLowerCase().includes(lowerQuery) ||
-        service.subjects?.some(subject => subject.toLowerCase().includes(lowerQuery))
-      );
+      if (error) {
+        console.error('Error searching services:', error);
+        return [];
+      }
+      
+      const services: ServiceData[] = data.map(item => ({
+        id: item.id,
+        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
+        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+        type: this.mapServiceType(item.service_type),
+        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
+        rating: 4.5, // Default rating
+        location: item.location_address || 'Various locations',
+        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+        availability: item.availability ? this.parseAvailability(item.availability) : [],
+        provider_id: item.tutor_id,
+        subjects: item.tutoring_subjects || [],
+        provider_name: item.profiles?.full_name || 'Unknown Provider',
+        provider_avatar: item.profiles?.avatar_url || undefined
+      }));
+      
+      console.log(`RealServiceListingService: searchServices returning ${services.length} results`);
+      return services;
     } catch (error) {
       console.error('Error searching services:', error);
       return [];

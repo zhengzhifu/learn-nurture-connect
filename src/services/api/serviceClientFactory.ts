@@ -5,8 +5,8 @@ import { realServiceClient } from './realServiceClient';
 
 // This factory will help us switch between mock and real implementations
 export class ServiceClientFactory {
-  // Use the mock client by default for development
-  private static instance: ServiceClient = mockServiceClient;
+  // Use the real client by default for production
+  private static instance: ServiceClient = realServiceClient;
   
   // Get the current client instance
   static getClient(): ServiceClient {

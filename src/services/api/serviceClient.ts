@@ -16,6 +16,8 @@ export interface ServiceData {
   availability: string[];
   provider_id?: string;
   subjects?: string[];
+  provider_name?: string;
+  provider_avatar?: string;
 }
 
 // Define the ServiceFilters interface
