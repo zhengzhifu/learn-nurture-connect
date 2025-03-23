@@ -49,6 +49,9 @@ const Navbar: React.FC = () => {
             <Link to="/dashboard">Dashboard</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link to="/reviews">Reviews</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link to="/profile">Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

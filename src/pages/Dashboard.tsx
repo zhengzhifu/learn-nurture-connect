@@ -6,7 +6,6 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardStats from '@/components/dashboard/DashboardStats';
-import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import DashboardError from '@/components/dashboard/DashboardError';
 import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
 import { supabase } from '@/integrations/supabase/client';
@@ -121,12 +120,18 @@ const Dashboard = () => {
                   <span className="inline-block h-4 w-24 bg-gray-200 animate-pulse rounded"></span>
                 ) : (
                   userData?.full_name?.split(' ')[0] || "User"
-                )}. Here's what's happening with your tutoring services.
+                )}. Here's an overview of your TutorFind account.
               </p>
             </div>
             
             <DashboardStats />
-            <DashboardTabs />
+            
+            <div className="bg-muted/40 rounded-lg p-6 text-center">
+              <h3 className="text-xl font-medium mb-2">MVP Version Notice</h3>
+              <p className="text-muted-foreground">
+                This is the MVP version of TutorFind. Session management features will be available in future updates.
+              </p>
+            </div>
           </div>
         </div>
       </div>

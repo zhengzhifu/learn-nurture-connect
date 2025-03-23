@@ -4,10 +4,8 @@ import { Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Settings, 
-  Calendar, 
-  MessageSquare, 
-  CreditCard,
   Users,
+  Star,
   LogOut
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,17 +27,9 @@ const SidebarNavigation: React.FC = () => {
         <Users className="h-5 w-5 mr-3 text-muted-foreground" />
         <span>Browse Services</span>
       </Link>
-      <Link to="/schedule" className="flex items-center p-2 rounded-md hover:bg-muted">
-        <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
-        <span>Schedule</span>
-      </Link>
-      <Link to="/messages" className="flex items-center p-2 rounded-md hover:bg-muted">
-        <MessageSquare className="h-5 w-5 mr-3 text-muted-foreground" />
-        <span>Messages</span>
-      </Link>
-      <Link to="/billing" className="flex items-center p-2 rounded-md hover:bg-muted">
-        <CreditCard className="h-5 w-5 mr-3 text-muted-foreground" />
-        <span>Billing</span>
+      <Link to="/reviews" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <Star className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Reviews</span>
       </Link>
       <Link to="/profile" className="flex items-center p-2 rounded-md hover:bg-muted">
         <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
