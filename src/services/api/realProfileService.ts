@@ -1,14 +1,14 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { toast } from 'sonner';
+import { BaseService } from './base/BaseService';
 
-export class RealProfileService {
+export class RealProfileService extends BaseService {
   async fetchUserProfile(userId: string): Promise<Profile | null> {
     try {
       console.log('RealProfileService: fetchUserProfile called with userId:', userId);
       
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('profiles')
         .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .eq('id', userId)
@@ -34,7 +34,7 @@ export class RealProfileService {
       console.log('RealProfileService: updateUserProfile called with userId:', userId, 'and data:', data);
       
       // First check if we can get the current user data
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await this.supabase.auth.getUser();
       if (userError || !userData.user) {
         console.error('Error getting current user:', userError);
         throw new Error('Authentication error: No valid session found');
@@ -44,7 +44,7 @@ export class RealProfileService {
       
       // Check if the profile exists first
       console.log('RealProfileService: Checking if profile exists for user ID:', userId);
-      const { data: existingProfile, error: checkError } = await supabase
+      const { data: existingProfile, error: checkError } = await this.supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
@@ -78,7 +78,7 @@ export class RealProfileService {
         console.log('RealProfileService: Creating profile with data:', profileData);
         
         // Create profile
-        const { data: newProfile, error: insertError } = await supabase
+        const { data: newProfile, error: insertError } = await this.supabase
           .from('profiles')
           .insert(profileData)
           .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
@@ -99,7 +99,7 @@ export class RealProfileService {
       
       // Proceed with the update
       console.log('RealProfileService: Proceeding with update - sending to Supabase:', data);
-      const { data: updatedData, error } = await supabase
+      const { data: updatedData, error } = await this.supabase
         .from('profiles')
         .update(data)
         .eq('id', userId)
@@ -131,7 +131,7 @@ export class RealProfileService {
             child_school_id: data.child_school_id
           };
           
-          const { data: insertedData, error: insertError } = await supabase
+          const { data: insertedData, error: insertError } = await this.supabase
             .from('profiles')
             .insert(profileData)
             .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')

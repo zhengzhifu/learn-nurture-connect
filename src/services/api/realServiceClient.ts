@@ -5,9 +5,10 @@ import { realProfileService } from './realProfileService';
 import { realServiceListingService } from './realServiceListingService';
 import { Review } from '@/types/review';
 import { realReviewService } from './implementations/RealReviewService';
+import { BaseService } from './base/BaseService';
 
 // Real implementation using Supabase
-export class RealServiceClient implements ServiceClient {
+export class RealServiceClient extends BaseService implements ServiceClient {
   // Profile operations
   async fetchUserProfile(userId: string): Promise<Profile | null> {
     return realProfileService.fetchUserProfile(userId);

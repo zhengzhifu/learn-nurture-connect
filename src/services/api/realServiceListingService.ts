@@ -2,16 +2,20 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from './serviceClient';
 import { ServiceType } from '@/types/service';
+import { BaseService } from './base/BaseService';
 
-export class RealServiceListingService {
+export class RealServiceListingService extends BaseService {
   async getServices(): Promise<ServiceData[]> {
     try {
       console.log('RealServiceListingService: getServices called');
       
       // Using tutor_services table as the source for our service data
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('tutor_services')
-        .select('*, profiles(full_name, avatar_url)');
+        .select(`
+          *,
+          profiles(full_name, avatar_url)
+        `);
         
       if (error) {
         console.error('Error fetching services from Supabase:', error);
@@ -47,9 +51,12 @@ export class RealServiceListingService {
     try {
       console.log('RealServiceListingService: filterServices called with filters:', JSON.stringify(filters, null, 2));
       
-      let query = supabase
+      let query = this.supabase
         .from('tutor_services')
-        .select('*, profiles(full_name, avatar_url)');
+        .select(`
+          *,
+          profiles(full_name, avatar_url)
+        `);
       
       // Filter by service type
       if (filters.types && filters.types.length > 0) {
@@ -130,9 +137,12 @@ export class RealServiceListingService {
       }
       
       // Search across multiple fields including the provider's name
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('tutor_services')
-        .select('*, profiles(full_name, avatar_url)')
+        .select(`
+          *,
+          profiles(full_name, avatar_url)
+        `)
         .or(`service_type.ilike.%${query}%,location_address.ilike.%${query}%`)
         .contains('tutoring_subjects', [query]);
       
