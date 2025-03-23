@@ -94,7 +94,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
     switch (profile.approval_status as ApprovalStatus) {
       case 'pending':
         return (
-          <Alert variant="warning" className="mb-6">
+          <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Profile Pending Approval</AlertTitle>
             <AlertDescription>
@@ -189,7 +189,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
             
             <Separator />
             
-            <SpecialtyManager userId={user.id} userType={profile.user_type as UserRole} />
+            <SpecialtyManager userId={user.id} userType={profile.user_type} />
           </CardContent>
         </Card>
       )}

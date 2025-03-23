@@ -223,7 +223,7 @@ const Admin: React.FC = () => {
                             </Button>
                             <Button 
                               onClick={() => handleProfileApproval(profile.id, false)} 
-                              variant="destructive"
+                              variant="secondary"
                               className="flex-1 md:w-full"
                               size="sm"
                             >
@@ -280,7 +280,7 @@ const Admin: React.FC = () => {
                             </Button>
                             <Button 
                               onClick={() => handleSchoolApproval(school.id, false)} 
-                              variant="destructive"
+                              variant="secondary"
                               size="sm"
                               className="flex-1 md:w-full"
                             >
