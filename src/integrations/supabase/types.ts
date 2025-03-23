@@ -226,9 +226,7 @@ export type Database = {
           id: string
           other_school_name: string | null
           phone: string | null
-          school_address: string | null
           school_id: string | null
-          school_name: string | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"]
           verified: boolean | null
@@ -244,9 +242,7 @@ export type Database = {
           id: string
           other_school_name?: string | null
           phone?: string | null
-          school_address?: string | null
           school_id?: string | null
-          school_name?: string | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           verified?: boolean | null
@@ -262,9 +258,7 @@ export type Database = {
           id?: string
           other_school_name?: string | null
           phone?: string | null
-          school_address?: string | null
           school_id?: string | null
-          school_name?: string | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           verified?: boolean | null
