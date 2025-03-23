@@ -2,7 +2,7 @@
 import React from 'react';
 import Button from './Button';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 
 const Hero: React.FC = () => {
   return (
@@ -22,16 +22,39 @@ const Hero: React.FC = () => {
                 Tutoring & Babysitting Platform
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                <span className="block">Find the perfect</span>
+                <span className="block">Connect with trusted</span>
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-                  tutor or babysitter
+                  tutors and babysitters
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 mb-8">
-                Connect with qualified student tutors and babysitters for personalized learning and care. 
-                Verified profiles, secure scheduling, and seamless booking.
+                Join our community of verified tutors, babysitters, and parents. Create your profile, get approved, and connect with the perfect match for your needs.
               </p>
+              
+              {/* Key Features List */}
+              <div className="text-left mx-auto lg:mx-0 max-w-2xl mb-8">
+                <ul className="space-y-2">
+                  {[
+                    'Create detailed profiles as a tutor, babysitter, or parent',
+                    'Select from verified schools or suggest new ones',
+                    'Set your availability and specialties',
+                    'Get verified through our approval process'
+                  ].map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link to="/register">
+                  <Button size="lg">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
                 <Link to="/browse">
                   <Button variant="outline" size="lg">
                     Browse Services
@@ -56,14 +79,14 @@ const Hero: React.FC = () => {
               <div className="absolute -bottom-6 -left-6 glass-card p-4 rounded-lg shadow-lg animate-float">
                 <div className="flex items-center space-x-3">
                   <div className="bg-green-500 rounded-full w-2 h-2"></div>
-                  <p className="text-sm font-medium">500+ Verified Tutors</p>
+                  <p className="text-sm font-medium">Verified Profiles</p>
                 </div>
               </div>
               
               <div className="absolute -top-6 -right-6 glass-card p-4 rounded-lg shadow-lg animate-float animation-delay-500">
                 <div className="flex items-center space-x-3">
                   <div className="bg-blue-500 rounded-full w-2 h-2"></div>
-                  <p className="text-sm font-medium">Secure Booking System</p>
+                  <p className="text-sm font-medium">School Verification</p>
                 </div>
               </div>
             </div>

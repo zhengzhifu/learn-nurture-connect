@@ -1,63 +1,52 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthProvider";
-import RequireAuth from "./components/auth/RequireAuth";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import ServiceBrowse from "./pages/ServiceBrowse";
-import NotFound from "./pages/NotFound";
-import SignIn from "./pages/SignIn";
-import SignUp from "./pages/SignUp";
-import About from "./pages/About";
-import MyTutors from "./pages/MyTutors";
-import Reviews from "./pages/Reviews";
+// Import pages
+import Index from '@/pages/Index';
+import About from '@/pages/About';
+import SignIn from '@/pages/SignIn';
+import SignUp from '@/pages/SignUp';
+import Profile from '@/pages/Profile';
+import ServiceBrowse from '@/pages/ServiceBrowse';
+import MyTutors from '@/pages/MyTutors';
+import Reviews from '@/pages/Reviews';
+import Dashboard from '@/pages/Dashboard';
+import NotFound from '@/pages/NotFound';
+
+// Import components
+import RequireAuth from '@/components/auth/RequireAuth';
+import { AuthProvider } from '@/contexts/AuthProvider';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+// Add the Admin import
+import Admin from '@/pages/Admin';
+
+const App: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <Toaster position="top-right" richColors closeButton />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={
-              <RequireAuth>
-                <Dashboard />
-              </RequireAuth>
-            } />
-            <Route path="/profile" element={
-              <RequireAuth>
-                <Profile />
-              </RequireAuth>
-            } />
-            <Route path="/my-tutors" element={
-              <RequireAuth>
-                <MyTutors />
-              </RequireAuth>
-            } />
-            <Route path="/reviews" element={
-              <RequireAuth>
-                <Reviews />
-              </RequireAuth>
-            } />
-            <Route path="/browse" element={<ServiceBrowse />} />
             <Route path="/about" element={<About />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/browse" element={<ServiceBrowse />} />
+            <Route path="/tutors" element={<RequireAuth><MyTutors /></RequireAuth>} />
+            <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
+            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

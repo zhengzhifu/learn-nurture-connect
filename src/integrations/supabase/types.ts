@@ -216,48 +216,75 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_status: string
           avatar_url: string | null
+          child_school_id: string | null
           created_at: string
           email: string
           full_name: string
           home_address: string | null
           id: string
+          other_school_name: string | null
           phone: string | null
           school_address: string | null
+          school_id: string | null
           school_name: string | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"]
           verified: boolean | null
         }
         Insert: {
+          approval_status?: string
           avatar_url?: string | null
+          child_school_id?: string | null
           created_at?: string
           email: string
           full_name: string
           home_address?: string | null
           id: string
+          other_school_name?: string | null
           phone?: string | null
           school_address?: string | null
+          school_id?: string | null
           school_name?: string | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           verified?: boolean | null
         }
         Update: {
+          approval_status?: string
           avatar_url?: string | null
+          child_school_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
           home_address?: string | null
           id?: string
+          other_school_name?: string | null
           phone?: string | null
           school_address?: string | null
+          school_id?: string | null
           school_name?: string | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           verified?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_child_school_id_fkey"
+            columns: ["child_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -311,6 +338,33 @@ export type Database = {
           },
         ]
       }
+      schools: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["school_status"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["school_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["school_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tutor_services: {
         Row: {
           availability: Json | null
@@ -361,6 +415,60 @@ export type Database = {
           },
         ]
       }
+      user_availability: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          end_time: string
+          id: string
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          end_time: string
+          id?: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_specialties: {
+        Row: {
+          created_at: string
+          id: string
+          specialty_name: string
+          specialty_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          specialty_name: string
+          specialty_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          specialty_name?: string
+          specialty_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -378,6 +486,7 @@ export type Database = {
         | "booking_confirmation"
         | "reminder"
         | "review_prompt"
+      school_status: "pending" | "approved" | "rejected"
       service_type:
         | "babysitting"
         | "tutoring_paid"

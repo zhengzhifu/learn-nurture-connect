@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -158,7 +157,7 @@ const SignUpForm: React.FC = () => {
                       >
                         <span className="font-medium">Parent</span>
                         <span className="text-sm text-muted-foreground">
-                          I'm looking for tutoring services for my child
+                          I'm looking for tutors or babysitters for my child
                         </span>
                       </label>
                     </div>
@@ -169,9 +168,9 @@ const SignUpForm: React.FC = () => {
                         htmlFor="tutor"
                         className="flex flex-col cursor-pointer"
                       >
-                        <span className="font-medium">Tutor</span>
+                        <span className="font-medium">Tutor/Babysitter</span>
                         <span className="text-sm text-muted-foreground">
-                          I want to offer my tutoring services
+                          I want to offer tutoring or babysitting services
                         </span>
                       </label>
                     </div>
@@ -179,7 +178,7 @@ const SignUpForm: React.FC = () => {
                 </FormControl>
                 <FormMessage />
                 <FormDescription>
-                  Choose the role that best describes you
+                  You'll be able to specify your exact services in your profile
                 </FormDescription>
               </FormItem>
             )}
