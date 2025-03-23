@@ -12,7 +12,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     // Try direct Supabase query for reliability
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+      .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
       .eq('id', userId)
       .maybeSingle();
 
@@ -76,10 +76,11 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
         user_type: authData.user?.user_metadata?.role || 'parent',
         phone: data.phone || '',
         avatar_url: data.avatar_url || '',
-        school_name: data.school_name || '',
-        school_address: data.school_address || '',
         home_address: data.home_address || '',
-        verified: false
+        verified: false,
+        school_id: data.school_id,
+        other_school_name: data.other_school_name,
+        child_school_id: data.child_school_id
       };
       
       console.log('ProfileService: Creating new profile with data:', profileData);

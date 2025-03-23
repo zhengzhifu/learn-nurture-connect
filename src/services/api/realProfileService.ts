@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { toast } from 'sonner';
@@ -9,7 +10,7 @@ export class RealProfileService {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+        .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -67,10 +68,11 @@ export class RealProfileService {
           user_type: data.user_type || userData.user.user_metadata?.role || 'parent',
           phone: data.phone || '',
           avatar_url: data.avatar_url || '',
-          school_name: data.school_name || '',
-          school_address: data.school_address || '',
           home_address: data.home_address || '',
-          verified: false
+          verified: false,
+          school_id: data.school_id,
+          other_school_name: data.other_school_name,
+          child_school_id: data.child_school_id
         };
         
         console.log('RealProfileService: Creating profile with data:', profileData);
@@ -79,7 +81,7 @@ export class RealProfileService {
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert(profileData)
-          .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+          .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
           .single();
           
         if (insertError) {
@@ -101,7 +103,7 @@ export class RealProfileService {
         .from('profiles')
         .update(data)
         .eq('id', userId)
-        .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+        .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .single();
       
       if (error) {
@@ -122,16 +124,17 @@ export class RealProfileService {
             user_type: data.user_type || userData.user.user_metadata?.role || 'parent',
             phone: data.phone || '',
             avatar_url: data.avatar_url || '',
-            school_name: data.school_name || '',
-            school_address: data.school_address || '',
             home_address: data.home_address || '',
-            verified: false
+            verified: false,
+            school_id: data.school_id,
+            other_school_name: data.other_school_name,
+            child_school_id: data.child_school_id
           };
           
           const { data: insertedData, error: insertError } = await supabase
             .from('profiles')
             .insert(profileData)
-            .select('id, full_name, email, user_type, avatar_url, verified, phone, school_name, school_address, home_address')
+            .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
             .single();
             
           if (insertError) {

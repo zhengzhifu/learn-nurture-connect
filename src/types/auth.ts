@@ -1,3 +1,4 @@
+
 // Auth-related types
 export type UserRole = 'parent' | 'tutor' | 'admin' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
@@ -10,8 +11,6 @@ export interface Profile {
   phone?: string;
   avatar_url?: string;
   verified?: boolean;
-  school_name?: string;
-  school_address?: string;
   home_address?: string;
   approval_status?: ApprovalStatus;
   school_id?: string;

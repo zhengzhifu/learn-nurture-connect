@@ -27,8 +27,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
     avatar_url: '',
     school_id: undefined as string | undefined,
     other_school_name: undefined as string | undefined,
-    school_name: '',
-    school_address: '',
     home_address: '',
     child_school_id: undefined as string | undefined
   });
@@ -43,8 +41,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
         avatar_url: profile.avatar_url || '',
         school_id: profile.school_id,
         other_school_name: profile.other_school_name,
-        school_name: profile.school_name || '',
-        school_address: profile.school_address || '',
         home_address: profile.home_address || '',
         child_school_id: profile.child_school_id
       });
@@ -189,7 +185,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
             
             <Separator />
             
-            <SpecialtyManager userId={user.id} userType={profile.user_type} />
+            <SpecialtyManager userId={user.id} userType={profile.user_type as "parent" | "tutor"} />
           </CardContent>
         </Card>
       )}
