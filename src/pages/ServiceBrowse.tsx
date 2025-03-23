@@ -1,11 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import ServiceSearchFilter from '@/components/services/ServiceSearchFilter';
-import ServiceList from '@/components/services/ServiceList';
+import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
 
 const ServiceBrowse: React.FC = () => {
@@ -38,9 +36,10 @@ const ServiceBrowse: React.FC = () => {
     <PageWrapper>
       <Navbar />
       <div className="container mx-auto py-8 pt-24">
-        <h1 className="text-2xl font-semibold mb-4">Browse Services</h1>
-
-        <ServiceSearchFilter 
+        <ServiceBrowser 
+          serviceList={serviceList}
+          isLoading={isLoading}
+          hasError={hasError}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedTypes={selectedTypes}
@@ -53,15 +52,9 @@ const ServiceBrowse: React.FC = () => {
           setSelectedSubjects={setSelectedSubjects}
           selectedAvailability={selectedAvailability}
           setSelectedAvailability={setSelectedAvailability}
-          onSearch={handleSearch}
+          handleSearch={handleSearch}
           applyFilters={applyFilters}
           clearFilters={clearFilters}
-        />
-
-        <ServiceList 
-          serviceList={serviceList}
-          isLoading={isLoading}
-          hasError={hasError}
           onServiceClick={handleServiceClick}
         />
       </div>
