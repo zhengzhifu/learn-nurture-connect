@@ -24,7 +24,6 @@ const Admin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Redirect if not admin
     if (profile && profile.user_type !== 'admin') {
       toast.error('You do not have permission to access this page');
       navigate('/');
@@ -35,7 +34,6 @@ const Admin: React.FC = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch users
         const { data: usersData, error: usersError } = await supabase
           .from('profiles')
           .select('*')
@@ -44,7 +42,6 @@ const Admin: React.FC = () => {
         if (usersError) throw usersError;
         setUsers(usersData || []);
         
-        // Fetch schools
         const schoolsData = await fetchApprovedSchools();
         setSchools(schoolsData || []);
       } catch (error: any) {
@@ -67,7 +64,6 @@ const Admin: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
       setUsers(users.map(user => 
         user.id === userId ? { ...user, approval_status: 'approved' } : user
       ));
@@ -88,7 +84,6 @@ const Admin: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
       setUsers(users.map(user => 
         user.id === userId ? { ...user, approval_status: 'rejected' } : user
       ));
@@ -109,7 +104,6 @@ const Admin: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
       setSchools(schools.map(school => 
         school.id === schoolId ? { ...school, status: 'approved' } : school
       ));
@@ -130,7 +124,6 @@ const Admin: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
       setSchools(schools.map(school => 
         school.id === schoolId ? { ...school, status: 'rejected' } : school
       ));
@@ -142,7 +135,6 @@ const Admin: React.FC = () => {
     }
   };
 
-  // User columns for the data table
   const userColumns: ColumnDef<Profile>[] = [
     {
       accessorKey: 'avatar_url',
@@ -192,7 +184,7 @@ const Admin: React.FC = () => {
         const status = row.original.approval_status;
         return (
           <Badge variant={
-            status === 'approved' ? 'success' : 
+            status === 'approved' ? 'default' : 
             status === 'rejected' ? 'destructive' : 
             'outline'
           }>
@@ -232,7 +224,6 @@ const Admin: React.FC = () => {
     },
   ];
 
-  // School columns for the data table
   const schoolColumns: ColumnDef<School>[] = [
     {
       accessorKey: 'name',
@@ -249,7 +240,7 @@ const Admin: React.FC = () => {
         const status = row.original.status;
         return (
           <Badge variant={
-            status === 'approved' ? 'success' : 
+            status === 'approved' ? 'default' : 
             status === 'rejected' ? 'destructive' : 
             'outline'
           }>
@@ -297,7 +288,6 @@ const Admin: React.FC = () => {
     },
   ];
 
-  // Filter for pending items
   const pendingUsers = users.filter(user => !user.approval_status || user.approval_status === 'pending');
   const pendingSchools = schools.filter(school => school.status === 'pending');
 

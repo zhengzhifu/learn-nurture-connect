@@ -1,6 +1,20 @@
 
 // Service types
-export type ServiceType = 'tutoring' | 'babysitting';
+export type ServiceType = 'tutoring' | 'babysitting' | 'tutoring_paid' | 'tutoring_voluntary';
+
+export interface Service {
+  id: string;
+  title: string;
+  description?: string;
+  type: ServiceType;
+  price: number;
+  rating?: number;
+  location: string;
+  image?: string;
+  availability: string[];
+  provider_id: string;
+  subjects?: string[];
+}
 
 export interface ServiceSubject {
   id: string;

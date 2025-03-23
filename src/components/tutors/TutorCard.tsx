@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,7 @@ interface TutorCardProps {
   showSelectButton?: boolean;
   selected?: boolean;
   onToggleBookmark: (tutorId: string) => Promise<void>;
+  onViewDetails?: (tutorId: string) => void;
 }
 
 const TutorCard: React.FC<TutorCardProps> = ({ 
@@ -28,7 +30,8 @@ const TutorCard: React.FC<TutorCardProps> = ({
   onSelect,
   showSelectButton = false,
   selected = false,
-  onToggleBookmark
+  onToggleBookmark,
+  onViewDetails
 }) => {
   return (
     <Card className={`overflow-hidden transition-shadow hover:shadow-md ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -77,7 +80,7 @@ const TutorCard: React.FC<TutorCardProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter className="pt-2">
+      <CardFooter className="pt-2 flex flex-col gap-2">
         {showSelectButton && (
           <Button
             className="w-full"
@@ -85,6 +88,16 @@ const TutorCard: React.FC<TutorCardProps> = ({
             onClick={() => onSelect && onSelect(tutor.id)}
           >
             {selected ? "Selected" : "Select Tutor"}
+          </Button>
+        )}
+        
+        {onViewDetails && (
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={() => onViewDetails(tutor.id)}
+          >
+            View Details
           </Button>
         )}
       </CardFooter>

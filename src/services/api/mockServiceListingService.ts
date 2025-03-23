@@ -1,6 +1,6 @@
 
 import { ServiceData, ServiceFilters } from './serviceClient';
-import { MOCK_SERVICES } from './mockData';
+import { mockServices } from './mockData';
 
 export class MockServiceListingService {
   async getServices(): Promise<ServiceData[]> {
@@ -9,8 +9,8 @@ export class MockServiceListingService {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    console.log(`MockServiceListingService: getServices returning ${MOCK_SERVICES.length} services`);
-    return MOCK_SERVICES;
+    console.log(`MockServiceListingService: getServices returning ${mockServices.length} services`);
+    return mockServices;
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
@@ -20,7 +20,7 @@ export class MockServiceListingService {
     await new Promise(resolve => setTimeout(resolve, 600));
     
     // Apply filters
-    let results = [...MOCK_SERVICES];
+    let results = [...mockServices];
     
     // Filter by service type
     if (filters.types && filters.types.length > 0) {
@@ -69,13 +69,13 @@ export class MockServiceListingService {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (!query.trim()) {
-      console.log(`MockServiceListingService: searchServices returning all ${MOCK_SERVICES.length} services (empty query)`);
-      return MOCK_SERVICES;
+      console.log(`MockServiceListingService: searchServices returning all ${mockServices.length} services (empty query)`);
+      return mockServices;
     }
     
     // Search in title, description and location
     const lowerQuery = query.toLowerCase();
-    const results = MOCK_SERVICES.filter(service => 
+    const results = mockServices.filter(service => 
       service.title.toLowerCase().includes(lowerQuery) ||
       (service.description && service.description.toLowerCase().includes(lowerQuery)) ||
       service.location.toLowerCase().includes(lowerQuery) ||
