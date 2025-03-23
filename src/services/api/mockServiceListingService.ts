@@ -10,7 +10,8 @@ export class MockServiceListingService {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     console.log(`MockServiceListingService: getServices returning ${mockServices.length} services`);
-    return mockServices;
+    // Since we updated the Service type to match ServiceData, this is now type-safe
+    return mockServices as ServiceData[];
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
@@ -59,7 +60,7 @@ export class MockServiceListingService {
     }
     
     console.log(`MockServiceListingService: filterServices returning ${results.length} filtered services`);
-    return results;
+    return results as ServiceData[];
   }
   
   async searchServices(query: string): Promise<ServiceData[]> {
@@ -70,7 +71,7 @@ export class MockServiceListingService {
     
     if (!query.trim()) {
       console.log(`MockServiceListingService: searchServices returning all ${mockServices.length} services (empty query)`);
-      return mockServices;
+      return mockServices as ServiceData[];
     }
     
     // Search in title, description and location
@@ -83,6 +84,6 @@ export class MockServiceListingService {
     );
     
     console.log(`MockServiceListingService: searchServices returning ${results.length} matching services for query "${query}"`);
-    return results;
+    return results as ServiceData[];
   }
 }

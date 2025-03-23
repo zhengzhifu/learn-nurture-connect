@@ -8,7 +8,7 @@ export interface Service {
   description?: string;
   type: ServiceType;
   price: number;
-  rating?: number;
+  rating: number; // Changed from optional to required to match ServiceData
   location: string;
   image?: string;
   availability: string[];
