@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,13 +20,15 @@ interface TutorCardProps {
   onSelect?: (tutorId: string) => void;
   showSelectButton?: boolean;
   selected?: boolean;
+  onToggleBookmark: (tutorId: string) => Promise<void>;
 }
 
 const TutorCard: React.FC<TutorCardProps> = ({ 
   tutor, 
   onSelect,
   showSelectButton = false,
-  selected = false
+  selected = false,
+  onToggleBookmark
 }) => {
   return (
     <Card className={`overflow-hidden transition-shadow hover:shadow-md ${selected ? 'ring-2 ring-primary' : ''}`}>

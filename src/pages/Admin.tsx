@@ -1,130 +1,105 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  BadgeCheck,
-  XCircle,
-  Clock,
-  GraduationCap,
-  User,
-  School as SchoolIcon
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import Button from '@/components/ui-custom/Button';
-import { Profile, School, ApprovalStatus } from '@/types/auth';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from '@/components/ui/data-table';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useNavigate } from 'react-router-dom';
+import { ColumnDef } from '@tanstack/react-table';
+import { Profile, School } from '@/types/auth';
+import { fetchApprovedSchools } from '@/services/api/schoolService';
 
-const Admin = () => {
-  const { profile, isLoading } = useAuth();
+const Admin: React.FC = () => {
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const [selectedTab, setSelectedTab] = useState("tutors");
-  const [pendingTutors, setPendingTutors] = useState<Profile[]>([]);
-  const [pendingSchools, setPendingSchools] = useState<School[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && profile?.user_type !== 'admin') {
-      toast.error('You do not have access to this page');
-      navigate('/dashboard');
+    // Redirect if not admin
+    if (profile && profile.user_type !== 'admin') {
+      toast.error('You do not have permission to access this page');
+      navigate('/');
     }
-  }, [isLoading, profile, navigate]);
+  }, [profile, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (profile?.user_type !== 'admin') return;
-      
-      setIsDataLoading(true);
-      setError(null);
-      
+      setIsLoading(true);
       try {
-        // Fetch tutors pending approval
-        const { data: tutorsData, error: tutorsError } = await supabase
+        // Fetch users
+        const { data: usersData, error: usersError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_type', 'tutor')
-          .eq('approval_status', 'pending');
+          .order('created_at', { ascending: false });
           
-        if (tutorsError) throw tutorsError;
-        setPendingTutors(tutorsData as Profile[]);
+        if (usersError) throw usersError;
+        setUsers(usersData || []);
         
-        // Fetch schools pending approval
-        const { data: schoolsData, error: schoolsError } = await supabase
-          .from('schools')
-          .select('*')
-          .eq('status', 'pending');
-          
-        if (schoolsError) throw schoolsError;
-        setPendingSchools(schoolsData as School[]);
-        
-      } catch (err: any) {
-        console.error('Error fetching admin data:', err);
-        setError(err.message);
-        toast.error(`Failed to load data: ${err.message}`);
+        // Fetch schools
+        const schoolsData = await fetchApprovedSchools();
+        setSchools(schoolsData || []);
+      } catch (error: any) {
+        console.error('Error fetching admin data:', error);
+        toast.error(`Failed to load data: ${error.message}`);
       } finally {
-        setIsDataLoading(false);
+        setIsLoading(false);
       }
     };
     
     fetchData();
-  }, [profile]);
+  }, []);
 
-  const handleApproveTutor = async (tutorId: string) => {
+  const handleApproveUser = async (userId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ approval_status: 'approved' })
-        .eq('id', tutorId);
+        .eq('id', userId);
         
       if (error) throw error;
       
-      setPendingTutors(prev => prev.filter(tutor => tutor.id !== tutorId));
-      toast.success('Tutor approved successfully');
-    } catch (err: any) {
-      console.error('Error approving tutor:', err);
-      toast.error(`Failed to approve tutor: ${err.message}`);
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, approval_status: 'approved' } : user
+      ));
+      
+      toast.success('User approved successfully');
+    } catch (error: any) {
+      console.error('Error approving user:', error);
+      toast.error(`Failed to approve user: ${error.message}`);
     }
   };
-
-  const handleRejectTutor = async (tutorId: string) => {
+  
+  const handleRejectUser = async (userId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ approval_status: 'rejected' })
-        .eq('id', tutorId);
+        .eq('id', userId);
         
       if (error) throw error;
       
-      setPendingTutors(prev => prev.filter(tutor => tutor.id !== tutorId));
-      toast.success('Tutor rejected');
-    } catch (err: any) {
-      console.error('Error rejecting tutor:', err);
-      toast.error(`Failed to reject tutor: ${err.message}`);
+      // Update local state
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, approval_status: 'rejected' } : user
+      ));
+      
+      toast.success('User rejected');
+    } catch (error: any) {
+      console.error('Error rejecting user:', error);
+      toast.error(`Failed to reject user: ${error.message}`);
     }
   };
-
+  
   const handleApproveSchool = async (schoolId: string) => {
     try {
       const { error } = await supabase
@@ -134,14 +109,18 @@ const Admin = () => {
         
       if (error) throw error;
       
-      setPendingSchools(prev => prev.filter(school => school.id !== schoolId));
+      // Update local state
+      setSchools(schools.map(school => 
+        school.id === schoolId ? { ...school, status: 'approved' } : school
+      ));
+      
       toast.success('School approved successfully');
-    } catch (err: any) {
-      console.error('Error approving school:', err);
-      toast.error(`Failed to approve school: ${err.message}`);
+    } catch (error: any) {
+      console.error('Error approving school:', error);
+      toast.error(`Failed to approve school: ${error.message}`);
     }
   };
-
+  
   const handleRejectSchool = async (schoolId: string) => {
     try {
       const { error } = await supabase
@@ -151,226 +130,267 @@ const Admin = () => {
         
       if (error) throw error;
       
-      setPendingSchools(prev => prev.filter(school => school.id !== schoolId));
+      // Update local state
+      setSchools(schools.map(school => 
+        school.id === schoolId ? { ...school, status: 'rejected' } : school
+      ));
+      
       toast.success('School rejected');
-    } catch (err: any) {
-      console.error('Error rejecting school:', err);
-      toast.error(`Failed to reject school: ${err.message}`);
+    } catch (error: any) {
+      console.error('Error rejecting school:', error);
+      toast.error(`Failed to reject school: ${error.message}`);
     }
   };
-  
-  const getSchoolNameById = async (schoolId: string | undefined) => {
-    if (!schoolId) return 'No school selected';
-    
-    try {
-      const { data, error } = await supabase
-        .from('schools')
-        .select('name')
-        .eq('id', schoolId)
-        .single();
+
+  // User columns for the data table
+  const userColumns: ColumnDef<Profile>[] = [
+    {
+      accessorKey: 'avatar_url',
+      header: '',
+      cell: ({ row }) => {
+        const user = row.original;
+        const initials = user.full_name
+          ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
+          : 'U';
+          
+        return (
+          <Avatar>
+            <AvatarImage src={user.avatar_url || ''} alt={user.full_name} />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+        );
+      },
+    },
+    {
+      accessorKey: 'full_name',
+      header: 'Name',
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'user_type',
+      header: 'Role',
+      cell: ({ row }) => {
+        const role = row.original.user_type;
+        return (
+          <Badge variant={
+            role === 'admin' ? 'destructive' : 
+            role === 'tutor' ? 'default' : 
+            'secondary'
+          }>
+            {role}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'approval_status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.approval_status;
+        return (
+          <Badge variant={
+            status === 'approved' ? 'success' : 
+            status === 'rejected' ? 'destructive' : 
+            'outline'
+          }>
+            {status || 'pending'}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const user = row.original;
+        const isPending = !user.approval_status || user.approval_status === 'pending';
         
-      if (error) throw error;
-      return data.name;
-    } catch (err) {
-      console.error('Error fetching school name:', err);
-      return 'Unknown school';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <PageWrapper>
-        <Navbar />
-        <div className="container mx-auto px-4 py-16">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-pulse text-center">
-              <h2 className="text-2xl font-bold">Loading admin panel...</h2>
-            </div>
+        if (!isPending) return null;
+        
+        return (
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleApproveUser(user.id)}
+            >
+              Approve
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => handleRejectUser(user.id)}
+            >
+              Reject
+            </Button>
           </div>
-        </div>
-        <Footer />
-      </PageWrapper>
-    );
-  }
+        );
+      },
+    },
+  ];
 
-  if (profile?.user_type !== 'admin') {
-    return null; // Navigate handled in useEffect
-  }
+  // School columns for the data table
+  const schoolColumns: ColumnDef<School>[] = [
+    {
+      accessorKey: 'name',
+      header: 'School Name',
+    },
+    {
+      accessorKey: 'address',
+      header: 'Address',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge variant={
+            status === 'approved' ? 'success' : 
+            status === 'rejected' ? 'destructive' : 
+            'outline'
+          }>
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'created_at',
+      header: 'Created',
+      cell: ({ row }) => {
+        const date = new Date(row.original.created_at);
+        return date.toLocaleDateString();
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const school = row.original;
+        const isPending = school.status === 'pending';
+        
+        if (!isPending) return null;
+        
+        return (
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleApproveSchool(school.id)}
+            >
+              Approve
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => handleRejectSchool(school.id)}
+            >
+              Reject
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  // Filter for pending items
+  const pendingUsers = users.filter(user => !user.approval_status || user.approval_status === 'pending');
+  const pendingSchools = schools.filter(school => school.status === 'pending');
 
   return (
     <PageWrapper>
       <Navbar />
-      <div className="container mx-auto px-4 py-16">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-3xl">Admin Panel</CardTitle>
-            <CardDescription>
-              Manage tutor approvals, school registrations, and other administrative tasks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-              <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none mb-6">
-                <TabsTrigger value="tutors" className="flex gap-2 items-center">
-                  <User size={16} />
-                  <span>Pending Tutors</span>
-                  {pendingTutors.length > 0 && (
-                    <Badge variant="secondary">{pendingTutors.length}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="schools" className="flex gap-2 items-center">
-                  <SchoolIcon size={16} />
-                  <span>Pending Schools</span>
-                  {pendingSchools.length > 0 && (
-                    <Badge variant="secondary">{pendingSchools.length}</Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="tutors">
-                {isDataLoading ? (
-                  <div className="text-center py-8">
-                    <Clock className="h-12 w-12 mx-auto mb-4 animate-spin text-muted-foreground" />
-                    <p>Loading tutors...</p>
-                  </div>
-                ) : pendingTutors.length === 0 ? (
-                  <div className="text-center py-8 border rounded-lg">
-                    <BadgeCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <h3 className="text-xl font-medium mb-2">All caught up!</h3>
-                    <p className="text-muted-foreground">There are no tutors waiting for approval.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Tutor</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>School</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pendingTutors.map((tutor) => (
-                          <TableRow key={tutor.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={tutor.avatar_url || ''} alt={tutor.full_name} />
-                                  <AvatarFallback>{tutor.full_name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{tutor.full_name}</div>
-                                  <div className="text-sm text-muted-foreground">{tutor.phone}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{tutor.email}</TableCell>
-                            <TableCell>
-                              {tutor.school_id ? (
-                                <div className="flex items-center gap-1">
-                                  <GraduationCap className="h-4 w-4" />
-                                  <span>{tutor.other_school_name || getSchoolNameById(tutor.school_id)}</span>
-                                </div>
-                              ) : tutor.other_school_name ? (
-                                <div>
-                                  <span>{tutor.other_school_name}</span>
-                                  <Badge variant="outline" className="ml-2">New</Badge>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">No school selected</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => handleApproveTutor(tutor.id)}
-                                  className="w-24"
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => handleRejectTutor(tutor.id)}
-                                  className="w-24"
-                                >
-                                  Reject
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="schools">
-                {isDataLoading ? (
-                  <div className="text-center py-8">
-                    <Clock className="h-12 w-12 mx-auto mb-4 animate-spin text-muted-foreground" />
-                    <p>Loading schools...</p>
-                  </div>
-                ) : pendingSchools.length === 0 ? (
-                  <div className="text-center py-8 border rounded-lg">
-                    <BadgeCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                    <h3 className="text-xl font-medium mb-2">All caught up!</h3>
-                    <p className="text-muted-foreground">There are no schools waiting for approval.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>School Name</TableHead>
-                          <TableHead>Address</TableHead>
-                          <TableHead>Date Submitted</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pendingSchools.map((school) => (
-                          <TableRow key={school.id}>
-                            <TableCell>
-                              <div className="font-medium">{school.name}</div>
-                            </TableCell>
-                            <TableCell>{school.address || 'No address provided'}</TableCell>
-                            <TableCell>{new Date(school.created_at).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => handleApproveSchool(school.id)}
-                                  className="w-24"
-                                >
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => handleRejectSchool(school.id)}
-                                  className="w-24"
-                                >
-                                  Reject
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+      
+      <div className="container mx-auto px-4 py-24 min-h-screen">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+          
+          <Tabs defaultValue="pending">
+            <TabsList className="mb-6">
+              <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
+              <TabsTrigger value="users">All Users</TabsTrigger>
+              <TabsTrigger value="schools">All Schools</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="pending">
+              <div className="space-y-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pending User Approvals</CardTitle>
+                    <CardDescription>
+                      {pendingUsers.length} users waiting for approval
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      columns={userColumns} 
+                      data={pendingUsers} 
+                      isLoading={isLoading}
+                    />
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pending School Approvals</CardTitle>
+                    <CardDescription>
+                      {pendingSchools.length} schools waiting for approval
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DataTable 
+                      columns={schoolColumns} 
+                      data={pendingSchools} 
+                      isLoading={isLoading}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="users">
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Users</CardTitle>
+                  <CardDescription>
+                    {users.length} users registered in the system
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataTable 
+                    columns={userColumns} 
+                    data={users} 
+                    isLoading={isLoading}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="schools">
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Schools</CardTitle>
+                  <CardDescription>
+                    {schools.length} schools in the system
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataTable 
+                    columns={schoolColumns} 
+                    data={schools} 
+                    isLoading={isLoading}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
+      
       <Footer />
     </PageWrapper>
   );
