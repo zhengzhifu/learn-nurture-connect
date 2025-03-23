@@ -1,7 +1,6 @@
-
 // Auth-related types
 export type UserRole = 'parent' | 'tutor' | 'admin' | null;
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
 
 export interface Profile {
   id: string;

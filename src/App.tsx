@@ -28,8 +28,8 @@ import Admin from '@/pages/Admin';
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Toaster position="top-right" richColors closeButton />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -44,8 +44,8 @@ const App: React.FC = () => {
             <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 };
