@@ -9,35 +9,53 @@ export class RealServiceListingService extends BaseService {
     try {
       console.log('RealServiceListingService: getServices called');
       
-      // Using tutor_services table as the source for our service data
+      // Using a separate query for profiles to avoid RLS recursion issues
       const { data, error } = await this.supabase
         .from('tutor_services')
-        .select(`
-          *,
-          profiles(full_name, avatar_url)
-        `);
+        .select('*');
         
       if (error) {
         console.error('Error fetching services from Supabase:', error);
         return [];
       }
-      
-      // Transform the data into ServiceData format
-      const services: ServiceData[] = data.map(item => ({
-        id: item.id,
-        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
-        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
-        type: this.mapServiceType(item.service_type),
-        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
-        rating: 4.5, // Default rating since we don't have this in tutor_services
-        location: item.location_address || 'Various locations',
-        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
-        availability: item.availability ? this.parseAvailability(item.availability) : [],
-        provider_id: item.tutor_id,
-        subjects: item.tutoring_subjects || [],
-        provider_name: item.profiles?.full_name || 'Unknown Provider',
-        provider_avatar: item.profiles?.avatar_url || undefined
-      }));
+
+      // Transform and fetch profile data separately to handle the services
+      const services: ServiceData[] = await Promise.all(
+        data.map(async (item) => {
+          // Fetch profile data for each service if tutor_id exists
+          let providerName = 'Unknown Provider';
+          let providerAvatar = undefined;
+          
+          if (item.tutor_id) {
+            const { data: profileData } = await this.supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', item.tutor_id)
+              .maybeSingle();
+              
+            if (profileData) {
+              providerName = profileData.full_name;
+              providerAvatar = profileData.avatar_url;
+            }
+          }
+          
+          return {
+            id: item.id,
+            title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
+            description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+            type: this.mapServiceType(item.service_type),
+            price: item.hourly_rate ? Number(item.hourly_rate) : 0,
+            rating: 4.5, // Default rating
+            location: item.location_address || 'Various locations',
+            image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+            availability: item.availability ? this.parseAvailability(item.availability) : [],
+            provider_id: item.tutor_id,
+            subjects: item.tutoring_subjects || [],
+            provider_name: providerName,
+            provider_avatar: providerAvatar
+          };
+        })
+      );
       
       console.log(`RealServiceListingService: getServices returning ${services.length} services`);
       return services;
@@ -53,10 +71,7 @@ export class RealServiceListingService extends BaseService {
       
       let query = this.supabase
         .from('tutor_services')
-        .select(`
-          *,
-          profiles(full_name, avatar_url)
-        `);
+        .select('*');
       
       // Filter by service type
       if (filters.types && filters.types.length > 0) {
@@ -84,22 +99,43 @@ export class RealServiceListingService extends BaseService {
         return [];
       }
       
-      // Transform and further filter the results
-      let services = data.map(item => ({
-        id: item.id,
-        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
-        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
-        type: this.mapServiceType(item.service_type),
-        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
-        rating: 4.5, // Default rating
-        location: item.location_address || 'Various locations',
-        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
-        availability: item.availability ? this.parseAvailability(item.availability) : [],
-        provider_id: item.tutor_id,
-        subjects: item.tutoring_subjects || [],
-        provider_name: item.profiles?.full_name || 'Unknown Provider',
-        provider_avatar: item.profiles?.avatar_url || undefined
-      }));
+      // Transform and fetch profile data separately to handle the services
+      let services = await Promise.all(
+        data.map(async (item) => {
+          // Fetch profile data for each service if tutor_id exists
+          let providerName = 'Unknown Provider';
+          let providerAvatar = undefined;
+          
+          if (item.tutor_id) {
+            const { data: profileData } = await this.supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', item.tutor_id)
+              .maybeSingle();
+              
+            if (profileData) {
+              providerName = profileData.full_name;
+              providerAvatar = profileData.avatar_url;
+            }
+          }
+          
+          return {
+            id: item.id,
+            title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
+            description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+            type: this.mapServiceType(item.service_type),
+            price: item.hourly_rate ? Number(item.hourly_rate) : 0,
+            rating: 4.5, // Default rating
+            location: item.location_address || 'Various locations',
+            image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+            availability: item.availability ? this.parseAvailability(item.availability) : [],
+            provider_id: item.tutor_id,
+            subjects: item.tutoring_subjects || [],
+            provider_name: providerName,
+            provider_avatar: providerAvatar
+          };
+        })
+      );
       
       // Client-side filtering for subjects and availability
       // These are arrays, so they're harder to filter in the database query
@@ -136,36 +172,54 @@ export class RealServiceListingService extends BaseService {
         return this.getServices();
       }
       
-      // Search across multiple fields including the provider's name
+      // Search across multiple fields
       const { data, error } = await this.supabase
         .from('tutor_services')
-        .select(`
-          *,
-          profiles(full_name, avatar_url)
-        `)
-        .or(`service_type.ilike.%${query}%,location_address.ilike.%${query}%`)
-        .contains('tutoring_subjects', [query]);
+        .select('*')
+        .or(`service_type.ilike.%${query}%,location_address.ilike.%${query}%`);
       
       if (error) {
         console.error('Error searching services:', error);
         return [];
       }
       
-      const services: ServiceData[] = data.map(item => ({
-        id: item.id,
-        title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
-        description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
-        type: this.mapServiceType(item.service_type),
-        price: item.hourly_rate ? Number(item.hourly_rate) : 0,
-        rating: 4.5, // Default rating
-        location: item.location_address || 'Various locations',
-        image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
-        availability: item.availability ? this.parseAvailability(item.availability) : [],
-        provider_id: item.tutor_id,
-        subjects: item.tutoring_subjects || [],
-        provider_name: item.profiles?.full_name || 'Unknown Provider',
-        provider_avatar: item.profiles?.avatar_url || undefined
-      }));
+      // Transform and fetch profile data separately
+      const services: ServiceData[] = await Promise.all(
+        data.map(async (item) => {
+          // Fetch profile data for each service if tutor_id exists
+          let providerName = 'Unknown Provider';
+          let providerAvatar = undefined;
+          
+          if (item.tutor_id) {
+            const { data: profileData } = await this.supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', item.tutor_id)
+              .maybeSingle();
+              
+            if (profileData) {
+              providerName = profileData.full_name;
+              providerAvatar = profileData.avatar_url;
+            }
+          }
+          
+          return {
+            id: item.id,
+            title: `${item.service_type.includes('tutoring') ? 'Tutoring' : 'Babysitting'} Service`,
+            description: `${item.service_type} service in ${item.location_address || 'Various locations'}`,
+            type: this.mapServiceType(item.service_type),
+            price: item.hourly_rate ? Number(item.hourly_rate) : 0,
+            rating: 4.5, // Default rating
+            location: item.location_address || 'Various locations',
+            image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop', // Default image
+            availability: item.availability ? this.parseAvailability(item.availability) : [],
+            provider_id: item.tutor_id,
+            subjects: item.tutoring_subjects || [],
+            provider_name: providerName,
+            provider_avatar: providerAvatar
+          };
+        })
+      );
       
       console.log(`RealServiceListingService: searchServices returning ${services.length} results`);
       return services;
