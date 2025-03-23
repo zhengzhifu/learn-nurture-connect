@@ -12,6 +12,7 @@ const ServiceBrowse: React.FC = () => {
   const {
     serviceList,
     isLoading,
+    hasError,
     searchQuery,
     setSearchQuery,
     selectedTypes,
@@ -60,6 +61,7 @@ const ServiceBrowse: React.FC = () => {
         <ServiceList 
           serviceList={serviceList}
           isLoading={isLoading}
+          hasError={hasError}
           onServiceClick={handleServiceClick}
         />
       </div>

@@ -4,18 +4,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import ServiceCard from '@/components/ui-custom/ServiceCard';
 import { ServiceData } from '@/services/api/serviceClient';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ServiceListProps {
   serviceList: ServiceData[];
   isLoading: boolean;
   onServiceClick: (serviceId: string) => void;
+  hasError?: boolean;
 }
 
 const ServiceList: React.FC<ServiceListProps> = ({ 
   serviceList, 
   isLoading, 
-  onServiceClick 
+  onServiceClick,
+  hasError = false
 }) => {
+  if (hasError) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          There was an error loading the services. This might be due to a database configuration issue. 
+          Please try again later or contact support.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

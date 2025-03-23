@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 export const useServiceBrowse = () => {
   const [serviceList, setServiceList] = useState<ServiceData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [selectedTypes, setSelectedTypes] = useState<ServiceType[]>([]);
@@ -34,6 +35,7 @@ export const useServiceBrowse = () => {
 
   const fetchServices = useCallback(async () => {
     setIsLoading(true);
+    setHasError(false);
     try {
       const serviceClient = ServiceClientFactory.getClient();
       let services: ServiceData[] = [];
@@ -50,6 +52,7 @@ export const useServiceBrowse = () => {
       setServiceList(services);
     } catch (error) {
       console.error('Error fetching services:', error);
+      setHasError(true);
       toast.error('Failed to load services');
     } finally {
       setIsLoading(false);
@@ -81,6 +84,7 @@ export const useServiceBrowse = () => {
   return {
     serviceList,
     isLoading,
+    hasError,
     searchQuery,
     setSearchQuery,
     selectedTypes,
