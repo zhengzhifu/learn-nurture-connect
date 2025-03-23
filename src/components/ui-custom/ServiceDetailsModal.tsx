@@ -125,9 +125,9 @@ const ServiceDetailsModal: React.FC<ServiceDetailsModalProps> = ({
           <Button 
             onClick={handleBookService} 
             className="w-full"
-            isLoading={isBooking}
+            disabled={isBooking}
           >
-            Book This Service
+            {isBooking ? 'Booking...' : 'Book This Service'}
           </Button>
         </DialogFooter>
       </DialogContent>
