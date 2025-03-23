@@ -1,61 +1,58 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Users, 
-  Star
+  Settings, 
+  Calendar, 
+  MessageSquare, 
+  CreditCard,
+  Users,
+  LogOut
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
 
 const SidebarNavigation: React.FC = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-  
-  const isActive = (path: string) => currentPath === path;
-  
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
-    <Card>
-      <CardContent className="p-4">
-        <nav className="space-y-1">
-          <Link 
-            to="/dashboard" 
-            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-              isActive('/dashboard') 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-foreground hover:bg-gray-100'
-            }`}
-          >
-            <LayoutDashboard className="h-5 w-5" />
-            <span className={isActive('/dashboard') ? 'font-medium' : ''}>Dashboard</span>
-          </Link>
-          
-          <Link 
-            to="/my-tutors" 
-            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-              isActive('/my-tutors') 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-foreground hover:bg-gray-100'
-            }`}
-          >
-            <Users className="h-5 w-5" />
-            <span className={isActive('/my-tutors') ? 'font-medium' : ''}>My Tutors</span>
-          </Link>
-          
-          <Link 
-            to="/reviews" 
-            className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-              isActive('/reviews') 
-                ? 'bg-primary/10 text-primary' 
-                : 'text-foreground hover:bg-gray-100'
-            }`}
-          >
-            <Star className="h-5 w-5" />
-            <span className={isActive('/reviews') ? 'font-medium' : ''}>Reviews</span>
-          </Link>
-        </nav>
-      </CardContent>
-    </Card>
+    <div className="space-y-1">
+      <Link to="/dashboard" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <LayoutDashboard className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Dashboard</span>
+      </Link>
+      <Link to="/browse" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Browse Services</span>
+      </Link>
+      <Link to="/schedule" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <Calendar className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Schedule</span>
+      </Link>
+      <Link to="/messages" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <MessageSquare className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Messages</span>
+      </Link>
+      <Link to="/billing" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <CreditCard className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Billing</span>
+      </Link>
+      <Link to="/profile" className="flex items-center p-2 rounded-md hover:bg-muted">
+        <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
+        <span>Settings</span>
+      </Link>
+      <button 
+        onClick={handleSignOut} 
+        className="flex items-center p-2 w-full text-left rounded-md hover:bg-red-100 text-red-600 hover:text-red-700 mt-4"
+      >
+        <LogOut className="h-5 w-5 mr-3" />
+        <span>Sign Out</span>
+      </button>
+    </div>
   );
 };
 

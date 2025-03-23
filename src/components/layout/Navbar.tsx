@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui-custom/Button';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,11 +46,15 @@ const Navbar: React.FC = () => {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
+            <Link to="/dashboard">Dashboard</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link to="/profile">Profile</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSignOut}>
-            Logout
-            <LogOut className="ml-auto h-4 w-4" />
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-700">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
