@@ -1,43 +1,64 @@
 
 import { Profile } from '@/types/auth';
-import { generateMockProfile } from './mockData';
+import { mockProfiles, mockSchools } from './mockData';
 import { toast } from 'sonner';
 
+// Class to provide mock profile service
 export class MockProfileService {
-  async fetchUserProfile(userId: string): Promise<Profile | null> {
-    console.log('MockProfileService: fetchUserProfile called with userId:', userId);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const result = generateMockProfile(userId);
-    
-    console.log('MockProfileService: fetchUserProfile returning:', result);
-    return result;
+  fetchUserProfile(userId: string): Promise<Profile | null> {
+    return new Promise((resolve) => {
+      console.log('MockProfileService: Fetching profile for user:', userId);
+      
+      // Simulate network delay
+      setTimeout(() => {
+        const profile = mockProfiles.find(p => p.id === userId);
+        console.log('MockProfileService: Profile fetched:', profile);
+        resolve(profile || null);
+      }, 500);
+    });
   }
   
-  async updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile | null> {
-    console.log('MockProfileService: updateUserProfile called with userId:', userId, 'and data:', data);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Create updated profile by merging input data
-    const updatedProfile: Profile = {
-      id: userId,
-      full_name: data.full_name || 'Mock User',
-      email: 'mock@example.com', // Email can't be changed
-      user_type: 'parent',
-      phone: data.phone || '123-456-7890',
-      avatar_url: data.avatar_url,
-      verified: true,
-      school_name: data.school_name || 'Mock School',
-      school_address: data.school_address || '123 School St, City',
-      home_address: data.home_address || '456 Home St, City'
-    };
-    
-    console.log('MockProfileService: updateUserProfile returning:', updatedProfile);
-    toast.success('Profile updated successfully (Mock)');
-    return updatedProfile;
+  updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile> {
+    return new Promise((resolve, reject) => {
+      console.log('MockProfileService: Updating profile for user:', userId, data);
+      
+      // Simulate network delay
+      setTimeout(() => {
+        try {
+          // Check if profile exists
+          let profile = mockProfiles.find(p => p.id === userId);
+          
+          if (!profile) {
+            // Create new profile if it doesn't exist
+            profile = {
+              id: userId,
+              full_name: data.full_name || 'New User',
+              email: data.email || 'user@example.com',
+              user_type: data.user_type || 'parent',
+              home_address: data.home_address || '',
+              approval_status: 'pending',
+              school_id: data.school_id,
+              other_school_name: data.other_school_name,
+              child_school_id: data.child_school_id
+            };
+            
+            mockProfiles.push(profile);
+            toast.success('Profile created successfully');
+          } else {
+            // Update existing profile
+            Object.assign(profile, data);
+            toast.success('Profile updated successfully');
+          }
+          
+          console.log('MockProfileService: Profile updated:', profile);
+          resolve({ ...profile });
+        } catch (error) {
+          console.error('MockProfileService: Error updating profile:', error);
+          reject(new Error('Failed to update profile'));
+        }
+      }, 800);
+    });
   }
 }
+
+export const mockProfileService = new MockProfileService();

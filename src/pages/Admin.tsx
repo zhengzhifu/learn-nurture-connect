@@ -1,304 +1,376 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Profile, School } from '@/types/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import Button from '@/components/ui-custom/Button';
-import { CheckCircle, XCircle, User, Building2 } from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  BadgeCheck,
+  XCircle,
+  Clock,
+  GraduationCap,
+  User,
+  School as SchoolIcon
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import Button from '@/components/ui-custom/Button';
+import { Profile, School, ApprovalStatus } from '@/types/auth';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useNavigate } from 'react-router-dom';
 
-const Admin: React.FC = () => {
+const Admin = () => {
   const { profile, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [pendingProfiles, setPendingProfiles] = useState<Profile[]>([]);
+  const [selectedTab, setSelectedTab] = useState("tutors");
+  const [pendingTutors, setPendingTutors] = useState<Profile[]>([]);
   const [pendingSchools, setPendingSchools] = useState<School[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect if not admin
-    if (!isLoading && (!profile || profile.user_type !== 'admin')) {
-      toast.error('You do not have permission to access this page');
-      navigate('/');
-    } else if (profile?.user_type === 'admin') {
-      fetchPendingData();
+    if (!isLoading && profile?.user_type !== 'admin') {
+      toast.error('You do not have access to this page');
+      navigate('/dashboard');
     }
-  }, [profile, isLoading, navigate]);
+  }, [isLoading, profile, navigate]);
 
-  const fetchPendingData = async () => {
-    setIsLoadingData(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (profile?.user_type !== 'admin') return;
+      
+      setIsDataLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch tutors pending approval
+        const { data: tutorsData, error: tutorsError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_type', 'tutor')
+          .eq('approval_status', 'pending');
+          
+        if (tutorsError) throw tutorsError;
+        setPendingTutors(tutorsData as Profile[]);
+        
+        // Fetch schools pending approval
+        const { data: schoolsData, error: schoolsError } = await supabase
+          .from('schools')
+          .select('*')
+          .eq('status', 'pending');
+          
+        if (schoolsError) throw schoolsError;
+        setPendingSchools(schoolsData as School[]);
+        
+      } catch (err: any) {
+        console.error('Error fetching admin data:', err);
+        setError(err.message);
+        toast.error(`Failed to load data: ${err.message}`);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [profile]);
+
+  const handleApproveTutor = async (tutorId: string) => {
     try {
-      // Fetch pending profiles
-      const { data: profilesData, error: profilesError } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('approval_status', 'pending');
+        .update({ approval_status: 'approved' })
+        .eq('id', tutorId);
         
-      if (profilesError) {
-        throw profilesError;
-      }
+      if (error) throw error;
       
-      setPendingProfiles(profilesData as Profile[]);
-      
-      // Fetch pending schools
-      const { data: schoolsData, error: schoolsError } = await supabase
-        .from('schools')
-        .select('*')
-        .eq('status', 'pending');
-        
-      if (schoolsError) {
-        throw schoolsError;
-      }
-      
-      setPendingSchools(schoolsData as School[]);
-    } catch (error) {
-      console.error('Error fetching pending data:', error);
-      toast.error('Failed to fetch pending approvals');
-    } finally {
-      setIsLoadingData(false);
+      setPendingTutors(prev => prev.filter(tutor => tutor.id !== tutorId));
+      toast.success('Tutor approved successfully');
+    } catch (err: any) {
+      console.error('Error approving tutor:', err);
+      toast.error(`Failed to approve tutor: ${err.message}`);
     }
   };
 
-  const handleProfileApproval = async (profileId: string, approved: boolean) => {
+  const handleRejectTutor = async (tutorId: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          approval_status: approved ? 'approved' : 'rejected' 
-        })
-        .eq('id', profileId);
+        .update({ approval_status: 'rejected' })
+        .eq('id', tutorId);
         
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      setPendingProfiles(pendingProfiles.filter(p => p.id !== profileId));
-      toast.success(`Profile ${approved ? 'approved' : 'rejected'} successfully`);
-    } catch (error) {
-      console.error('Error updating profile status:', error);
-      toast.error('Failed to update profile status');
+      setPendingTutors(prev => prev.filter(tutor => tutor.id !== tutorId));
+      toast.success('Tutor rejected');
+    } catch (err: any) {
+      console.error('Error rejecting tutor:', err);
+      toast.error(`Failed to reject tutor: ${err.message}`);
     }
   };
 
-  const handleSchoolApproval = async (schoolId: string, approved: boolean) => {
+  const handleApproveSchool = async (schoolId: string) => {
     try {
       const { error } = await supabase
         .from('schools')
-        .update({ 
-          status: approved ? 'approved' : 'rejected' 
-        })
+        .update({ status: 'approved' })
         .eq('id', schoolId);
         
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      setPendingSchools(pendingSchools.filter(s => s.id !== schoolId));
-      toast.success(`School ${approved ? 'approved' : 'rejected'} successfully`);
-    } catch (error) {
-      console.error('Error updating school status:', error);
-      toast.error('Failed to update school status');
+      setPendingSchools(prev => prev.filter(school => school.id !== schoolId));
+      toast.success('School approved successfully');
+    } catch (err: any) {
+      console.error('Error approving school:', err);
+      toast.error(`Failed to approve school: ${err.message}`);
     }
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  const handleRejectSchool = async (schoolId: string) => {
+    try {
+      const { error } = await supabase
+        .from('schools')
+        .update({ status: 'rejected' })
+        .eq('id', schoolId);
+        
+      if (error) throw error;
+      
+      setPendingSchools(prev => prev.filter(school => school.id !== schoolId));
+      toast.success('School rejected');
+    } catch (err: any) {
+      console.error('Error rejecting school:', err);
+      toast.error(`Failed to reject school: ${err.message}`);
+    }
+  };
+  
+  const getSchoolNameById = async (schoolId: string | undefined) => {
+    if (!schoolId) return 'No school selected';
+    
+    try {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('name')
+        .eq('id', schoolId)
+        .single();
+        
+      if (error) throw error;
+      return data.name;
+    } catch (err) {
+      console.error('Error fetching school name:', err);
+      return 'Unknown school';
+    }
   };
 
-  if (isLoading || !profile || profile.user_type !== 'admin') {
+  if (isLoading) {
     return (
       <PageWrapper>
         <Navbar />
-        <div className="container mx-auto px-4 py-24 text-center">
-          <p>Loading...</p>
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-pulse text-center">
+              <h2 className="text-2xl font-bold">Loading admin panel...</h2>
+            </div>
+          </div>
         </div>
         <Footer />
       </PageWrapper>
     );
   }
 
+  if (profile?.user_type !== 'admin') {
+    return null; // Navigate handled in useEffect
+  }
+
   return (
     <PageWrapper>
       <Navbar />
-      
-      <div className="container mx-auto px-4 py-24 min-h-screen">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Administrator Dashboard</h1>
-          
-          <Tabs defaultValue="profiles" className="w-full">
-            <TabsList className="mb-8">
-              <TabsTrigger value="profiles" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>Pending Profiles</span>
-                {pendingProfiles.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {pendingProfiles.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="schools" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span>Pending Schools</span>
-                {pendingSchools.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {pendingSchools.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="profiles">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Profile Approvals</CardTitle>
-                  <CardDescription>
-                    Review and approve user profiles
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingData ? (
-                    <p className="text-center py-8">Loading pending profiles...</p>
-                  ) : pendingProfiles.length === 0 ? (
-                    <p className="text-center py-8 text-muted-foreground">
-                      No pending profiles to approve
-                    </p>
-                  ) : (
-                    <div className="space-y-6">
-                      {pendingProfiles.map(profile => (
-                        <div key={profile.id} className="p-6 border rounded-lg shadow-sm flex flex-col md:flex-row md:items-start gap-6">
-                          <Avatar className="h-16 w-16 mx-auto md:mx-0">
-                            <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name} />
-                            <AvatarFallback className="text-lg">{getInitials(profile.full_name)}</AvatarFallback>
-                          </Avatar>
-                          
-                          <div className="flex-1 space-y-4">
-                            <div>
-                              <h3 className="text-lg font-semibold">{profile.full_name}</h3>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                <Badge variant="outline">
-                                  {profile.user_type?.charAt(0).toUpperCase() + (profile.user_type?.slice(1) || '')}
-                                </Badge>
-                                <Badge variant="outline">{profile.email}</Badge>
-                                {profile.phone && <Badge variant="outline">{profile.phone}</Badge>}
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <p className="font-medium">Home Address:</p>
-                                <p className="text-muted-foreground">{profile.home_address || 'Not provided'}</p>
-                              </div>
-                              
-                              <div>
-                                <p className="font-medium">School:</p>
-                                <p className="text-muted-foreground">
-                                  {profile.school_name || profile.other_school_name || 'Not provided'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-row md:flex-col gap-2 mt-4 md:mt-0">
-                            <Button 
-                              onClick={() => handleProfileApproval(profile.id, true)} 
-                              variant="default"
-                              className="flex-1 md:w-full"
-                              size="sm"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button 
-                              onClick={() => handleProfileApproval(profile.id, false)} 
-                              variant="secondary"
-                              className="flex-1 md:w-full"
-                              size="sm"
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+      <div className="container mx-auto px-4 py-16">
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-3xl">Admin Panel</CardTitle>
+            <CardDescription>
+              Manage tutor approvals, school registrations, and other administrative tasks
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+              <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-2 md:grid-cols-none mb-6">
+                <TabsTrigger value="tutors" className="flex gap-2 items-center">
+                  <User size={16} />
+                  <span>Pending Tutors</span>
+                  {pendingTutors.length > 0 && (
+                    <Badge variant="secondary">{pendingTutors.length}</Badge>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="schools">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending School Approvals</CardTitle>
-                  <CardDescription>
-                    Review and approve school submissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingData ? (
-                    <p className="text-center py-8">Loading pending schools...</p>
-                  ) : pendingSchools.length === 0 ? (
-                    <p className="text-center py-8 text-muted-foreground">
-                      No pending schools to approve
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {pendingSchools.map(school => (
-                        <div key={school.id} className="p-6 border rounded-lg shadow-sm flex flex-col md:flex-row justify-between gap-4">
-                          <div className="space-y-2">
-                            <h3 className="text-lg font-semibold">{school.name}</h3>
-                            <p className="text-muted-foreground">
-                              {school.address || 'No address provided'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Submitted: {new Date(school.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          
-                          <div className="flex flex-row md:flex-col gap-2 mt-4 md:mt-0">
-                            <Button 
-                              onClick={() => handleSchoolApproval(school.id, true)} 
-                              variant="default"
-                              size="sm"
-                              className="flex-1 md:w-full"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button 
-                              onClick={() => handleSchoolApproval(school.id, false)} 
-                              variant="secondary"
-                              size="sm"
-                              className="flex-1 md:w-full"
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                </TabsTrigger>
+                <TabsTrigger value="schools" className="flex gap-2 items-center">
+                  <SchoolIcon size={16} />
+                  <span>Pending Schools</span>
+                  {pendingSchools.length > 0 && (
+                    <Badge variant="secondary">{pendingSchools.length}</Badge>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tutors">
+                {isDataLoading ? (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 mx-auto mb-4 animate-spin text-muted-foreground" />
+                    <p>Loading tutors...</p>
+                  </div>
+                ) : pendingTutors.length === 0 ? (
+                  <div className="text-center py-8 border rounded-lg">
+                    <BadgeCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                    <h3 className="text-xl font-medium mb-2">All caught up!</h3>
+                    <p className="text-muted-foreground">There are no tutors waiting for approval.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tutor</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>School</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingTutors.map((tutor) => (
+                          <TableRow key={tutor.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={tutor.avatar_url || ''} alt={tutor.full_name} />
+                                  <AvatarFallback>{tutor.full_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium">{tutor.full_name}</div>
+                                  <div className="text-sm text-muted-foreground">{tutor.phone}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{tutor.email}</TableCell>
+                            <TableCell>
+                              {tutor.school_id ? (
+                                <div className="flex items-center gap-1">
+                                  <GraduationCap className="h-4 w-4" />
+                                  <span>{tutor.other_school_name || getSchoolNameById(tutor.school_id)}</span>
+                                </div>
+                              ) : tutor.other_school_name ? (
+                                <div>
+                                  <span>{tutor.other_school_name}</span>
+                                  <Badge variant="outline" className="ml-2">New</Badge>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">No school selected</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleApproveTutor(tutor.id)}
+                                  className="w-24"
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleRejectTutor(tutor.id)}
+                                  className="w-24"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="schools">
+                {isDataLoading ? (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 mx-auto mb-4 animate-spin text-muted-foreground" />
+                    <p>Loading schools...</p>
+                  </div>
+                ) : pendingSchools.length === 0 ? (
+                  <div className="text-center py-8 border rounded-lg">
+                    <BadgeCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                    <h3 className="text-xl font-medium mb-2">All caught up!</h3>
+                    <p className="text-muted-foreground">There are no schools waiting for approval.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>School Name</TableHead>
+                          <TableHead>Address</TableHead>
+                          <TableHead>Date Submitted</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingSchools.map((school) => (
+                          <TableRow key={school.id}>
+                            <TableCell>
+                              <div className="font-medium">{school.name}</div>
+                            </TableCell>
+                            <TableCell>{school.address || 'No address provided'}</TableCell>
+                            <TableCell>{new Date(school.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleApproveSchool(school.id)}
+                                  className="w-24"
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleRejectSchool(school.id)}
+                                  className="w-24"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
-      
       <Footer />
     </PageWrapper>
   );

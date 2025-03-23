@@ -1,102 +1,92 @@
 
 import React from 'react';
-import { Tutor } from '@/services/api/mockTutorService';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Star, Clock, MapPin, GraduationCap } from 'lucide-react';
 import Button from '@/components/ui-custom/Button';
-import { Star, BookmarkPlus, BookmarkCheck, MapPin, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Profile } from '@/types/auth';
+
+interface Tutor extends Profile {
+  rating?: number;
+  specialties?: string[];
+  school?: {
+    name: string;
+    id: string;
+  };
+}
 
 interface TutorCardProps {
   tutor: Tutor;
-  onToggleBookmark: (tutorId: string) => void;
-  onViewDetails: (tutorId: string) => void;
+  onSelect?: (tutorId: string) => void;
+  showSelectButton?: boolean;
+  selected?: boolean;
 }
 
 const TutorCard: React.FC<TutorCardProps> = ({ 
   tutor, 
-  onToggleBookmark, 
-  onViewDetails 
+  onSelect,
+  showSelectButton = false,
+  selected = false
 }) => {
   return (
-    <Card className="hover-lift overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          {/* Tutor Image and Basic Info */}
-          <div className="md:w-1/3 relative h-full max-h-48 md:max-h-none">
-            <div className="w-full h-40 md:h-full">
-              <img 
-                src={tutor.avatar_url || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400'} 
-                alt={`${tutor.full_name}`} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {tutor.verified && (
-              <div className="absolute top-2 left-2">
-                <Badge className="bg-green-500">Verified</Badge>
-              </div>
-            )}
-          </div>
-          
-          {/* Tutor Details */}
-          <div className="p-5 md:w-2/3">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h3 className="font-semibold text-lg">{tutor.full_name}</h3>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                  <span>{tutor.rating} ({tutor.reviewCount} reviews)</span>
+    <Card className={`overflow-hidden transition-shadow hover:shadow-md ${selected ? 'ring-2 ring-primary' : ''}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={tutor.avatar_url || ''} alt={tutor.full_name} />
+            <AvatarFallback>{tutor.full_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-xl">{tutor.full_name}</CardTitle>
+            
+            <div className="flex items-center gap-1 mt-1">
+              {tutor.rating && (
+                <div className="flex items-center text-yellow-500">
+                  <Star className="fill-yellow-500 mr-1 h-4 w-4" />
+                  <span className="text-sm font-medium">{tutor.rating.toFixed(1)}</span>
                 </div>
-              </div>
-              <span className="font-medium">${tutor.hourlyRate}/hr</span>
-            </div>
-            
-            <div className="mb-3 text-sm">
-              <p className="text-muted-foreground flex items-center gap-1 mb-1">
-                <MapPin className="h-3.5 w-3.5" />
-                {tutor.school_name || "Online"}
-              </p>
-              <p className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                {tutor.availability.join(', ')}
-              </p>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-sm line-clamp-2">{tutor.bio}</p>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Subjects:</p>
-              <div className="flex flex-wrap gap-1">
-                {tutor.subjects.map((subject, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">
-                    {subject}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2 mt-4">
-              <Button
-                onClick={() => onToggleBookmark(tutor.id)}
-                variant="outline"
-                size="sm"
-                icon={tutor.isBookmarked ? <BookmarkCheck className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
-              >
-                {tutor.isBookmarked ? 'Saved' : 'Save'}
-              </Button>
-              <Button
-                onClick={() => onViewDetails(tutor.id)}
-                variant="default"
-                size="sm"
-              >
-                View Profile
-              </Button>
+              )}
             </div>
           </div>
         </div>
+      </CardHeader>
+      
+      <CardContent className="pb-2">
+        {tutor.school && (
+          <div className="flex items-start gap-2 mb-2">
+            <GraduationCap className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <span className="text-sm">{tutor.school.name}</span>
+          </div>
+        )}
+        
+        {tutor.home_address && (
+          <div className="flex items-start gap-2 mb-2">
+            <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
+            <span className="text-sm">{tutor.home_address}</span>
+          </div>
+        )}
+        
+        <div className="flex items-center flex-wrap gap-1 mt-3">
+          {tutor.specialties && tutor.specialties.map((specialty, index) => (
+            <Badge key={index} variant="secondary" className="mr-1 mb-1">
+              {specialty}
+            </Badge>
+          ))}
+        </div>
       </CardContent>
+      
+      <CardFooter className="pt-2">
+        {showSelectButton && (
+          <Button
+            className="w-full"
+            variant={selected ? "secondary" : "default"}
+            onClick={() => onSelect && onSelect(tutor.id)}
+          >
+            {selected ? "Selected" : "Select Tutor"}
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 };

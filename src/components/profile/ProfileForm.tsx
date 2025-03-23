@@ -1,17 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { ApprovalStatus, UserRole } from '@/types/auth';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import PersonalInfoForm from './PersonalInfoForm';
-import AddressInfoForm from './AddressInfoForm';
-import SchoolSelector from './SchoolSelector';
-import AvailabilityManager from './AvailabilityManager';
-import SpecialtyManager from './SpecialtyManager';
+import { Card, CardFooter } from "@/components/ui/card";
+import ApprovalStatusAlert from './ApprovalStatusAlert';
+import PersonalInfoCard from './PersonalInfoCard';
+import SchoolInfoSection from './SchoolInfoSection';
+import TutorServiceDetails from './TutorServiceDetails';
 import ProfileFormActions from './ProfileFormActions';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ProfileFormProps {
   onSubmit: (formData: any) => Promise<void>;
@@ -64,7 +59,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
     setFormData(prev => ({ 
       ...prev, 
       child_school_id: schoolId,
-      // We're not storing 'other child school' in this implementation
     }));
   };
 
@@ -84,110 +78,30 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
       .substring(0, 2);
   };
 
-  const renderApprovalStatusAlert = () => {
-    if (!profile?.approval_status) return null;
-    
-    switch (profile.approval_status as ApprovalStatus) {
-      case 'pending':
-        return (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Profile Pending Approval</AlertTitle>
-            <AlertDescription>
-              Your profile is currently under review. Once approved, you'll be able to access all platform features.
-            </AlertDescription>
-          </Alert>
-        );
-      case 'rejected':
-        return (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Profile Approval Rejected</AlertTitle>
-            <AlertDescription>
-              Your profile has been rejected. Please update your information and try again.
-            </AlertDescription>
-          </Alert>
-        );
-      case 'approved':
-        return (
-          <Alert variant="default" className="mb-6 bg-green-50 border-green-200">
-            <AlertCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">Profile Approved</AlertTitle>
-            <AlertDescription className="text-green-700">
-              Your profile has been approved! You can now use all platform features.
-            </AlertDescription>
-          </Alert>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit}>
-      {renderApprovalStatusAlert()}
+      <ApprovalStatusAlert status={profile?.approval_status} />
       
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Update your personal details and contact information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <PersonalInfoForm 
-            formData={formData} 
-            handleChange={handleChange} 
-            getInitials={getInitials} 
-          />
-          
-          <Separator />
-          
-          <AddressInfoForm 
-            formData={formData} 
-            handleChange={handleChange} 
-          />
-        </CardContent>
-      </Card>
+      <PersonalInfoCard 
+        formData={formData} 
+        handleChange={handleChange} 
+        getInitials={getInitials} 
+      />
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>School Information</CardTitle>
-          <CardDescription>Select your school or add a new one</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {profile?.user_type === 'tutor' && (
-            <SchoolSelector
-              selectedSchoolId={formData.school_id}
-              otherSchoolName={formData.other_school_name}
-              onSchoolChange={handleSchoolChange}
-              label="Your School"
-            />
-          )}
-          
-          {profile?.user_type === 'parent' && (
-            <SchoolSelector
-              selectedSchoolId={formData.child_school_id}
-              otherSchoolName={undefined}
-              onSchoolChange={handleChildSchoolChange}
-              label="Child's School"
-            />
-          )}
-        </CardContent>
-      </Card>
+      <SchoolInfoSection 
+        userType={profile?.user_type}
+        schoolId={formData.school_id}
+        otherSchoolName={formData.other_school_name}
+        childSchoolId={formData.child_school_id}
+        onSchoolChange={handleSchoolChange}
+        onChildSchoolChange={handleChildSchoolChange}
+      />
 
       {profile?.user_type === 'tutor' && user?.id && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Service Details</CardTitle>
-            <CardDescription>Manage your availability and specialties</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <AvailabilityManager userId={user.id} />
-            
-            <Separator />
-            
-            <SpecialtyManager userId={user.id} userType={profile.user_type as "parent" | "tutor"} />
-          </CardContent>
-        </Card>
+        <TutorServiceDetails 
+          userId={user.id} 
+          userType={profile.user_type === 'tutor' ? 'tutor' : 'parent'} 
+        />
       )}
 
       <Card>

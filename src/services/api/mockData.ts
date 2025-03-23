@@ -1,9 +1,111 @@
+import { Profile, School, UserRole } from '@/types/auth';
+import { Review } from '@/types/review';
+import { ServiceListing } from '@/types/service';
 
-import { ServiceData } from './serviceClient';
-import { Profile } from '@/types/auth';
+// Generate a random ID for mock data
+export const generateMockId = () => Math.random().toString(36).substring(2, 11);
+
+// Mock user profiles
+export const mockProfiles: Profile[] = [
+  {
+    id: 'user1',
+    full_name: 'John Doe',
+    email: 'john@example.com',
+    user_type: 'parent',
+    phone: '555-123-4567',
+    avatar_url: 'https://i.pravatar.cc/150?img=1',
+    verified: true,
+    home_address: '123 Main St, Anytown, CA 12345',
+    approval_status: 'approved',
+    child_school_id: 'school1'
+  },
+  {
+    id: 'user2',
+    full_name: 'Jane Smith',
+    email: 'jane@example.com',
+    user_type: 'tutor',
+    phone: '555-987-6543',
+    avatar_url: 'https://i.pravatar.cc/150?img=2',
+    verified: true,
+    home_address: '456 Oak Ave, Somewhere, CA 54321',
+    approval_status: 'approved',
+    school_id: 'school1'
+  },
+  {
+    id: 'user3',
+    full_name: 'Robert Johnson',
+    email: 'robert@example.com',
+    user_type: 'tutor',
+    phone: '555-555-5555',
+    avatar_url: 'https://i.pravatar.cc/150?img=3',
+    verified: true,
+    home_address: '789 Elm St, Nowhere, CA 67890',
+    approval_status: 'pending',
+    school_id: 'school2'
+  },
+  {
+    id: 'user4',
+    full_name: 'Emily Wang',
+    email: 'emily@example.com',
+    user_type: 'admin',
+    phone: '555-444-3333',
+    avatar_url: 'https://i.pravatar.cc/150?img=4',
+    verified: true,
+    home_address: '321 Pine St, Everywhere, CA 13579',
+    approval_status: 'approved'
+  },
+  {
+    id: 'user5',
+    full_name: 'Michael Brown',
+    email: 'michael@example.com',
+    user_type: 'parent',
+    phone: '555-222-1111',
+    avatar_url: 'https://i.pravatar.cc/150?img=5',
+    verified: false,
+    home_address: '654 Maple Dr, Elsewhere, CA 24680',
+    approval_status: 'rejected',
+    child_school_id: 'school3'
+  }
+];
+
+// Mock schools
+export const mockSchools: School[] = [
+  {
+    id: 'school1',
+    name: 'Springfield Elementary',
+    address: '123 School Lane, Springfield, CA 12345',
+    status: 'approved',
+    created_at: '2023-01-01T00:00:00Z',
+    updated_at: '2023-01-01T00:00:00Z'
+  },
+  {
+    id: 'school2',
+    name: 'Riverdale High',
+    address: '456 Education Blvd, Riverdale, CA 54321',
+    status: 'approved',
+    created_at: '2023-01-02T00:00:00Z',
+    updated_at: '2023-01-02T00:00:00Z'
+  },
+  {
+    id: 'school3',
+    name: 'Westview Middle School',
+    address: '789 Learning Ave, Westview, CA 67890',
+    status: 'approved',
+    created_at: '2023-01-03T00:00:00Z',
+    updated_at: '2023-01-03T00:00:00Z'
+  },
+  {
+    id: 'school4',
+    name: 'Eastside Academy',
+    address: '321 Scholar St, Eastside, CA 13579',
+    status: 'pending',
+    created_at: '2023-01-04T00:00:00Z',
+    updated_at: '2023-01-04T00:00:00Z'
+  }
+];
 
 // Mock services data
-export const MOCK_SERVICES: ServiceData[] = [
+export const MOCK_SERVICES: ServiceListing[] = [
   {
     id: '1',
     title: 'Math Tutoring',
