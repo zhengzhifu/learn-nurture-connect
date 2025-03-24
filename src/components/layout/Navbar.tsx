@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import Button from '@/components/ui-custom/Button';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { LogOut, User } from 'lucide-react';
@@ -13,9 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { isTokenExpired } from '@/services/auth/sessionService';
+import AuthButtons from '@/components/auth/AuthButtons';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, signOut, profile, user } = useAuth();
+  const isTokenValid = !isTokenExpired();
+  const isActuallyAuthenticated = isAuthenticated && isTokenValid;
 
   const handleSignOut = async () => {
     await signOut();
@@ -64,41 +68,6 @@ const Navbar: React.FC = () => {
     );
   };
 
-  const renderAuthLinks = () => {
-    if (isAuthenticated) {
-      return (
-        <>
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/browse">Browse</NavLink>
-          {profile && profile.user_type === 'parent' && (
-            <NavLink to="/tutors">My Tutors</NavLink>
-          )}
-          <NavLink to="/reviews">Reviews</NavLink>
-          {profile && profile.user_type === 'admin' && (
-            <NavLink to="/admin">Admin</NavLink>
-          )}
-          <ProfileButton />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <NavLink to="/browse">Browse</NavLink>
-          <div className="flex items-center gap-4">
-            <Link to="/signin">
-              <Button variant="outline" size="sm">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button size="sm">Sign up</Button>
-            </Link>
-          </div>
-        </>
-      );
-    }
-  };
-
   return (
     <div className="bg-white border-b">
       <div className="container flex h-16 items-center justify-between py-4">
@@ -106,7 +75,31 @@ const Navbar: React.FC = () => {
           Tutor<span className="text-primary">Find</span>
         </Link>
         <div className="flex items-center gap-5">
-          {renderAuthLinks()}
+          <NavLink to="/browse">Browse</NavLink>
+          {isActuallyAuthenticated ? (
+            <>
+              <NavLink to="/dashboard">Dashboard</NavLink>
+              {profile && profile.user_type === 'parent' && (
+                <NavLink to="/tutors">My Tutors</NavLink>
+              )}
+              <NavLink to="/reviews">Reviews</NavLink>
+              {profile && profile.user_type === 'admin' && (
+                <NavLink to="/admin">Admin</NavLink>
+              )}
+              <ProfileButton />
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link to="/signin">
+                <Button variant="outline" size="sm">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button size="sm">Sign up</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

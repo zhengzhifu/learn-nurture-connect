@@ -15,6 +15,7 @@ const SignIn: React.FC = () => {
   
   // Redirect to dashboard if already authenticated AND token is valid
   useEffect(() => {
+    // Prevent infinite redirects by only redirecting if we've completed loading
     if (isAuthenticated && !isLoading) {
       // Only redirect if token is valid
       if (!isTokenExpired()) {
