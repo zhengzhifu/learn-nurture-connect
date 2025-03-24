@@ -33,7 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signIn(email, password);
       
       if (result.user) {
-        navigate('/dashboard');
+        // Navigate after successful sign in
+        navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
       setError(`Login error: ${error.message}`);
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       
       await signUp(email, password, role, fullName);
-      navigate('/signin');
+      navigate('/signin', { replace: true });
     } catch (error: any) {
       setError(`Registration error: ${error.message}`);
       throw error;
@@ -61,19 +62,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignOut = async () => {
     try {
       console.log('handleSignOut called in AuthProvider');
+      setIsLoading(true);
       
       // Clear state first for immediate UI feedback
       setUser(null);
       setProfile(null);
       
-      // Perform the sign out operation - this handles the navigation
+      // Aggressively clear localStorage
+      for (const key of Object.keys(localStorage)) {
+        if (key.includes('supabase.auth.') || key.includes('sb-')) {
+          console.log('Removing localStorage item:', key);
+          localStorage.removeItem(key);
+        }
+      }
+      
+      // Perform the sign out operation
       await signOut();
+      
+      // Force redirect to signin regardless of signOut result
+      navigate('/signin', { replace: true });
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
       console.error('Sign out error:', error);
       
       // Force redirect to signin on error
-      navigate('/signin');
+      navigate('/signin', { replace: true });
+    } finally {
+      setIsLoading(false);
     }
   };
 

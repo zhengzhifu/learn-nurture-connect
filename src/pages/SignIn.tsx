@@ -7,15 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import SignInForm from '@/components/auth/SignInForm';
 import Button from '@/components/ui-custom/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
+import { isTokenExpired } from '@/services/auth/sessionService';
 
 const SignIn: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Redirect to dashboard if already authenticated
+  // Redirect to dashboard if already authenticated AND token is valid
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate('/dashboard', { replace: true });
+      // Only redirect if token is valid
+      if (!isTokenExpired()) {
+        console.log('SignIn: User is authenticated with valid token, redirecting to dashboard');
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log('SignIn: Token is expired, staying on signin page');
+      }
     }
   }, [isAuthenticated, isLoading, navigate]);
 

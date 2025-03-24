@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -13,14 +13,23 @@ import { isTokenExpired } from '@/services/auth/sessionService';
 const Dashboard = () => {
   const { profile, user, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   // Additional verification that we have a valid session
   useEffect(() => {
-    if (!isLoading && (!user || isTokenExpired())) {
-      console.log('Dashboard: No valid user session, redirecting to signin');
-      navigate('/signin');
+    // Prevent multiple redirects
+    if (hasRedirected) return;
+    
+    if (!isLoading) {
+      const tokenExpired = isTokenExpired();
+      
+      if (!user || tokenExpired) {
+        console.log('Dashboard: No valid user session, redirecting to signin');
+        setHasRedirected(true);
+        navigate('/signin', { replace: true });
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, hasRedirected]);
 
   // Create a safe user data object to prevent any circular references
   const userData = profile ? {
@@ -48,8 +57,7 @@ const Dashboard = () => {
 
   // Additional guard to ensure we have user data before rendering
   if (!isLoading && !userData) {
-    navigate('/signin');
-    return null;
+    return null; // Will be handled by the redirect in useEffect
   }
 
   return (

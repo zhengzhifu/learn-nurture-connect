@@ -67,6 +67,43 @@ export const isTokenExpired = () => {
   }
 };
 
+// Refresh the token if it's close to expiring
+export const refreshTokenIfNeeded = async () => {
+  try {
+    // Get the current session
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error || !data.session) {
+      console.log('No active session to refresh');
+      return false;
+    }
+    
+    // Calculate how much time is left before the token expires
+    const expiresAt = new Date(data.session.expires_at || 0);
+    const now = new Date();
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+    
+    // If token expires in less than 5 minutes (300000 ms), refresh it
+    if (timeUntilExpiry < 300000) {
+      console.log('Token is about to expire, refreshing...');
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.error('Error refreshing token:', refreshError);
+        return false;
+      }
+      
+      console.log('Token refreshed successfully');
+      return true;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in refreshTokenIfNeeded:', error);
+    return false;
+  }
+};
+
 // Reset password for email
 export const resetPasswordForEmail = async (email: string, redirectUrl: string) => {
   try {

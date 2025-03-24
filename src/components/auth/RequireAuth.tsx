@@ -16,16 +16,26 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showTimeout, setShowTimeout] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
   
   // Force check if we have a valid auth token directly
   useEffect(() => {
+    // Only perform check if we're not already on the signin page
+    if (location.pathname === '/signin') {
+      return;
+    }
+    
     const checkToken = () => {
+      // Prevent multiple redirects
+      if (hasRedirected) return;
+      
       const isExpired = isTokenExpired();
       console.log('RequireAuth: Directly checking token, isExpired:', isExpired);
       
       // If token is expired or missing, redirect to signin
       if (isExpired) {
         console.log('RequireAuth: Token expired, redirecting to signin');
+        setHasRedirected(true);
         toast.error('Your session has expired. Please sign in again.');
         navigate('/signin', { 
           state: { from: location.pathname },
@@ -45,7 +55,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     }, 60000); // Check every minute
     
     return () => clearInterval(intervalId);
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, hasRedirected]);
   
   // Set a timeout to show a friendly message if loading takes too long
   useEffect(() => {
@@ -74,11 +84,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
   // Check token using local storage first (fast path) when auth status changes
   useEffect(() => {
+    // Skip checking if we're on the signin page or already redirected
+    if (location.pathname === '/signin' || hasRedirected) {
+      return;
+    }
+    
     if (!isLoading && !isAuthenticated) {
       const expired = isTokenExpired();
       
       if (expired) {
         console.log('RequireAuth: Not authenticated, redirecting to signin');
+        setHasRedirected(true);
         toast.error('Authentication required. Please sign in.');
         navigate('/signin', { 
           state: { from: location.pathname },
@@ -86,7 +102,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         });
       }
     }
-  }, [isAuthenticated, isLoading, navigate, location.pathname]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname, hasRedirected]);
 
   // Show loading timeout UI if taking too long
   if (isLoading && showTimeout) {
