@@ -53,7 +53,7 @@ export const useServiceBrowse = () => {
     } catch (error) {
       console.error('Error fetching services:', error);
       setHasError(true);
-      toast.error('Failed to load services');
+      toast.error('Failed to load services. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -74,12 +74,17 @@ export const useServiceBrowse = () => {
     setPriceRange([0, 100]);
     setSelectedSubjects([]);
     setSelectedAvailability([]);
-  }, []);
+    // Fetch all services after clearing filters
+    setTimeout(() => {
+      fetchServices();
+    }, 0);
+  }, [fetchServices]);
 
   // Initial data fetch
   useEffect(() => {
+    console.log('useServiceBrowse: Initial fetch triggered');
     fetchServices();
-  }, []);
+  }, [fetchServices]);
 
   return {
     serviceList,

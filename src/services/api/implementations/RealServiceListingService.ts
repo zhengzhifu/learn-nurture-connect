@@ -15,6 +15,13 @@ export class RealServiceListingService extends BaseService {
         
       if (error) {
         console.error('Error fetching services from Supabase:', error);
+        throw error; // Throw the error to be caught by the calling function
+      }
+
+      console.log('Raw tutor_services data:', data);
+      
+      if (!data || data.length === 0) {
+        console.log('No tutor services found in the database');
         return [];
       }
 
@@ -23,7 +30,7 @@ export class RealServiceListingService extends BaseService {
         data.map(item => realServiceFetcher.transformServiceData(item))
       );
       
-      console.log(`RealServiceListingService: getServices returning ${services.length} services`);
+      console.log(`RealServiceListingService: getServices returning ${services.length} services:`, services);
       return services;
     } catch (error) {
       console.error('Exception fetching services:', error);
@@ -47,6 +54,11 @@ export class RealServiceListingService extends BaseService {
       
       if (error) {
         console.error('Error filtering services:', error);
+        throw error; // Throw the error to be caught by the calling function
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('No services found matching the filters');
         return [];
       }
       
@@ -58,7 +70,7 @@ export class RealServiceListingService extends BaseService {
       // Apply client-side filters
       services = this.applyClientSideFilters(services, filters);
       
-      console.log(`RealServiceListingService: filterServices returning ${services.length} filtered results`);
+      console.log(`RealServiceListingService: filterServices returning ${services.length} filtered results:`, services);
       return services;
     } catch (error) {
       console.error('Error filtering services:', error);
@@ -83,6 +95,11 @@ export class RealServiceListingService extends BaseService {
       
       if (error) {
         console.error('Error searching services:', error);
+        throw error; // Throw the error to be caught by the calling function
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('No services found matching the search query');
         return [];
       }
       
@@ -91,7 +108,7 @@ export class RealServiceListingService extends BaseService {
         data.map(item => realServiceFetcher.transformServiceData(item))
       );
       
-      console.log(`RealServiceListingService: searchServices returning ${services.length} results`);
+      console.log(`RealServiceListingService: searchServices returning ${services.length} results:`, services);
       return services;
     } catch (error) {
       console.error('Error searching services:', error);

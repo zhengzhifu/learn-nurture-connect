@@ -20,13 +20,19 @@ const ServiceList: React.FC<ServiceListProps> = ({
   onServiceClick,
   hasError = false
 }) => {
+  console.log('ServiceList rendering with:', { 
+    serviceCount: serviceList?.length, 
+    isLoading, 
+    hasError 
+  });
+
   if (hasError) {
     return (
       <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
-          There was an error loading the services. This might be due to a database configuration issue. 
+          There was an error loading the services. This might be due to a database connection issue. 
           Please try again later or contact support.
         </AlertDescription>
       </Alert>
@@ -49,7 +55,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
     );
   }
   
-  if (serviceList.length === 0) {
+  if (!serviceList || serviceList.length === 0) {
     return (
       <Card>
         <CardContent className="p-6 text-center">

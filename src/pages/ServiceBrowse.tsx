@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const ServiceBrowse: React.FC = () => {
   const navigate = useNavigate();
@@ -27,11 +28,19 @@ const ServiceBrowse: React.FC = () => {
     setSelectedAvailability,
     handleSearch,
     applyFilters,
-    clearFilters
+    clearFilters,
+    fetchServices
   } = useServiceBrowse();
+
+  useEffect(() => {
+    // Ensure services are loaded when the component mounts
+    console.log('ServiceBrowse: Component mounted, fetching services');
+    fetchServices();
+  }, [fetchServices]);
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
+    toast.info(`Service ${serviceId} details will be available soon`);
     // In a full implementation, this would navigate to a service details page
     // navigate(`/services/${serviceId}`);
   };
