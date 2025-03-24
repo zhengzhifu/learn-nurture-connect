@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -61,8 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignOut = async () => {
     try {
       console.log('handleSignOut called in AuthProvider');
-      setIsLoading(true);
-      setError(null);
       
       // Clear state first for immediate UI feedback
       setUser(null);
@@ -71,14 +68,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Perform the sign out operation
       await signOut();
       
-      // Navigate to home page after sign out
-      console.log('Sign out complete, navigating to home page');
-      navigate('/', { replace: true });
+      // No need to navigate here as we're doing it in signOutService
+      console.log('Sign out complete');
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
       console.error('Sign out error:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

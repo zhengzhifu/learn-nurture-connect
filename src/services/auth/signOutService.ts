@@ -25,6 +25,13 @@ export const signOut = async () => {
     
     console.log('Sign out successful');
     toast.success('Successfully signed out');
+    
+    // Force refresh the page after a slight delay
+    // This ensures clean state across all components
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
+    
     return true;
   } catch (error: any) {
     console.error('Error signing out:', error);

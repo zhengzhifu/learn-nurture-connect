@@ -8,13 +8,19 @@ import {
   Star,
   LogOut
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 const SidebarNavigation: React.FC = () => {
   const { signOut } = useAuth();
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      console.log('SidebarNavigation: Sign out button clicked');
+      await signOut();
+      // Navigation is handled in AuthProvider
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (

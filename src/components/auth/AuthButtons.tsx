@@ -78,16 +78,7 @@ const AuthButtons: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Sign out button */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleSignOut}
-          className="border-destructive text-destructive hover:bg-destructive/10"
-          icon={<LogOut className="h-4 w-4" />}
-        >
-          <span className="hidden sm:inline">Sign Out</span>
-        </Button>
+        {/* Only one sign out button is needed - removing the duplicate button */}
       </div>
     );
   }
