@@ -10,6 +10,7 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Tutor } from '@/services/api/mockTutorService';
+import { UserRole } from '@/types/auth';
 
 const MyTutorsPage: React.FC = () => {
   const { user, profile } = useAuth();
@@ -36,13 +37,13 @@ const MyTutorsPage: React.FC = () => {
         if (error) throw error;
         
         // Transform the data to match the Tutor interface
-        const transformedTutors = data.map(item => {
+        const transformedTutors: Tutor[] = data.map(item => {
           const profile = item.profiles;
           return {
             id: profile?.id || item.tutor_id,
             full_name: profile?.full_name || 'Unknown Tutor',
             email: profile?.email || '',
-            user_type: 'tutor',
+            user_type: (profile?.user_type || 'tutor') as UserRole, // Cast to UserRole
             phone: profile?.phone || '',
             avatar_url: profile?.avatar_url || '',
             verified: profile?.verified || false,
