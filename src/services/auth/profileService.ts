@@ -9,17 +9,33 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('ProfileService: Fetching profile for user:', userId);
     
-    // Try direct Supabase query for reliability
+    // Use the security definer function through RPC to avoid RLS issues
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
-      .eq('id', userId)
+      .rpc('get_current_user_profile')
       .maybeSingle();
-
+      
     if (error) {
       console.error('ProfileService: Error fetching profile:', error);
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
+      
+      // Fall back to direct query if RPC fails (this will work with new RLS policies)
+      const { data: directData, error: directError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (directError) {
+        console.error('ProfileService: Error in direct profile query:', directError);
+        return null;
+      }
+      
+      if (directData) {
+        console.log('ProfileService: Profile fetched via direct query:', directData);
+        return directData as Profile;
+      }
+      
       return null;
     }
 
@@ -28,7 +44,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       return null;
     }
 
-    console.log('ProfileService: Profile data fetched:', data);
+    console.log('ProfileService: Profile data fetched via RPC:', data);
     return data as Profile;
   } catch (error: any) {
     console.error('ProfileService: Exception fetching profile:', error);
@@ -73,7 +89,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
         id: userId,
         full_name: data.full_name || authData.user?.user_metadata?.full_name || 'User',
         email: authData.user?.email || '',
-        user_type: authData.user?.user_metadata?.role || 'parent',
+        user_type: data.user_type || authData.user?.user_metadata?.role || 'parent',
         phone: data.phone || '',
         avatar_url: data.avatar_url || '',
         home_address: data.home_address || '',

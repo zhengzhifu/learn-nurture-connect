@@ -472,6 +472,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_auth_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          approval_status: string
+          avatar_url: string | null
+          child_school_id: string | null
+          created_at: string
+          email: string
+          full_name: string
+          home_address: string | null
+          id: string
+          other_school_name: string | null
+          phone: string | null
+          school_id: string | null
+          updated_at: string
+          user_type: Database["public"]["Enums"]["user_type"]
+          verified: boolean | null
+        }[]
+      }
     }
     Enums: {
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"

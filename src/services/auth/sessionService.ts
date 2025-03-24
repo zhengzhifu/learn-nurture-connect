@@ -21,7 +21,7 @@ export const getCurrentSession = async () => {
 // Check if token is expired or missing
 export const isTokenExpired = () => {
   try {
-    // First, check for token in sessionStorage (used by Supabase)
+    // First, check for token in localStorage (used by Supabase)
     const localStorageKeys = Object.keys(localStorage);
     const authKey = localStorageKeys.find(key => key.startsWith('supabase.auth.token'));
     
