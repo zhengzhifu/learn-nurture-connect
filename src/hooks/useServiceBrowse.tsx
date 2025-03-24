@@ -37,38 +37,47 @@ export const useServiceBrowse = () => {
     setIsLoading(true);
     setHasError(false);
     try {
+      console.log('Fetching services...');
       const serviceClient = ServiceClientFactory.getClient();
       let services: ServiceData[] = [];
       
       if (searchQuery) {
+        console.log('Searching with query:', searchQuery);
         services = await serviceClient.searchServices(searchQuery);
       } else if (hasActiveFilters) {
+        console.log('Applying filters:', activeFilters);
         services = await serviceClient.filterServices(activeFilters);
       } else {
+        console.log('Fetching all services');
         services = await serviceClient.getServices();
       }
       
       console.log('Fetched services:', services);
-      setServiceList(services);
+      setServiceList(services || []);
     } catch (error) {
       console.error('Error fetching services:', error);
       setHasError(true);
       toast.error('Failed to load services. Please try again later.');
+      // Set empty array to avoid undefined errors
+      setServiceList([]);
     } finally {
       setIsLoading(false);
     }
   }, [searchQuery, hasActiveFilters, activeFilters]);
 
   const applyFilters = useCallback(() => {
+    console.log('Applying filters...');
     fetchServices();
   }, [fetchServices]);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Handling search...');
     fetchServices();
   }, [fetchServices]);
 
   const clearFilters = useCallback(() => {
+    console.log('Clearing filters...');
     setSelectedTypes([]);
     setLocationFilter('');
     setPriceRange([0, 100]);
@@ -84,7 +93,7 @@ export const useServiceBrowse = () => {
   useEffect(() => {
     console.log('useServiceBrowse: Initial fetch triggered');
     fetchServices();
-  }, [fetchServices]);
+  }, []);
 
   return {
     serviceList,

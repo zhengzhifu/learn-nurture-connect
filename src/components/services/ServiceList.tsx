@@ -33,7 +33,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
           There was an error loading the services. This might be due to a database connection issue. 
-          Please try again later or contact support.
+          Please try again later or contact support if the issue persists.
         </AlertDescription>
       </Alert>
     );

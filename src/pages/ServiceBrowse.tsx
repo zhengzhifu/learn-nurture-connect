@@ -5,11 +5,9 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const ServiceBrowse: React.FC = () => {
-  const navigate = useNavigate();
   const {
     serviceList,
     isLoading,
@@ -40,17 +38,23 @@ const ServiceBrowse: React.FC = () => {
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
-    toast.info(`Service ${serviceId} details will be available soon`);
+    toast.info(`Viewing service details for ${serviceId}`);
     // In a full implementation, this would navigate to a service details page
     // navigate(`/services/${serviceId}`);
   };
+
+  console.log('ServiceBrowse rendering with:', { 
+    serviceCount: serviceList?.length, 
+    isLoading, 
+    hasError 
+  });
 
   return (
     <PageWrapper>
       <Navbar />
       <div className="container mx-auto py-8 pt-24">
         <ServiceBrowser 
-          serviceList={serviceList}
+          serviceList={serviceList || []}
           isLoading={isLoading}
           hasError={hasError}
           searchQuery={searchQuery}

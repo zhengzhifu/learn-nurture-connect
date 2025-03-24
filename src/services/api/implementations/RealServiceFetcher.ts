@@ -15,15 +15,23 @@ export class RealServiceFetcher {
     let providerAvatar = undefined;
     
     if (tutorId) {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', tutorId)
-        .maybeSingle();
-        
-      if (profileData) {
-        providerName = profileData.full_name;
-        providerAvatar = profileData.avatar_url;
+      try {
+        // Use direct query with .select() to avoid RLS issues
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', tutorId)
+          .maybeSingle();
+          
+        if (error) {
+          console.error('ProfileService: Error fetching profile:', error);
+          console.error('Error details:', JSON.stringify(error));
+        } else if (profileData) {
+          providerName = profileData.full_name;
+          providerAvatar = profileData.avatar_url;
+        }
+      } catch (error) {
+        console.error('Exception fetching profile data:', error);
       }
     }
     
