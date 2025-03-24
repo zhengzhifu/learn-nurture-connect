@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
@@ -18,14 +17,18 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 const Reviews: React.FC = () => {
   const { user, profile, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
-  const userId = user?.id || 'user123'; // Fallback for development
+  const userId = user?.id || '';
   
   const { data: reviews, isLoading: reviewsLoading, error } = useQuery({
     queryKey: ['reviews', userId],
     queryFn: async () => {
+      if (!userId) {
+        return [];
+      }
       const client = ServiceClientFactory.getClient();
       return client.getUserReviews(userId);
-    }
+    },
+    enabled: !!userId
   });
   
   if (error) {
@@ -53,7 +56,7 @@ const Reviews: React.FC = () => {
     if (activeTab === 'tutoring') return review.subject !== 'Babysitting' && review.subject !== 'Childcare';
     if (activeTab === 'childcare') return review.subject === 'Babysitting' || review.subject === 'Childcare';
     return true;
-  });
+  }) || [];
   
   const renderSkeletons = () => {
     return Array(3).fill(null).map((_, index) => (
@@ -102,7 +105,7 @@ const Reviews: React.FC = () => {
               <div className="space-y-4">
                 {renderSkeletons()}
               </div>
-            ) : filteredReviews && filteredReviews.length > 0 ? (
+            ) : filteredReviews.length > 0 ? (
               <div className="space-y-4">
                 {filteredReviews.map((review) => (
                   <ReviewCard key={review.id} review={review} />

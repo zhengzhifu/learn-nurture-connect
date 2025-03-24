@@ -42,7 +42,6 @@ const Dashboard = () => {
     checkAuthStatus();
   }, []);
   
-  // Log when auth data changes
   useEffect(() => {
     console.log('Dashboard: auth state updated', {
       isLoading,
@@ -58,7 +57,7 @@ const Dashboard = () => {
       const timer = setTimeout(() => {
         console.log('Dashboard: loading timeout expired');
         setTimeoutExpired(true);
-      }, 5000); // Reducing timeout from 10s to 5s for faster feedback
+      }, 5000);
       
       return () => clearTimeout(timer);
     } else {

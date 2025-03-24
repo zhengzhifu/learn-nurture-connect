@@ -5,8 +5,10 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
+import { useNavigate } from 'react-router-dom';
 
 const ServiceBrowse: React.FC = () => {
+  const navigate = useNavigate();
   const {
     serviceList,
     isLoading,
@@ -30,6 +32,8 @@ const ServiceBrowse: React.FC = () => {
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
+    // In a full implementation, this would navigate to a service details page
+    // navigate(`/services/${serviceId}`);
   };
 
   return (

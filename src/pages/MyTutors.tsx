@@ -1,12 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { mockTutorService, Tutor } from '@/services/api/mockTutorService';
+import { supabase } from '@/integrations/supabase/client';
 import TutorCard from '@/components/tutors/TutorCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import PageWrapper from '@/components/utils/PageWrapper';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { Tutor } from '@/services/api/mockTutorService';
 
 const MyTutorsPage: React.FC = () => {
   const { user, profile } = useAuth();
@@ -22,8 +25,38 @@ const MyTutorsPage: React.FC = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const tutorsData = await mockTutorService.getUserTutors(user.id);
-        setTutors(tutorsData);
+        
+        // Fetch tutors from Supabase
+        // In real implementation, we would fetch from bookings or tutor associations
+        const { data, error } = await supabase
+          .from('tutor_services')
+          .select('*, profiles:tutor_id(*)')
+          .limit(10);
+          
+        if (error) throw error;
+        
+        // Transform the data to match the Tutor interface
+        const transformedTutors = data.map(item => {
+          const profile = item.profiles;
+          return {
+            id: profile?.id || item.tutor_id,
+            full_name: profile?.full_name || 'Unknown Tutor',
+            email: profile?.email || '',
+            user_type: 'tutor',
+            phone: profile?.phone || '',
+            avatar_url: profile?.avatar_url || '',
+            verified: profile?.verified || false,
+            subjects: item.tutoring_subjects || [],
+            hourlyRate: parseFloat(item.hourly_rate) || 0,
+            rating: 4.5, // Default rating
+            reviewCount: 0, // Default count
+            availability: ['Weekdays', 'Weekends'], // Default availability
+            bio: 'Tutor profile', // Default bio
+            isBookmarked: false // Default bookmark status
+          };
+        });
+        
+        setTutors(transformedTutors);
       } catch (err: any) {
         console.error('Error fetching tutors:', err);
         setError('Failed to load tutors. Please try again later.');
@@ -41,9 +74,8 @@ const MyTutorsPage: React.FC = () => {
     if (!user) return;
     
     try {
-      await mockTutorService.toggleTutorBookmark(tutorId, user.id);
-      
-      // Update local state
+      // In real implementation, we would update a bookmarks table in Supabase
+      // For now, just update UI state
       setTutors(prevTutors => 
         prevTutors.map(tutor => 
           tutor.id === tutorId 
@@ -67,7 +99,6 @@ const MyTutorsPage: React.FC = () => {
   // Handle view details
   const handleViewDetails = (tutorId: string) => {
     // In a real app, this would navigate to a tutor detail page
-    // For now, we'll just show a toast
     toast.info('Tutor details would open here');
     console.log('Viewing tutor details for:', tutorId);
   };
@@ -97,7 +128,8 @@ const MyTutorsPage: React.FC = () => {
 
   return (
     <PageWrapper>
-      <div className="container mx-auto py-8 px-4">
+      <Navbar />
+      <div className="container mx-auto py-8 px-4 pt-24">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <DashboardSidebar userData={profile} isLoading={isLoading} />
@@ -137,6 +169,7 @@ const MyTutorsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </PageWrapper>
   );
 };
