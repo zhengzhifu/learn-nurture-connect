@@ -24,16 +24,17 @@ export class ServiceClientFactory {
       case 'real':
         return realServiceClient;
       case 'edge':
-        // For the edge function client, we'll wrap it in the real service client
-        // and override just the methods we need
-        const client = { ...realServiceClient };
-        
-        // Override the methods with edge function implementations
-        client.getServices = edgeFunctionServiceClient.getServices.bind(edgeFunctionServiceClient);
-        client.filterServices = edgeFunctionServiceClient.filterServices.bind(edgeFunctionServiceClient);
-        client.searchServices = edgeFunctionServiceClient.searchServices.bind(edgeFunctionServiceClient);
-        
-        return client;
+        // Create a proper composite client by extending the real service client
+        // and overriding specific methods with edge function implementations
+        return {
+          // Include all methods from realServiceClient for profile and review operations
+          ...realServiceClient,
+          
+          // Override service-related methods with edge function implementations
+          getServices: edgeFunctionServiceClient.getServices.bind(edgeFunctionServiceClient),
+          filterServices: edgeFunctionServiceClient.filterServices.bind(edgeFunctionServiceClient),
+          searchServices: edgeFunctionServiceClient.searchServices.bind(edgeFunctionServiceClient)
+        };
       default:
         return mockServiceClient;
     }
