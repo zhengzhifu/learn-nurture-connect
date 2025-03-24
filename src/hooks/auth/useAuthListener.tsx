@@ -38,7 +38,6 @@ export const useAuthListener = (
           setUser(currentSession.user);
           
           // Only fetch profile if we have a user and don't already have a profile
-          // This prevents unnecessary profile fetches on every auth state change
           if (!profile || profile.id !== currentSession.user.id) {
             try {
               const profileData = await fetchProfile(currentSession.user.id);

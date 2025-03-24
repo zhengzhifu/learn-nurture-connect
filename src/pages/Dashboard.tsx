@@ -3,7 +3,7 @@ import React from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardError from '@/components/dashboard/DashboardError';

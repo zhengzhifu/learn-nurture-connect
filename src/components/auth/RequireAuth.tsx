@@ -16,7 +16,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showTimeout, setShowTimeout] = useState(false);
-  const [checkingToken, setCheckingToken] = useState(false);
   
   // Set a timeout to show a friendly message if loading takes too long
   useEffect(() => {
@@ -43,45 +42,25 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     }
   }, [error]);
 
-  // Check if token is explicitly expired
+  // Check token using local storage first (fast path)
   useEffect(() => {
-    const checkTokenExpiration = async () => {
-      if (!isLoading && !isAuthenticated) {
-        setCheckingToken(true);
-        try {
-          const expired = await isTokenExpired();
-          if (expired) {
-            console.log('Token is expired, redirecting to signin');
-            toast.error('Your session has expired. Please sign in again.');
-            navigate('/signin', { 
-              state: { from: location.pathname },
-              replace: true 
-            });
-          }
-        } catch (error) {
-          console.error('Error checking token expiration:', error);
-        } finally {
-          setCheckingToken(false);
-        }
+    if (!isLoading && !isAuthenticated) {
+      // Instead of calling an async function, do a synchronous check
+      const expired = isTokenExpired();
+      
+      if (expired) {
+        console.log('Token is expired, redirecting to signin');
+        toast.error('Your session has expired. Please sign in again.');
+        navigate('/signin', { 
+          state: { from: location.pathname },
+          replace: true 
+        });
       }
-    };
-    
-    checkTokenExpiration();
+    }
   }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
-  // If not loading but not authenticated, redirect to signin
-  useEffect(() => {
-    if (!isLoading && !checkingToken && !isAuthenticated) {
-      console.log('Not authenticated, redirecting to signin');
-      navigate('/signin', { 
-        state: { from: location.pathname },
-        replace: true 
-      });
-    }
-  }, [isAuthenticated, isLoading, checkingToken, navigate, location.pathname]);
-
   // Show loading timeout UI if taking too long
-  if ((isLoading || checkingToken) && showTimeout) {
+  if (isLoading && showTimeout) {
     return (
       <LoadingTimeout 
         onRetry={() => window.location.reload()} 
@@ -91,7 +70,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   }
 
   // Show standard loading UI
-  if (isLoading || checkingToken) {
+  if (isLoading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />

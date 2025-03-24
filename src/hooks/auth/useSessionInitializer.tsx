@@ -58,7 +58,20 @@ export const useSessionInitializer = (
           return;
         }
         
-        // Check for existing session
+        // If token exists but is expired, clear auth state
+        if (isTokenExpired()) {
+          console.log('Token is expired, clearing auth state');
+          if (isMounted.current) {
+            setUser(null);
+            setProfile(null);
+            setSession(null);
+            setIsLoading(false);
+            clearTimeout(authTimeoutRef.current!);
+          }
+          return;
+        }
+        
+        // Only call getSession if we have a non-expired token
         const { data, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
