@@ -48,7 +48,7 @@ const MyTutorsPage: React.FC = () => {
             avatar_url: profile?.avatar_url || '',
             verified: profile?.verified || false,
             subjects: item.tutoring_subjects || [],
-            hourlyRate: parseFloat(item.hourly_rate) || 0,
+            hourlyRate: parseFloat(String(item.hourly_rate)) || 0, // Convert to string first, then parse as float
             rating: 4.5, // Default rating
             reviewCount: 0, // Default count
             availability: ['Weekdays', 'Weekends'], // Default availability
