@@ -6,7 +6,7 @@ import PageWrapper from '@/components/utils/PageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SignInForm from '@/components/auth/SignInForm';
 import Button from '@/components/ui-custom/Button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 const SignIn: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
