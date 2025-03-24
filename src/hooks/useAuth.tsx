@@ -1,10 +1,12 @@
 
 import { useContext } from 'react';
 import { AuthContext } from '@/contexts/AuthContext';
-import { createFallbackProfile } from '@/utils/profileUtils';
-import { User } from '@supabase/supabase-js';
 import { AuthContextType } from '@/types/auth';
 
+/**
+ * Hook to access the authentication context
+ * Provides access to the authentication state and methods
+ */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   

@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import { Profile, UserRole } from '@/types/auth';
-import { useAuthState } from '@/hooks/useAuthState';
+import { useAuthState } from '@/hooks/auth/useAuthState';
 import { 
   signIn, 
   signUp, 
