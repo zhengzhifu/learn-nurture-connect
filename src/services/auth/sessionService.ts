@@ -19,11 +19,28 @@ export const getCurrentSession = async () => {
 };
 
 // Check if token is expired or missing
-export const isTokenExpired = () => {
+export const isTokenExpired = async () => {
   try {
-    // First, check for token in localStorage (used by Supabase)
+    // First check if we have a valid session via Supabase API
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error checking session:', error);
+      return true;
+    }
+    
+    if (data.session) {
+      // We have a valid session, token is not expired
+      console.log('Valid session found via Supabase API');
+      return false;
+    }
+    
+    // As fallback, check for token in localStorage (used by Supabase)
     const localStorageKeys = Object.keys(localStorage);
-    const authKey = localStorageKeys.find(key => key.startsWith('supabase.auth.token'));
+    const authKey = localStorageKeys.find(key => 
+      key.startsWith('supabase.auth.token') || 
+      key.startsWith('sb-') && key.includes('-auth-token')
+    );
     
     if (!authKey) {
       console.log('No auth token found in localStorage');
@@ -31,25 +48,30 @@ export const isTokenExpired = () => {
     }
     
     // Parse the token data
-    const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
-    if (!authData.expiresAt) {
-      console.log('No expiration data found in token');
+    try {
+      const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
+      if (!authData.expiresAt) {
+        console.log('No expiration data found in token');
+        return true;
+      }
+      
+      // Check if token is expired
+      const expiresAt = new Date(authData.expiresAt * 1000);
+      const now = new Date();
+      const isExpired = now >= expiresAt;
+      
+      // Log the expiration status
+      if (isExpired) {
+        console.log('Token is expired, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
+      } else {
+        console.log('Token is valid, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
+      }
+      
+      return isExpired;
+    } catch (parseError) {
+      console.error('Error parsing token data:', parseError);
       return true;
     }
-    
-    // Check if token is expired
-    const expiresAt = new Date(authData.expiresAt * 1000);
-    const now = new Date();
-    const isExpired = now >= expiresAt;
-    
-    // Log the expiration status
-    if (isExpired) {
-      console.log('Token is expired, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
-    } else {
-      console.log('Token is valid, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
-    }
-    
-    return isExpired;
   } catch (error) {
     console.error('Error checking token expiration:', error);
     return true; // Assume expired in case of error
