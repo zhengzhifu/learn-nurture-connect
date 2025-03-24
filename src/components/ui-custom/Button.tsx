@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { cn } from "@/lib/utils";
 import { Button as ShadcnButton } from "@/components/ui/button";
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   variant?: 'default' | 'ghost' | 'primary' | 'outline' | 'secondary' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
@@ -15,7 +15,7 @@ interface ButtonProps {
   icon?: React.ReactNode;
 }
 
-const Button: React.FC<ButtonProps> = ({
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   variant = 'default',
   size = 'default',
@@ -24,8 +24,9 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   type = 'button',
   fullWidth = false,
-  icon
-}) => {
+  icon,
+  ...props
+}, ref) => {
   const variantClasses = {
     primary: 'bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-shadow',
     default: 'hover-lift',
@@ -37,6 +38,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <ShadcnButton
+      ref={ref}
       variant={variant as any}
       size={size}
       onClick={onClick}
@@ -47,11 +49,14 @@ const Button: React.FC<ButtonProps> = ({
         fullWidth ? 'w-full' : '',
         className
       )}
+      {...props}
     >
       {icon && <span className="mr-2">{icon}</span>}
       {children}
     </ShadcnButton>
   );
-};
+});
+
+Button.displayName = 'Button';
 
 export default Button;
