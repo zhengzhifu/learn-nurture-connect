@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { fetchProfile } from '@/services/auth';
 import { createFallbackProfile } from '@/utils/profileUtils';
-import { toast } from 'sonner';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -24,50 +23,93 @@ export const useAuthState = () => {
       setError(null);
       
       try {
-        console.log('Initializing auth...');
-        // Get the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Initializing auth state...');
+        
+        // Set up auth state listener FIRST
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, currentSession) => {
+            console.log('Auth state changed:', event, 'User ID:', currentSession?.user?.id);
+            
+            if (!isMounted) return;
+            
+            // Update session state
+            setSession(currentSession);
+            
+            if (currentSession?.user) {
+              setUser(currentSession.user);
+              
+              // Fetch profile data only if we have a user
+              try {
+                const profileData = await fetchProfile(currentSession.user.id);
+                if (isMounted) {
+                  if (profileData) {
+                    console.log('Profile data fetched on auth change');
+                    setProfile(profileData);
+                  } else {
+                    console.log('Using fallback profile on auth change');
+                    setProfile(createFallbackProfile(currentSession.user));
+                  }
+                }
+              } catch (profileError) {
+                console.error('Error fetching profile:', profileError);
+                if (isMounted) {
+                  setProfile(createFallbackProfile(currentSession.user));
+                }
+              }
+            } else if (event === 'SIGNED_OUT') {
+              // Clear user and profile on sign out
+              setUser(null);
+              setProfile(null);
+              console.log('User signed out, state cleared');
+            }
+            
+            // Ensure loading state is updated
+            if (isMounted) {
+              setIsLoading(false);
+            }
+          }
+        );
+        
+        // THEN check for existing session
+        const { data, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error('Error getting session:', sessionError);
+          console.error('Error getting initial session:', sessionError);
           setError(`Error getting session: ${sessionError.message}`);
           setIsLoading(false);
           return;
         }
         
         if (!isMounted) return;
-        setSession(session);
         
-        if (session?.user) {
-          console.log('User found in session:', session.user.id);
-          setUser(session.user);
+        // Update session state with initial session
+        setSession(data.session);
+        
+        if (data.session?.user) {
+          console.log('User found in initial session:', data.session.user.id);
+          setUser(data.session.user);
           
-          // Fetch profile data
+          // Fetch profile data for initial user
           try {
-            const profileData = await fetchProfile(session.user.id);
+            const profileData = await fetchProfile(data.session.user.id);
             
             if (!isMounted) return;
             
             if (profileData) {
-              console.log('Profile data fetched:', profileData);
+              console.log('Profile data fetched on init');
               setProfile(profileData);
             } else {
-              console.log('Using fallback profile from user metadata');
-              const fallbackProfile = createFallbackProfile(session.user);
-              setProfile(fallbackProfile);
+              console.log('Using fallback profile on init');
+              setProfile(createFallbackProfile(data.session.user));
             }
-          } catch (profileError: any) {
-            console.error('Error fetching profile:', profileError);
-            // Still keep the user logged in but with fallback profile
-            const fallbackProfile = createFallbackProfile(session.user);
-            if (isMounted) setProfile(fallbackProfile);
+          } catch (profileError) {
+            console.error('Error fetching initial profile:', profileError);
+            if (isMounted) {
+              setProfile(createFallbackProfile(data.session.user));
+            }
           }
         } else {
-          console.log('No user found in session');
-          if (isMounted) {
-            setUser(null);
-            setProfile(null);
-          }
+          console.log('No user found in initial session');
         }
       } catch (error: any) {
         console.error('Exception during auth initialization:', error);
@@ -76,7 +118,7 @@ export const useAuthState = () => {
         }
       } finally {
         if (isMounted) {
-          console.log('Auth initialization complete, setting isLoading to false');
+          console.log('Auth initialization complete');
           setIsLoading(false);
         }
       }
@@ -84,64 +126,8 @@ export const useAuthState = () => {
 
     initializeAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, 'User ID:', session?.user?.id);
-        
-        if (!isMounted) return;
-        
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setProfile(null);
-          setSession(null);
-          console.log('User signed out, state cleared');
-          setIsLoading(false);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession(session);
-          
-          if (session?.user) {
-            setUser(session.user);
-            
-            try {
-              const profileData = await fetchProfile(session.user.id);
-              
-              if (!isMounted) return;
-              
-              if (profileData) {
-                console.log('Profile data fetched on auth change:', profileData);
-                setProfile(profileData);
-              } else {
-                console.log('Using fallback profile on auth change');
-                const fallbackProfile = createFallbackProfile(session.user);
-                setProfile(fallbackProfile);
-              }
-            } catch (error) {
-              console.error('Error fetching profile on auth change:', error);
-              // Still keep user signed in with fallback profile
-              if (isMounted) {
-                const fallbackProfile = createFallbackProfile(session.user);
-                setProfile(fallbackProfile);
-              }
-            } finally {
-              if (isMounted) {
-                console.log('Auth state change handling complete, setting isLoading to false');
-                setIsLoading(false);
-              }
-            }
-          } else {
-            setIsLoading(false);
-          }
-        } else {
-          // For other auth events, make sure loading state is cleared
-          setIsLoading(false);
-        }
-      }
-    );
-
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 

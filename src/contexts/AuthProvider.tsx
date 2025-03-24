@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import { Profile, UserRole } from '@/types/auth';
@@ -10,7 +10,6 @@ import {
   signOut, 
   updateUserProfile 
 } from '@/services/auth';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,62 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading, 
     setError 
   } = useAuthState();
-
-  // Log auth state for debugging
-  useEffect(() => {
-    console.log('AuthProvider: auth state updated', {
-      isAuthenticated: !!user,
-      hasProfile: !!profile,
-      isLoading,
-      hasError: !!error
-    });
-  }, [user, profile, isLoading, error]);
-
-  // Listen for auth state changes directly in the provider
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed in provider:', event, session?.user?.id);
-        
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out, clearing state');
-          setUser(null);
-          setProfile(null);
-          // Force navigate to home page on sign out
-          navigate('/', { replace: true });
-        }
-        
-        // Make sure we're not stuck in loading state
-        if (isLoading) {
-          setTimeout(() => {
-            console.log('Force clearing loading state after timeout');
-            setIsLoading(false);
-          }, 3000); // Set a timeout to ensure loading state gets cleared
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [setUser, setProfile, isLoading, setIsLoading, navigate]);
-
-  // Direct session check to ensure UI is in sync with auth state
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session && !user) {
-          console.log('Session exists but no user in state, updating...');
-          setUser(data.session.user);
-        }
-      } catch (err) {
-        console.error('Session check error:', err);
-      }
-    };
-    
-    checkSession();
-  }, [user, setUser]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -128,14 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Perform the sign out operation
       await signOut();
       
-      // Force redirect to home page immediately after sign out
+      // Navigate to home page after sign out
       console.log('Sign out complete, navigating to home page');
       navigate('/', { replace: true });
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
       console.error('Sign out error:', error);
     } finally {
-      // Make sure loading state is cleared regardless of outcome
       setIsLoading(false);
     }
   };
@@ -150,20 +92,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
       
-      console.log('AuthProvider: Updating profile with data:', data);
-      
       const updatedProfile = await updateUserProfile(user.id, data);
       
       if (updatedProfile) {
-        console.log('AuthProvider: Profile updated successfully:', updatedProfile);
         setProfile(updatedProfile);
         toast.success('Profile updated successfully');
       } else {
-        console.error('AuthProvider: Profile update returned null');
         toast.error('Failed to update profile');
       }
     } catch (error: any) {
-      console.error('AuthProvider: Profile update error:', error);
       setError(`Profile update error: ${error.message}`);
       toast.error(`Profile update error: ${error.message}`);
       throw error;

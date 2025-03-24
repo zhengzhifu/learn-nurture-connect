@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -7,64 +7,9 @@ import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardError from '@/components/dashboard/DashboardError';
-import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
-import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { profile, user, isLoading, error } = useAuth();
-  const [timeoutExpired, setTimeoutExpired] = useState(false);
-  const [authStatus, setAuthStatus] = useState<string | null>(null);
-  
-  // Check direct session status for debugging
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        console.log('Dashboard: checking auth status...');
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Dashboard: session check error:', error);
-          setAuthStatus(`Error: ${error.message}`);
-        } else {
-          const status = data.session ? 'Authenticated' : 'Not authenticated';
-          setAuthStatus(status);
-          console.log('Dashboard: direct session check:', {
-            status,
-            session: data.session ? 'exists' : 'null',
-            user: data.session?.user?.id
-          });
-        }
-      } catch (e) {
-        console.error('Dashboard: session check exception:', e);
-        setAuthStatus('Check failed');
-      }
-    };
-    
-    checkAuthStatus();
-  }, []);
-  
-  useEffect(() => {
-    console.log('Dashboard: auth state updated', {
-      isLoading,
-      hasUser: !!user,
-      hasProfile: !!profile,
-      hasError: !!error
-    });
-  }, [isLoading, user, profile, error]);
-  
-  useEffect(() => {
-    if (isLoading) {
-      console.log('Dashboard: loading state is active, setting timeout...');
-      const timer = setTimeout(() => {
-        console.log('Dashboard: loading timeout expired');
-        setTimeoutExpired(true);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      console.log('Dashboard: loading state cleared');
-      setTimeoutExpired(false);
-    }
-  }, [isLoading]);
 
   // Create a safe user data object to prevent any circular references
   const userData = profile ? {
@@ -82,21 +27,8 @@ const Dashboard = () => {
       <PageWrapper>
         <Navbar />
         <DashboardError 
-          error={`${error} (Auth status: ${authStatus})`} 
+          error={error} 
           onRetry={() => window.location.reload()} 
-        />
-        <Footer />
-      </PageWrapper>
-    );
-  }
-
-  if (isLoading && timeoutExpired) {
-    return (
-      <PageWrapper>
-        <Navbar />
-        <LoadingTimeout 
-          onRetry={() => window.location.reload()} 
-          message={`Auth status: ${authStatus || 'Checking...'}`}
         />
         <Footer />
       </PageWrapper>
