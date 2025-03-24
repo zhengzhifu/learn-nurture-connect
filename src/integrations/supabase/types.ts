@@ -439,6 +439,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_specialties: {
         Row: {
           created_at: string
@@ -495,8 +519,22 @@ export type Database = {
           verified: boolean | null
         }[]
       }
+      get_user_role: {
+        Args: {
+          _user_id: string
+        }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "parent" | "tutor" | "admin"
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       notification_type:
         | "booking_request"
