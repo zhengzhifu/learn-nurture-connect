@@ -2,41 +2,23 @@
 import { ServiceClient } from './serviceClient';
 import { mockServiceClient } from './mockServiceClient';
 import { realServiceClient } from './realServiceClient';
-import { edgeFunctionServiceClient } from './implementations/EdgeFunctionServiceClient';
 
-type ServiceClientType = 'mock' | 'real' | 'edge';
-
+// This factory will help us switch between mock and real implementations
 export class ServiceClientFactory {
-  // Default to edge function client for production, mock for development
-  private static clientType: ServiceClientType = import.meta.env.PROD ? 'edge' : (import.meta.env.VITE_USE_MOCK_DATA === 'true' ? 'mock' : 'edge');
+  // Use the real client by default for production
+  private static instance: ServiceClient = realServiceClient;
   
-  static setClientType(type: ServiceClientType): void {
-    this.clientType = type;
-    console.log(`ServiceClientFactory: Client type set to ${type}`);
+  // Get the current client instance
+  static getClient(): ServiceClient {
+    console.log('ServiceClientFactory: getClient called, returning:', 
+      this.instance === mockServiceClient ? 'mockServiceClient' : 'realServiceClient');
+    return this.instance;
   }
   
-  static getClient(): ServiceClient {
-    console.log(`ServiceClientFactory: Getting client of type ${this.clientType}`);
-    
-    switch (this.clientType) {
-      case 'mock':
-        return mockServiceClient;
-      case 'real':
-        return realServiceClient;
-      case 'edge':
-        // Create a proper composite client by extending the real service client
-        // and overriding specific methods with edge function implementations
-        return {
-          // Include all methods from realServiceClient for profile and review operations
-          ...realServiceClient,
-          
-          // Override service-related methods with edge function implementations
-          getServices: edgeFunctionServiceClient.getServices.bind(edgeFunctionServiceClient),
-          filterServices: edgeFunctionServiceClient.filterServices.bind(edgeFunctionServiceClient),
-          searchServices: edgeFunctionServiceClient.searchServices.bind(edgeFunctionServiceClient)
-        };
-      default:
-        return mockServiceClient;
-    }
+  // Set a different client implementation
+  static setClient(client: ServiceClient): void {
+    console.log('ServiceClientFactory: setClient called, switching to:', 
+      client === mockServiceClient ? 'mockServiceClient' : 'realServiceClient');
+    this.instance = client;
   }
 }
