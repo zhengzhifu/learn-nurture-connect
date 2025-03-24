@@ -18,21 +18,38 @@ export const getCurrentSession = async () => {
   }
 };
 
-// Check if token is expired
+// Check if token is expired or missing
 export const isTokenExpired = () => {
   try {
+    // First, check for token in sessionStorage (used by Supabase)
     const localStorageKeys = Object.keys(localStorage);
     const authKey = localStorageKeys.find(key => key.startsWith('supabase.auth.token'));
     
-    if (!authKey) return true;
+    if (!authKey) {
+      console.log('No auth token found in localStorage');
+      return true;
+    }
     
+    // Parse the token data
     const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
-    if (!authData.expiresAt) return true;
+    if (!authData.expiresAt) {
+      console.log('No expiration data found in token');
+      return true;
+    }
     
+    // Check if token is expired
     const expiresAt = new Date(authData.expiresAt * 1000);
     const now = new Date();
+    const isExpired = now >= expiresAt;
     
-    return now >= expiresAt;
+    // Log the expiration status
+    if (isExpired) {
+      console.log('Token is expired, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
+    } else {
+      console.log('Token is valid, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
+    }
+    
+    return isExpired;
   } catch (error) {
     console.error('Error checking token expiration:', error);
     return true; // Assume expired in case of error

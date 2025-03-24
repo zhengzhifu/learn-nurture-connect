@@ -1,9 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
+import { isTokenExpired } from '@/services/auth/sessionService';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -13,6 +15,24 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const { isAuthenticated, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showTimeout, setShowTimeout] = useState(false);
+  
+  // Set a timeout to show a friendly message if loading takes too long
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        setShowTimeout(true);
+      }, 5000); // Show timeout message after 5 seconds
+    } else {
+      setShowTimeout(false);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
 
   // Show toast if there are authentication errors
   useEffect(() => {
@@ -21,6 +41,22 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       console.error('Auth error:', error);
     }
   }, [error]);
+
+  // Check if token is explicitly expired
+  useEffect(() => {
+    const checkTokenExpiration = () => {
+      if (!isLoading && !isAuthenticated && isTokenExpired()) {
+        console.log('Token is expired, redirecting to signin');
+        toast.error('Your session has expired. Please sign in again.');
+        navigate('/signin', { 
+          state: { from: location.pathname },
+          replace: true 
+        });
+      }
+    };
+    
+    checkTokenExpiration();
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // If not loading but not authenticated, redirect to signin
   useEffect(() => {
@@ -33,6 +69,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     }
   }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
+  // Show loading timeout UI if taking too long
+  if (isLoading && showTimeout) {
+    return (
+      <LoadingTimeout 
+        onRetry={() => window.location.reload()} 
+        message="This might be due to network issues or an expired session. You can try refreshing the page."
+      />
+    );
+  }
+
+  // Show standard loading UI
   if (isLoading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center">
@@ -59,7 +106,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
             className="px-4 py-2 border border-destructive text-destructive rounded-md"
             onClick={() => window.location.reload()}
           >
-            Retry
+            <RefreshCw className="h-4 w-4 mr-2 inline" /> Retry
           </button>
         </div>
       </div>

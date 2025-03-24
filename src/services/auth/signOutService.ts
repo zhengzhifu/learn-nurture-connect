@@ -15,9 +15,10 @@ export const signOut = async () => {
       throw error;
     }
     
-    // Clear all auth-related items from localStorage as a fallback
+    // Aggressively clear all auth-related items from localStorage
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('supabase.auth.')) {
+      if (key.includes('supabase.auth.') || key.includes('sb-')) {
+        console.log('Removing localStorage item:', key);
         localStorage.removeItem(key);
       }
     }
