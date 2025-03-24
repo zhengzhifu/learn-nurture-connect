@@ -26,10 +26,9 @@ export const signOut = async () => {
     console.log('Sign out successful');
     toast.success('Successfully signed out');
     
-    // Force refresh the page after a slight delay
-    // This ensures clean state across all components
+    // Force refresh the page after a slight delay to clear all React state
     setTimeout(() => {
-      window.location.href = '/';
+      window.location.href = '/signin';
     }, 100);
     
     return true;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -65,14 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       
-      // Perform the sign out operation
+      // Perform the sign out operation - this handles the navigation
       await signOut();
-      
-      // No need to navigate here as we're doing it in signOutService
-      console.log('Sign out complete');
     } catch (error: any) {
       setError(`Sign out error: ${error.message}`);
       console.error('Sign out error:', error);
+      
+      // Force redirect to signin on error
+      navigate('/signin');
     }
   };
 

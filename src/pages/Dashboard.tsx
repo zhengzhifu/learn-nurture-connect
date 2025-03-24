@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -7,9 +8,19 @@ import { useAuth } from '@/hooks/auth/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardError from '@/components/dashboard/DashboardError';
+import { isTokenExpired } from '@/services/auth/sessionService';
 
 const Dashboard = () => {
   const { profile, user, isLoading, error } = useAuth();
+  const navigate = useNavigate();
+
+  // Additional verification that we have a valid session
+  useEffect(() => {
+    if (!isLoading && (!user || isTokenExpired())) {
+      console.log('Dashboard: No valid user session, redirecting to signin');
+      navigate('/signin');
+    }
+  }, [user, isLoading, navigate]);
 
   // Create a safe user data object to prevent any circular references
   const userData = profile ? {
@@ -33,6 +44,12 @@ const Dashboard = () => {
         <Footer />
       </PageWrapper>
     );
+  }
+
+  // Additional guard to ensure we have user data before rendering
+  if (!isLoading && !userData) {
+    navigate('/signin');
+    return null;
   }
 
   return (

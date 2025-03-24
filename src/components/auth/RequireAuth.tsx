@@ -17,6 +17,36 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const location = useLocation();
   const [showTimeout, setShowTimeout] = useState(false);
   
+  // Force check if we have a valid auth token directly
+  useEffect(() => {
+    const checkToken = () => {
+      const isExpired = isTokenExpired();
+      console.log('RequireAuth: Directly checking token, isExpired:', isExpired);
+      
+      // If token is expired or missing, redirect to signin
+      if (isExpired) {
+        console.log('RequireAuth: Token expired, redirecting to signin');
+        toast.error('Your session has expired. Please sign in again.');
+        navigate('/signin', { 
+          state: { from: location.pathname },
+          replace: true 
+        });
+        return false;
+      }
+      return true;
+    };
+    
+    // Immediate check on mount
+    checkToken();
+    
+    // Set up interval to periodically check token expiration
+    const intervalId = setInterval(() => {
+      checkToken();
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, [navigate, location.pathname]);
+  
   // Set a timeout to show a friendly message if loading takes too long
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
@@ -42,15 +72,14 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     }
   }, [error]);
 
-  // Check token using local storage first (fast path)
+  // Check token using local storage first (fast path) when auth status changes
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      // Instead of calling an async function, do a synchronous check
       const expired = isTokenExpired();
       
       if (expired) {
-        console.log('Token is expired, redirecting to signin');
-        toast.error('Your session has expired. Please sign in again.');
+        console.log('RequireAuth: Not authenticated, redirecting to signin');
+        toast.error('Authentication required. Please sign in.');
         navigate('/signin', { 
           state: { from: location.pathname },
           replace: true 
@@ -103,7 +132,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     );
   }
 
-  // Let the user proceed if authenticated
+  // Only render children if authenticated
   return isAuthenticated ? <>{children}</> : null;
 };
 

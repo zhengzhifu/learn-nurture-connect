@@ -48,6 +48,14 @@ export const isTokenExpired = () => {
     // Log the expiration status
     if (isExpired) {
       console.log('Token is expired, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
+      
+      // Clear all auth-related items if expired
+      for (const key of Object.keys(localStorage)) {
+        if (key.includes('supabase.auth.') || key.includes('sb-')) {
+          console.log('Token expired: Removing localStorage item:', key);
+          localStorage.removeItem(key);
+        }
+      }
     } else {
       console.log('Token is valid, expires at:', expiresAt.toISOString(), 'now:', now.toISOString());
     }
