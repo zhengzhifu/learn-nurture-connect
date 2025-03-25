@@ -1,6 +1,5 @@
-
 import { ServiceClient } from './serviceClient';
-import { ServiceData, ServiceFilters } from '@/types/service';
+import type { ServiceData, ServiceFilters } from './serviceClient';
 import { Profile } from '@/types/auth';
 import { Review } from '@/types/review';
 import { MockProfileService } from './mockProfileService';

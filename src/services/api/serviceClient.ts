@@ -4,7 +4,7 @@ import { ServiceType, ServiceFilters, ServiceData } from '@/types/service';
 import { Review } from '@/types/review';
 
 // Re-export these types so they can be imported from this file
-export { ServiceData, ServiceFilters };
+export type { ServiceData, ServiceFilters };
 
 // Define the ServiceClient interface
 export interface ServiceClient {

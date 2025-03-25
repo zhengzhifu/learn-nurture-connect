@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ServiceClientFactory } from '@/services/api/serviceClientFactory';
-import { ServiceData, ServiceFilters } from '@/types/service';
+import type { ServiceData, ServiceFilters } from '@/services/api/serviceClient';
 import { ServiceType } from '@/types/service';
 import { toast } from 'sonner';
 
