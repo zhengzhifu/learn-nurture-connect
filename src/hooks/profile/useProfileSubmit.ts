@@ -42,6 +42,11 @@ export const useProfileSubmit = () => {
         ...updateData 
       } = formData;
       
+      // Handle empty school_id (empty string should be null)
+      if (updateData.school_id === '') {
+        updateData.school_id = null;
+      }
+      
       console.log('Calling updateProfile with:', updateData);
       
       // Update profile data with JSON stringified address and dedicated latitude/longitude
