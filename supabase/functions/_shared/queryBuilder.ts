@@ -13,6 +13,20 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
       console.log("Direct tutor count result:", result?.count, "Error:", result?.error ? JSON.stringify(result.error) : "none");
     });
   
+  // Try to fetch a specific tutor by ID to check if it exists and is accessible
+  console.log("Checking if specific tutor exists with ID: 842a450a-eca3-4e23-a02e-b2f93706d208");
+  supabase
+    .from('tutors')
+    .select('id')
+    .eq('id', '842a450a-eca3-4e23-a02e-b2f93706d208')
+    .then((result: any) => {
+      console.log("Specific tutor check result:", 
+        "Found:", result?.data?.length > 0 ? "Yes" : "No", 
+        "Data:", JSON.stringify(result?.data || []), 
+        "Error:", result?.error ? JSON.stringify(result.error) : "none"
+      );
+    });
+  
   // Base query to fetch tutors with their profiles
   console.log("Building base query for tutors...");
   let queryBuilder = supabase

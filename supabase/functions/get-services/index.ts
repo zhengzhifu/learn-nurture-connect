@@ -37,6 +37,19 @@ Deno.serve(async (req) => {
       .select('id');
     
     console.log("Simple select results:", "Found", simpleTutors?.length || 0, "tutors", "Error:", simpleError ? JSON.stringify(simpleError) : "none");
+
+    // Fetch specific tutor to verify it exists
+    console.log("Checking for specific tutor with ID 842a450a-eca3-4e23-a02e-b2f93706d208");
+    const { data: specificTutor, error: specificError } = await supabase
+      .from('tutors')
+      .select('id, bio')
+      .eq('id', '842a450a-eca3-4e23-a02e-b2f93706d208');
+    
+    console.log("Specific tutor query results:", 
+      "Found:", specificTutor?.length > 0 ? "Yes" : "No", 
+      "Data:", JSON.stringify(specificTutor || []), 
+      "Error:", specificError ? JSON.stringify(specificError) : "none"
+    );
     
     // Parse request body for parameters
     let query = '';
@@ -71,6 +84,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     console.log("Auth header present:", !!authHeader);
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
+    console.log("Authentication details:", { userId, isApproved });
     
     // Build query with search and filters
     console.log("Building query with:", { query, filterParams });
