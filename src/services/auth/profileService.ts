@@ -16,9 +16,15 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     
     // Create the RPC promise
     const rpcPromise = async () => {
+      console.log('ProfileService: Starting RPC call at:', new Date().toISOString());
+      
+      const startTime = performance.now();
       const { data, error } = await supabase
         .rpc('get_current_user_profile')
         .maybeSingle();
+      const endTime = performance.now();
+      
+      console.log(`ProfileService: RPC call completed in ${(endTime - startTime).toFixed(2)}ms`);
         
       if (error) {
         console.error('ProfileService: Error fetching profile via RPC:', error);
@@ -26,11 +32,16 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
         console.error('Error message:', error.message);
         
         // Fall back to direct query
+        console.log('ProfileService: Falling back to direct query at:', new Date().toISOString());
+        const directStartTime = performance.now();
         const { data: directData, error: directError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .maybeSingle();
+        const directEndTime = performance.now();
+        
+        console.log(`ProfileService: Direct query completed in ${(directEndTime - directStartTime).toFixed(2)}ms`);
           
         if (directError) {
           console.error('ProfileService: Error in direct profile query:', directError);
@@ -67,7 +78,9 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
     };
 
     // Race the fetch against the timeout
+    console.log('ProfileService: Starting race between RPC and timeout at:', new Date().toISOString());
     const profile = await Promise.race([rpcPromise(), timeoutPromise]);
+    console.log('ProfileService: Race completed at:', new Date().toISOString());
     return profile;
   } catch (error: any) {
     console.error('ProfileService: Exception fetching profile:', error);
