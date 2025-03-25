@@ -25,25 +25,21 @@ Deno.serve(async (req) => {
     // Log database contents to debug the problem
     console.log("=== Checking Database State ===")
     
-    // Check if any tutors exist in the database
-    const { data: tutorCheck, count: tutorCount, error: countError } = await supabase
+    // Check if any tutors exist in the database - explicit count
+    console.log("Performing direct count query on tutors table");
+    const { count: tutorCount, error: countError } = await supabase
       .from('tutors')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true });
     
-    console.log("Tutor check results:", tutorCount, "Error:", countError ? JSON.stringify(countError) : "none")
-    if (tutorCheck && tutorCheck.length > 0) {
-      console.log("First tutor in database:", JSON.stringify(tutorCheck[0], null, 2))
-    }
+    console.log("Direct count of tutors in database:", tutorCount, "Error:", countError ? JSON.stringify(countError) : "none");
     
-    // Check if any profiles exist
-    const { data: profileCheck, count: profileCount, error: profileError } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact' })
+    // Try a simple select to confirm we can read the table
+    console.log("Trying a simple select from tutors table");
+    const { data: simpleTutors, error: simpleError } = await supabase
+      .from('tutors')
+      .select('id');
     
-    console.log("Profile check results:", profileCount, "Error:", profileError ? JSON.stringify(profileError) : "none")
-    if (profileCheck && profileCheck.length > 0) {
-      console.log("First profile in database:", JSON.stringify(profileCheck[0], null, 2))
-    }
+    console.log("Simple select results:", "Found", simpleTutors?.length || 0, "tutors", "Error:", simpleError ? JSON.stringify(simpleError) : "none");
     
     // Parse request body for parameters
     let query = '';
@@ -79,103 +75,45 @@ Deno.serve(async (req) => {
     console.log("Auth header present:", !!authHeader);
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     
-    // Try different approaches to get tutors data
-    let tutorsData;
-    let error;
+    console.log("User authenticated:", !!userId);
+    console.log("User approved:", isApproved);
     
-    // Approach 1: Standard query through queryBuilder
-    console.log("=== Approach 1: Using queryBuilder ===");
+    // Build query with search and filters
+    console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
-    const result1 = await queryBuilder;
     
-    if (result1.error) {
-      console.error("Approach 1 error:", result1.error);
-    } else {
-      console.log("Approach 1 results:", result1.data ? result1.data.length : 0);
-      if (result1.data && result1.data.length > 0) {
-        tutorsData = result1.data;
-      }
+    // Execute query
+    console.log("Executing query...");
+    const { data: tutorsData, error } = await queryBuilder;
+    
+    console.log("Tutors data retrieved:", tutorsData?.length || 0);
+    
+    if (error) {
+      console.error("Query error:", error);
+      throw new Error(`Error fetching tutors: ${error.message}`);
     }
     
-    // Approach 2: Direct simple query if Approach 1 failed
+    // If no tutors were found, return empty array
     if (!tutorsData || tutorsData.length === 0) {
-      console.log("=== Approach 2: Direct query ===");
-      const { data: directData, error: directError } = await supabase
-        .from('tutors')
-        .select(`
-          id, bio, hourly_rate, years_of_experience,
-          profiles(id, first_name, last_name, email, avatar_url, approval_status)
-        `);
+      console.log("No tutors found from query.");
       
-      if (directError) {
-        console.error("Approach 2 error:", directError);
-      } else {
-        console.log("Approach 2 results:", directData ? directData.length : 0);
-        if (directData && directData.length > 0) {
-          tutorsData = directData;
-        }
-      }
-    }
-    
-    // Approach 3: Create mock data if database has no tutors
-    if (!tutorsData || tutorsData.length === 0) {
-      console.log("=== Approach 3: Using mock data since database is empty ===");
-      
-      // Create a mock tutor to return some results
-      tutorsData = [
+      // Return an empty array instead of mock data
+      return new Response(
+        JSON.stringify({ services: [] }),
         {
-          id: '1',
-          bio: 'Experienced math tutor with 5 years of teaching experience',
-          hourly_rate: 35,
-          years_of_experience: 5,
-          profiles: {
-            id: '1',
-            first_name: 'John',
-            last_name: 'Smith',
-            email: 'john.smith@example.com',
-            approval_status: 'approved',
-            avatar_url: 'https://randomuser.me/api/portraits/men/1.jpg'
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
           },
-          specialties: [
-            { specialty_name: 'Mathematics', specialty_type: 'subject' },
-            { specialty_name: 'Physics', specialty_type: 'subject' }
-          ],
-          availability: [
-            { day_of_week: 'Monday', start_time: '15:00', end_time: '18:00' },
-            { day_of_week: 'Wednesday', start_time: '15:00', end_time: '18:00' }
-          ]
-        },
-        {
-          id: '2',
-          bio: 'Dedicated English language and literature teacher',
-          hourly_rate: 30,
-          years_of_experience: 3,
-          profiles: {
-            id: '2',
-            first_name: 'Emily',
-            last_name: 'Johnson',
-            email: 'emily.johnson@example.com',
-            approval_status: 'approved',
-            avatar_url: 'https://randomuser.me/api/portraits/women/1.jpg'
-          },
-          specialties: [
-            { specialty_name: 'English', specialty_type: 'subject' },
-            { specialty_name: 'Literature', specialty_type: 'subject' }
-          ],
-          availability: [
-            { day_of_week: 'Tuesday', start_time: '16:00', end_time: '19:00' },
-            { day_of_week: 'Thursday', start_time: '16:00', end_time: '19:00' }
-          ]
+          status: 200,
         }
-      ];
-      
-      console.log("Using mock data with", tutorsData.length, "tutors");
+      );
     }
     
     // Transform the data with access control based on authentication
-    const services = tutorsData && tutorsData.length > 0 
-      ? tutorsData.map(tutor => transformTutorToService(tutor, !!userId, isApproved))
-      : [];
+    const services = tutorsData.map(tutor => 
+      transformTutorToService(tutor, !!userId, isApproved)
+    );
     
     console.log("Transformed services:", services.length);
     if (services.length > 0) {
@@ -196,7 +134,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Error in get-services function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, services: [] }),
       {
         headers: {
           ...corsHeaders,

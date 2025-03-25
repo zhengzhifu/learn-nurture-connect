@@ -13,16 +13,18 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
       console.log("Direct tutor count result:", result?.count, "Error:", result?.error ? JSON.stringify(result.error) : "none");
     });
   
-  // Base query to fetch tutors - using a simpler approach
-  console.log("Building simplified base query for tutors...");
+  // Base query to fetch tutors with their profiles
+  console.log("Building base query for tutors...");
   let queryBuilder = supabase
     .from('tutors')
     .select(`
-      *,
-      profiles(*)
+      id, bio, hourly_rate, years_of_experience,
+      profiles (id, first_name, last_name, email, avatar_url, home_address, approval_status),
+      specialties (specialty_name, specialty_type),
+      availability (day_of_week, start_time, end_time)
     `);
   
-  console.log("Base query constructed with simplified join");
+  console.log("Base query constructed for tutors");
   
   // Apply search filter if provided
   if (query && query.trim() !== '') {
@@ -42,6 +44,6 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     queryBuilder = queryBuilder.ilike('profiles.home_address', `%${filterParams.location}%`);
   }
   
-  console.log("Query built and ready to execute");
+  console.log("Final query built. About to execute it.");
   return queryBuilder;
 };
