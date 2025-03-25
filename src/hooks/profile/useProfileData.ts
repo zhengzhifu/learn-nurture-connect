@@ -21,7 +21,6 @@ export const useProfileData = () => {
     country: '',
     latitude: undefined as number | undefined,
     longitude: undefined as number | undefined,
-    approval_status: undefined as string | undefined
   });
 
   useEffect(() => {
@@ -55,11 +54,11 @@ export const useProfileData = () => {
         state: typeof addressData === 'object' ? (addressData as any).state || '' : '',
         zip_code: typeof addressData === 'object' ? (addressData as any).zip_code || '' : '',
         country: typeof addressData === 'object' ? (addressData as any).country || '' : '',
+        // Use the dedicated latitude and longitude columns
         latitude: profile.latitude !== undefined ? profile.latitude : 
                  (typeof addressData === 'object' ? (addressData as any).latitude : undefined),
         longitude: profile.longitude !== undefined ? profile.longitude : 
                   (typeof addressData === 'object' ? (addressData as any).longitude : undefined),
-        approval_status: profile.approval_status
       });
     }
   }, [profile, user]);
@@ -85,14 +84,11 @@ export const useProfileData = () => {
     }));
   };
 
-  const handleSchoolChange = (schoolId: string | undefined, otherSchoolName: string | undefined, isChanged: boolean) => {
-    console.log('School changed, setting to pending:', isChanged);
+  const handleSchoolChange = (schoolId: string | undefined, otherSchoolName: string | undefined) => {
     setFormData(prev => ({ 
       ...prev, 
       school_id: schoolId,
-      other_school_name: otherSchoolName,
-      // If the school has changed, set approval status to pending
-      approval_status: isChanged ? 'pending' : prev.approval_status
+      other_school_name: otherSchoolName
     }));
   };
 

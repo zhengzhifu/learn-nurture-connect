@@ -27,7 +27,7 @@ const ProfileForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <ApprovalStatusAlert status={formData.approval_status || profile?.approval_status} />
+      <ApprovalStatusAlert status={profile?.approval_status} />
       
       <PersonalInfoCard 
         formData={formData} 
