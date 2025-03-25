@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ServiceClientFactory } from '@/services/api/serviceClientFactory';
 import type { ServiceData, ServiceFilters } from '@/services/api/serviceClient';
 import { ServiceType } from '@/types/service';
@@ -16,6 +16,9 @@ export const useServiceBrowse = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
+  
+  // Add a ref to track initial fetch
+  const initialFetchDone = useRef(false);
 
   const hasActiveFilters = 
     selectedTypes.length > 0 ||
@@ -89,11 +92,14 @@ export const useServiceBrowse = () => {
     }, 0);
   }, [fetchServices]);
 
-  // Initial data fetch
+  // Initial data fetch - only done once
   useEffect(() => {
-    console.log('useServiceBrowse: Initial fetch triggered');
-    fetchServices();
-  }, []);
+    if (!initialFetchDone.current) {
+      console.log('useServiceBrowse: Initial fetch triggered (first time only)');
+      fetchServices();
+      initialFetchDone.current = true;
+    }
+  }, [fetchServices]);
 
   return {
     serviceList,

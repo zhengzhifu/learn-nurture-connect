@@ -1,11 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
-import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
@@ -36,11 +35,7 @@ const ServiceBrowse: React.FC = () => {
     fetchServices
   } = useServiceBrowse();
 
-  useEffect(() => {
-    // Ensure services are loaded when the component mounts
-    console.log('ServiceBrowse: Component mounted, fetching services');
-    fetchServices();
-  }, [fetchServices]);
+  // We removed the useEffect here to avoid duplicate fetches
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
