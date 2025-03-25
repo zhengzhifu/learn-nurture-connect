@@ -67,7 +67,7 @@ export const useAuthState = () => {
     error,
     setUser,
     setProfile,
-    setSession, // Add this to fix the error
+    setSession,
     setIsLoading,
     setError
   };
