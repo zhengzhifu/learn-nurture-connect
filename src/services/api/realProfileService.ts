@@ -10,7 +10,7 @@ export class RealProfileService extends BaseService {
       
       const { data, error } = await this.supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, user_type, avatar_url, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+        .select('id, first_name, last_name, email, user_type, avatar_url, phone, home_address, approval_status, school_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -28,7 +28,7 @@ export class RealProfileService extends BaseService {
 
       // Create a valid Profile object from the data
       const profile: Profile = {
-        id: data.id,
+        id: data.id || '',
         first_name: data.first_name || '',
         last_name: data.last_name || '',
         email: data.email || '',
@@ -38,8 +38,9 @@ export class RealProfileService extends BaseService {
         home_address: data.home_address || '',
         approval_status: data.approval_status || 'pending',
         school_id: data.school_id || '',
-        other_school_name: data.other_school_name || '',
-        child_school_id: data.child_school_id || '',
+        // Add empty strings for fields that might not exist in the database
+        other_school_name: '',
+        child_school_id: '',
         verified: false,
         // Add derived full_name for backward compatibility
         full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
@@ -104,9 +105,7 @@ export class RealProfileService extends BaseService {
           phone: data.phone || '',
           avatar_url: data.avatar_url || '',
           home_address: data.home_address || '',
-          school_id: data.school_id || null,
-          other_school_name: data.other_school_name || null,
-          child_school_id: data.child_school_id || null
+          school_id: data.school_id || null
         };
         
         console.log('RealProfileService: Creating profile with data:', profileData);
@@ -132,7 +131,7 @@ export class RealProfileService extends BaseService {
         
         // Create a valid Profile object from the data
         const profile: Profile = {
-          id: newProfile.id,
+          id: newProfile.id || '',
           first_name: newProfile.first_name || '',
           last_name: newProfile.last_name || '',
           email: newProfile.email || '',
@@ -142,8 +141,9 @@ export class RealProfileService extends BaseService {
           home_address: newProfile.home_address || '',
           approval_status: newProfile.approval_status || 'pending',
           school_id: newProfile.school_id || '',
-          other_school_name: newProfile.other_school_name || '',
-          child_school_id: newProfile.child_school_id || '',
+          // Add empty strings for fields that might not exist in the database
+          other_school_name: '',
+          child_school_id: '',
           verified: false,
           // Add derived full_name for backward compatibility
           full_name: `${newProfile.first_name || ''} ${newProfile.last_name || ''}`.trim()
@@ -166,9 +166,15 @@ export class RealProfileService extends BaseService {
         delete updateData.full_name;
       }
       
-      // Remove verified field as it doesn't exist in DB
+      // Remove fields that don't exist in the database
       if ('verified' in updateData) {
         delete updateData.verified;
+      }
+      if ('other_school_name' in updateData) {
+        delete updateData.other_school_name;
+      }
+      if ('child_school_id' in updateData) {
+        delete updateData.child_school_id;
       }
       
       // Proceed with the update
@@ -196,7 +202,7 @@ export class RealProfileService extends BaseService {
       
       // Create a valid Profile object from the data
       const profile: Profile = {
-        id: updatedData.id,
+        id: updatedData.id || '',
         first_name: updatedData.first_name || '',
         last_name: updatedData.last_name || '',
         email: updatedData.email || '',
@@ -206,8 +212,9 @@ export class RealProfileService extends BaseService {
         home_address: updatedData.home_address || '',
         approval_status: updatedData.approval_status || 'pending',
         school_id: updatedData.school_id || '',
-        other_school_name: updatedData.other_school_name || '',
-        child_school_id: updatedData.child_school_id || '',
+        // Add empty strings for fields that might not exist in the database
+        other_school_name: '',
+        child_school_id: '',
         verified: false,
         // Add derived full_name for backward compatibility
         full_name: `${updatedData.first_name || ''} ${updatedData.last_name || ''}`.trim()

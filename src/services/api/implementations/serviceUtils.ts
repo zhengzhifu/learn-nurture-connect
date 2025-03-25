@@ -1,5 +1,6 @@
 
-import { ServiceData, ServiceType } from '@/types/service';
+import { ServiceType } from '@/types/service';
+import { ServiceData } from '@/types/service';
 
 /**
  * Converts raw service data from the database to the ServiceData interface
@@ -42,6 +43,12 @@ export function toServiceType(type: string): ServiceType {
       return 'tutoring';
     case 'childcare':
       return 'childcare';
+    case 'babysitting':
+      return 'babysitting';
+    case 'tutoring_paid':
+      return 'tutoring_paid';
+    case 'tutoring_voluntary':
+      return 'tutoring_voluntary';
     default:
       return 'tutoring';
   }

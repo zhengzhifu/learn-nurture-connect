@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,23 +40,28 @@ const MyTutorsPage: React.FC = () => {
         
         // Transform the data to match the Tutor interface
         const transformedTutors: Tutor[] = data.map(item => {
-          const profile = item.profiles || {};
+          const tutorProfile = item.profiles || {};
+          
+          // Create a profile object with safe access
+          const safeProfile = {
+            id: tutorProfile.id || item.id || '',
+            first_name: tutorProfile.first_name || '',
+            last_name: tutorProfile.last_name || '',
+            email: tutorProfile.email || '',
+            user_type: tutorProfile.user_type || 'tutor',
+            phone: tutorProfile.phone || '',
+            avatar_url: tutorProfile.avatar_url || '',
+          };
           
           return {
-            id: profile.id || item.id,
-            first_name: profile.first_name || '',
-            last_name: profile.last_name || '',
-            full_name: getDisplayName({
-              id: profile.id || '',
-              first_name: profile.first_name || '',
-              last_name: profile.last_name || '',
-              email: profile.email || '',
-              user_type: profile.user_type || 'tutor'
-            }),
-            email: profile.email || '',
-            user_type: profile.user_type || 'tutor',
-            phone: profile.phone || '',
-            avatar_url: profile.avatar_url || '',
+            id: safeProfile.id,
+            first_name: safeProfile.first_name,
+            last_name: safeProfile.last_name,
+            full_name: getDisplayName(safeProfile),
+            email: safeProfile.email,
+            user_type: safeProfile.user_type,
+            phone: safeProfile.phone,
+            avatar_url: safeProfile.avatar_url,
             hourlyRate: parseFloat(String(item.hourly_rate)) || 0,
             rating: 4.5, // Default rating
             reviewCount: 0, // Default count

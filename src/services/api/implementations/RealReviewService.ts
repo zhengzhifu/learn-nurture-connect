@@ -26,9 +26,11 @@ export class RealReviewService extends BaseService {
       return data.map(review => {
         const reviewer = review.reviewer || {};
         
-        // Generate name from first_name and last_name
-        const reviewerName = reviewer.first_name && reviewer.last_name
-          ? `${reviewer.first_name} ${reviewer.last_name}`
+        // Generate name from first_name and last_name with null checks
+        const first_name = reviewer.first_name || '';
+        const last_name = reviewer.last_name || '';
+        const reviewerName = first_name || last_name 
+          ? `${first_name} ${last_name}`.trim()
           : 'Anonymous';
         
         return {
@@ -67,7 +69,7 @@ export class RealReviewService extends BaseService {
           reviewer_id: review.reviewer_id,
           reviewee_id: review.reviewee_id,
           rating: review.rating,
-          comment: review.comment,
+          comment: review.comment || '',
           subject: review.subject || 'General'
         })
         .select()
@@ -90,16 +92,24 @@ export class RealReviewService extends BaseService {
       }
 
       // Generate full name from first_name and last_name
-      const reviewerName = reviewerData 
-        ? `${reviewerData.first_name || ''} ${reviewerData.last_name || ''}`.trim() || 'Anonymous'
+      const first_name = reviewerData?.first_name || '';
+      const last_name = reviewerData?.last_name || '';
+      const reviewerName = first_name || last_name 
+        ? `${first_name} ${last_name}`.trim()
         : 'Anonymous';
 
       const result: Review = {
-        ...data,
+        id: data.id,
+        reviewer_id: data.reviewer_id,
+        reviewee_id: data.reviewee_id,
+        rating: data.rating,
+        comment: data.comment || '',
+        created_at: data.created_at,
+        subject: data.subject || 'General',
         reviewer_name: reviewerName,
         reviewer_avatar: reviewerData?.avatar_url || '',
         // Add legacy fields
-        content: data.comment,
+        content: data.comment || '',
         tutor_id: data.reviewee_id,
         user_id: data.reviewer_id,
         tutor_name: reviewerName,
@@ -136,8 +146,8 @@ export class RealReviewService extends BaseService {
         .from('reviews')
         .update({
           rating: updatedData.rating,
-          comment: updatedData.comment,
-          subject: updatedData.subject
+          comment: updatedData.comment || '',
+          subject: updatedData.subject || 'General'
         })
         .eq('id', reviewId)
         .select()
@@ -160,16 +170,24 @@ export class RealReviewService extends BaseService {
       }
 
       // Generate full name from first_name and last_name
-      const reviewerName = reviewerData 
-        ? `${reviewerData.first_name || ''} ${reviewerData.last_name || ''}`.trim() || 'Anonymous'
+      const first_name = reviewerData?.first_name || '';
+      const last_name = reviewerData?.last_name || '';
+      const reviewerName = first_name || last_name 
+        ? `${first_name} ${last_name}`.trim()
         : 'Anonymous';
 
       const result: Review = {
-        ...data,
+        id: data.id,
+        reviewer_id: data.reviewer_id,
+        reviewee_id: data.reviewee_id,
+        rating: data.rating,
+        comment: data.comment || '',
+        created_at: data.created_at,
+        subject: data.subject || 'General',
         reviewer_name: reviewerName,
         reviewer_avatar: reviewerData?.avatar_url || '',
         // Add legacy fields
-        content: data.comment,
+        content: data.comment || '',
         tutor_id: data.reviewee_id,
         user_id: data.reviewer_id,
         tutor_name: reviewerName,

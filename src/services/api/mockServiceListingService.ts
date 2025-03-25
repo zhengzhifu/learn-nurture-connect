@@ -1,5 +1,6 @@
 
-import { ServiceData, ServiceFilters, ServiceType } from '../serviceClient';
+import { ServiceType } from '@/types/service';
+import { ServiceData, ServiceFilters } from '@/types/service';
 import { mockServices } from './mockData';
 import { toServiceType } from './implementations/serviceUtils';
 

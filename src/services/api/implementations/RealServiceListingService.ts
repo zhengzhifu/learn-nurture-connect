@@ -1,8 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ServiceData, ServiceFilters } from '../serviceClient';
+import { ServiceData, ServiceFilters } from '@/types/service';
 import { getDisplayName } from '@/utils/profileUtils';
 import { ServiceListingUtils } from './ServiceListingUtils';
+import { convertToServiceData } from './serviceUtils';
 
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
@@ -12,7 +13,7 @@ export class RealServiceListingService {
         .from('tutors')
         .select(`
           *,
-          profiles:id(*)
+          profiles:profiles(*)
         `)
         .limit(20);
       
@@ -23,32 +24,40 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const tutorProfile = item.profiles || {};
-        const tutorName = getDisplayName({
-          id: tutorProfile.id || '',
-          first_name: tutorProfile.first_name || '',
-          last_name: tutorProfile.last_name || '',
-          email: tutorProfile.email || '',
+        const profile = item.profiles || {};
+        
+        // Add null checks when accessing profile properties
+        const displayName = getDisplayName({
+          id: profile.id || '',
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          email: profile.email || '',
           user_type: 'tutor'
         });
         
-        return {
+        // Create a raw data object to pass to the conversion utility
+        const rawData = {
           id: item.id,
-          title: `${tutorName} - Tutoring Services`,
+          title: `${displayName} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: tutorName,
-          providerAvatar: tutorProfile.avatar_url || '',
+          provider: displayName,
+          providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count
           price: item.hourly_rate || 35,
           priceUnit: 'hour',
           locations: ['Online'], // Default location
+          location: 'Online',
           availability: ['Weekdays', 'Weekends'], // Default availability
           serviceType: 'tutoring',
+          type: 'tutoring',
+          rating: 4.5,
           subjects: ['General'], // Default subjects
           grade: 'All Grades',
           featured: false
         };
+        
+        return convertToServiceData(rawData);
       });
     } catch (error) {
       console.error('Error in getServices:', error);
@@ -63,11 +72,11 @@ export class RealServiceListingService {
         .from('tutors')
         .select(`
           *,
-          profiles:id(*)
+          profiles:profiles(*)
         `);
       
       // Apply filters to the query builder
-      query = ServiceListingUtils.applyTutorFilters(query, filters);
+      query = ServiceListingUtils.applyFilters(query, filters);
       
       // Execute the query
       const { data, error } = await query;
@@ -79,32 +88,40 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const tutorProfile = item.profiles || {};
-        const tutorName = getDisplayName({
-          id: tutorProfile.id || '',
-          first_name: tutorProfile.first_name || '',
-          last_name: tutorProfile.last_name || '',
-          email: tutorProfile.email || '',
+        const profile = item.profiles || {};
+        
+        // Add null checks when accessing profile properties
+        const displayName = getDisplayName({
+          id: profile.id || '',
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          email: profile.email || '',
           user_type: 'tutor'
         });
         
-        return {
+        // Create a raw data object to pass to the conversion utility
+        const rawData = {
           id: item.id,
-          title: `${tutorName} - Tutoring Services`,
+          title: `${displayName} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: tutorName,
-          providerAvatar: tutorProfile.avatar_url || '',
+          provider: displayName,
+          providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count
           price: item.hourly_rate || 35,
           priceUnit: 'hour',
           locations: ['Online'], // Default location
+          location: 'Online',
           availability: ['Weekdays', 'Weekends'], // Default availability
           serviceType: 'tutoring',
+          type: 'tutoring',
+          rating: 4.5,
           subjects: ['General'], // Default subjects
           grade: 'All Grades',
           featured: false
         };
+        
+        return convertToServiceData(rawData);
       });
     } catch (error) {
       console.error('Error in filterServices:', error);
@@ -119,11 +136,9 @@ export class RealServiceListingService {
         .from('tutors')
         .select(`
           *,
-          profiles:id(*)
+          profiles:profiles(*)
         `)
         .or(`
-          profiles.first_name.ilike.%${query}%,
-          profiles.last_name.ilike.%${query}%,
           bio.ilike.%${query}%
         `)
         .limit(20);
@@ -135,32 +150,40 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const tutorProfile = item.profiles || {};
-        const tutorName = getDisplayName({
-          id: tutorProfile.id || '',
-          first_name: tutorProfile.first_name || '',
-          last_name: tutorProfile.last_name || '',
-          email: tutorProfile.email || '',
+        const profile = item.profiles || {};
+        
+        // Add null checks when accessing profile properties
+        const displayName = getDisplayName({
+          id: profile.id || '',
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          email: profile.email || '',
           user_type: 'tutor'
         });
         
-        return {
+        // Create a raw data object to pass to the conversion utility
+        const rawData = {
           id: item.id,
-          title: `${tutorName} - Tutoring Services`,
+          title: `${displayName} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: tutorName,
-          providerAvatar: tutorProfile.avatar_url || '',
+          provider: displayName,
+          providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count
           price: item.hourly_rate || 35,
           priceUnit: 'hour',
           locations: ['Online'], // Default location
+          location: 'Online',
           availability: ['Weekdays', 'Weekends'], // Default availability
           serviceType: 'tutoring',
+          type: 'tutoring',
+          rating: 4.5,
           subjects: ['General'], // Default subjects
           grade: 'All Grades',
           featured: false
         };
+        
+        return convertToServiceData(rawData);
       });
     } catch (error) {
       console.error('Error in searchServices:', error);

@@ -3,7 +3,7 @@ import { ServiceFilters } from '../serviceClient';
 import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 
 export class ServiceListingUtils {
-  static applyFilters(query: PostgrestFilterBuilder<any>, filters: ServiceFilters): PostgrestFilterBuilder<any> {
+  static applyFilters(query: any, filters: ServiceFilters): any {
     // Apply price range filter
     if (filters.priceRange && filters.priceRange.length === 2) {
       const [minPrice, maxPrice] = filters.priceRange;
