@@ -31,6 +31,10 @@ export interface ServiceData {
   provider_name?: string;
   provider_avatar?: string;
   
+  // Additional fields for authentication and approval visibility
+  contact_email?: string;
+  contact_phone?: string;
+  
   // Additional properties
   provider?: string;
   providerAvatar?: string;

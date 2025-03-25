@@ -6,8 +6,14 @@ import Footer from '@/components/layout/Footer';
 import ServiceBrowser from '@/components/services/ServiceBrowser';
 import { useServiceBrowse } from '@/hooks/useServiceBrowse';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const ServiceBrowse: React.FC = () => {
+  const { isAuthenticated, profile } = useAuth();
+  const isApproved = profile?.approval_status === 'approved';
+  
   const {
     serviceList,
     isLoading,
@@ -38,21 +44,30 @@ const ServiceBrowse: React.FC = () => {
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);
-    toast.info(`Viewing service details for ${serviceId}`);
-    // In a full implementation, this would navigate to a service details page
-    // navigate(`/services/${serviceId}`);
   };
-
-  console.log('ServiceBrowse rendering with:', { 
-    serviceCount: serviceList?.length, 
-    isLoading, 
-    hasError 
-  });
 
   return (
     <PageWrapper>
       <Navbar />
       <div className="container mx-auto py-8 pt-24">
+        {!isAuthenticated && (
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Sign in to see more details about these services including provider information and availability.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {isAuthenticated && !isApproved && (
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Your account is pending approval. Once approved, you'll be able to see complete provider information and contact details.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <ServiceBrowser 
           serviceList={serviceList || []}
           isLoading={isLoading}

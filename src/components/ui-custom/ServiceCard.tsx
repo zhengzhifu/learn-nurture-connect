@@ -6,6 +6,7 @@ import { Star, MapPin, Clock, User } from 'lucide-react';
 import { ServiceData } from '@/services/api/serviceClient';
 import ServiceDetailsModal from './ServiceDetailsModal';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from '@/hooks/useAuth';
 
 interface ServiceCardProps {
   service: ServiceData;
@@ -18,6 +19,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   className = '',
   onClick,
 }) => {
+  const { isAuthenticated, profile } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Format price as a string (e.g. "$25/hr")
@@ -28,6 +30,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     ? service.availability.join(', ') 
     : 'Flexible';
 
+  const isApproved = profile?.approval_status === 'approved';
+  
   const handleViewDetails = () => {
     setIsModalOpen(true);
     if (onClick) onClick();
@@ -69,8 +73,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               </div>
             </div>
             
-            {/* Provider information */}
-            {service.provider_name && (
+            {/* Provider information - only show if authenticated */}
+            {isAuthenticated && service.provider_name && (
               <div className="flex items-center text-sm mb-2">
                 <Avatar className="h-6 w-6 mr-2">
                   <AvatarImage src={service.provider_avatar || ''} alt={service.provider_name} />
@@ -87,10 +91,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               <span>{service.location}</span>
             </div>
             
-            <div className="flex items-center text-muted-foreground text-sm">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{availabilityText}</span>
-            </div>
+            {/* Only show availability if authenticated */}
+            {isAuthenticated && (
+              <div className="flex items-center text-muted-foreground text-sm">
+                <Clock className="w-4 h-4 mr-1" />
+                <span>{availabilityText}</span>
+              </div>
+            )}
           </div>
           
           {service.description && (
@@ -115,6 +122,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         service={service}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        isAuthenticated={isAuthenticated}
+        isApproved={isApproved}
       />
     </>
   );

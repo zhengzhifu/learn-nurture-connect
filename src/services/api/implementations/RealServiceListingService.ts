@@ -1,164 +1,46 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from '@/types/service';
-import { ServiceListingUtils } from './ServiceListingUtils';
-import { convertToServiceData, safeProfileData } from './serviceUtils';
+import { toast } from 'sonner';
 
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
     try {
-      // Fetch tutors with their associated profiles
-      const { data, error } = await supabase
-        .from('tutors')
-        .select(`
-          *,
-          profiles:profiles(*)
-        `)
-        .limit(20);
-      
-      if (error) {
-        console.error('Error fetching services:', error);
-        return [];
-      }
-      
-      // Transform the data into the expected format
-      return data.map(item => {
-        const profile = safeProfileData(item.profiles || {});
-        
-        // Create a raw data object to pass to the conversion utility
-        const rawData = {
-          id: item.id,
-          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
-          description: item.bio || 'Professional tutoring services',
-          provider: `${profile.first_name} ${profile.last_name}`,
-          providerAvatar: profile.avatar_url || '',
-          providerRating: 4.5, // Default rating
-          providerReviews: 0, // Default review count
-          price: item.hourly_rate || 35,
-          priceUnit: 'hour',
-          locations: ['Online'], // Default location
-          location: 'Online',
-          availability: ['Weekdays', 'Weekends'], // Default availability
-          serviceType: 'tutoring',
-          type: 'tutoring',
-          rating: 4.5,
-          subjects: ['General'], // Default subjects
-          grade: 'All Grades',
-          featured: false
-        };
-        
-        return convertToServiceData(rawData);
-      });
+      const { data } = await supabase.functions.invoke('get-services');
+      return data?.services || [];
     } catch (error) {
-      console.error('Error in getServices:', error);
+      console.error('Error fetching services:', error);
+      toast.error('Failed to load services');
       return [];
     }
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
-      // Start with a base query
-      let query = supabase
-        .from('tutors')
-        .select(`
-          *,
-          profiles:profiles(*)
-        `);
-      
-      // Apply filters to the query builder - fix the method name
-      query = ServiceListingUtils.applyFilters(query, filters);
-      
-      // Execute the query
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error filtering services:', error);
-        return [];
-      }
-      
-      // Transform the data into the expected format
-      return data.map(item => {
-        const profile = safeProfileData(item.profiles || {});
-        
-        // Create a raw data object to pass to the conversion utility
-        const rawData = {
-          id: item.id,
-          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
-          description: item.bio || 'Professional tutoring services',
-          provider: `${profile.first_name} ${profile.last_name}`,
-          providerAvatar: profile.avatar_url || '',
-          providerRating: 4.5, // Default rating
-          providerReviews: 0, // Default review count
-          price: item.hourly_rate || 35,
-          priceUnit: 'hour',
-          locations: ['Online'], // Default location
-          location: 'Online',
-          availability: ['Weekdays', 'Weekends'], // Default availability
-          serviceType: 'tutoring',
-          type: 'tutoring',
-          rating: 4.5,
-          subjects: ['General'], // Default subjects
-          grade: 'All Grades',
-          featured: false
-        };
-        
-        return convertToServiceData(rawData);
+      const { data } = await supabase.functions.invoke('get-services', {
+        query: {
+          filters: JSON.stringify(filters)
+        }
       });
+      return data?.services || [];
     } catch (error) {
-      console.error('Error in filterServices:', error);
+      console.error('Error filtering services:', error);
+      toast.error('Failed to filter services');
       return [];
     }
   }
   
   async searchServices(query: string): Promise<ServiceData[]> {
     try {
-      // Search across multiple tables using full text search
-      const { data, error } = await supabase
-        .from('tutors')
-        .select(`
-          *,
-          profiles:profiles(*)
-        `)
-        .or(`
-          bio.ilike.%${query}%
-        `)
-        .limit(20);
-      
-      if (error) {
-        console.error('Error searching services:', error);
-        return [];
-      }
-      
-      // Transform the data into the expected format
-      return data.map(item => {
-        const profile = safeProfileData(item.profiles || {});
-        
-        // Create a raw data object to pass to the conversion utility
-        const rawData = {
-          id: item.id,
-          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
-          description: item.bio || 'Professional tutoring services',
-          provider: `${profile.first_name} ${profile.last_name}`,
-          providerAvatar: profile.avatar_url || '',
-          providerRating: 4.5, // Default rating
-          providerReviews: 0, // Default review count
-          price: item.hourly_rate || 35,
-          priceUnit: 'hour',
-          locations: ['Online'], // Default location
-          location: 'Online',
-          availability: ['Weekdays', 'Weekends'], // Default availability
-          serviceType: 'tutoring',
-          type: 'tutoring',
-          rating: 4.5,
-          subjects: ['General'], // Default subjects
-          grade: 'All Grades',
-          featured: false
-        };
-        
-        return convertToServiceData(rawData);
+      const { data } = await supabase.functions.invoke('get-services', {
+        query: {
+          query
+        }
       });
+      return data?.services || [];
     } catch (error) {
-      console.error('Error in searchServices:', error);
+      console.error('Error searching services:', error);
+      toast.error('Failed to search services');
       return [];
     }
   }
