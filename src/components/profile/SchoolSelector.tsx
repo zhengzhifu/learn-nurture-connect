@@ -17,7 +17,7 @@ import Button from '@/components/ui-custom/Button';
 interface SchoolSelectorProps {
   selectedSchoolId: string | undefined;
   otherSchoolName: string | undefined;
-  onSchoolChange: (schoolId: string | undefined, otherSchoolName: string | undefined) => void;
+  onSchoolChange: (schoolId: string | undefined, otherSchoolName: string | undefined, isChanged: boolean) => void;
   label?: string;
 }
 
@@ -33,6 +33,8 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
   const [newSchoolName, setNewSchoolName] = useState(otherSchoolName || '');
   const [newSchoolAddress, setNewSchoolAddress] = useState('');
   const [selectedSchool, setSelectedSchool] = useState<string>(selectedSchoolId || '');
+  const [initialSchoolId, setInitialSchoolId] = useState<string | undefined>(selectedSchoolId);
+  const [initialOtherSchoolName, setInitialOtherSchoolName] = useState<string | undefined>(otherSchoolName);
 
   useEffect(() => {
     const loadSchools = async () => {
@@ -60,21 +62,32 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
     if (selectedSchoolId) {
       setSelectedSchool(selectedSchoolId);
       setShowOtherInput(false);
+      // Store initial values to detect changes
+      setInitialSchoolId(selectedSchoolId);
+      setInitialOtherSchoolName(undefined);
     } else if (otherSchoolName) {
       setShowOtherInput(true);
       setNewSchoolName(otherSchoolName);
+      // Store initial values to detect changes
+      setInitialSchoolId(undefined);
+      setInitialOtherSchoolName(otherSchoolName);
     }
   }, [selectedSchoolId, otherSchoolName]);
 
   const handleSchoolChange = (value: string) => {
+    // Determine if the school has changed from the initial value
+    const hasChanged = 
+      (value === 'other' && initialOtherSchoolName === undefined) || 
+      (value !== 'other' && value !== initialSchoolId);
+
     if (value === 'other') {
       setShowOtherInput(true);
       setSelectedSchool('other');
-      onSchoolChange(undefined, newSchoolName);
+      onSchoolChange(undefined, newSchoolName, hasChanged);
     } else {
       setShowOtherInput(false);
       setSelectedSchool(value);
-      onSchoolChange(value, undefined);
+      onSchoolChange(value, undefined, hasChanged);
     }
   };
 
@@ -87,7 +100,8 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
     try {
       const newSchool = await suggestNewSchool(newSchoolName, newSchoolAddress);
       if (newSchool) {
-        onSchoolChange(undefined, newSchoolName);
+        // Always true for new schools
+        onSchoolChange(undefined, newSchoolName, true);
         toast.success('School submitted for approval successfully');
       }
     } catch (error) {

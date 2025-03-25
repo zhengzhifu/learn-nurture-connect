@@ -8,7 +8,7 @@ interface SchoolInfoSectionProps {
   userType: UserRole;
   schoolId: string | undefined;
   otherSchoolName: string | undefined;
-  onSchoolChange: (schoolId: string | undefined, otherSchoolName: string | undefined) => void;
+  onSchoolChange: (schoolId: string | undefined, otherSchoolName: string | undefined, isChanged: boolean) => void;
 }
 
 const SchoolInfoSection: React.FC<SchoolInfoSectionProps> = ({
