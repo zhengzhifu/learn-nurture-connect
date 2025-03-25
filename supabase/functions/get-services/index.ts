@@ -78,9 +78,13 @@ Deno.serve(async (req) => {
     
     // Execute query
     console.log("Executing query...");
-    const { data: tutorsData, error } = await queryBuilder;
+    const { data: tutorsData, error, status, statusText, count } = await queryBuilder;
     
-    console.log("Tutors data retrieved:", tutorsData?.length || 0);
+    console.log("Query execution result:");
+    console.log("- Status:", status, statusText);
+    console.log("- Count:", count);
+    console.log("- Error:", error ? JSON.stringify(error) : "none");
+    console.log("- Data length:", tutorsData?.length || 0);
     
     if (error) {
       console.error("Query error:", error);

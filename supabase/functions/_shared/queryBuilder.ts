@@ -44,6 +44,13 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     queryBuilder = queryBuilder.ilike('profiles.home_address', `%${filterParams.location}%`);
   }
   
-  console.log("Final query built. About to execute it.");
+  // Get the SQL query string for debugging
+  const { url, headers, body, method } = queryBuilder.toURL();
+  console.log("Query built and ready to execute");
+  console.log("SQL Query URL:", url);
+  console.log("SQL Query Method:", method);
+  console.log("SQL Query Headers:", JSON.stringify(headers));
+  console.log("SQL Query Body:", body);
+  
   return queryBuilder;
 };

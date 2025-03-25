@@ -21,7 +21,6 @@ export class RealServiceListingService {
       }
       
       console.log("Services received:", data?.services ? data.services.length : 0);
-      console.log("Raw response data:", JSON.stringify(data));
       
       return data?.services || [];
     } catch (error) {
@@ -39,7 +38,7 @@ export class RealServiceListingService {
         return this.getServices();
       }
       
-      console.log("Filtering services with:", filters);
+      console.log("Filtering services with:", JSON.stringify(filters, null, 2));
       // Pass filters as body parameter with explicit Content-Type header
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
