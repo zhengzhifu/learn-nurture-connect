@@ -6,12 +6,18 @@ import { toast } from 'sonner';
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
     try {
+      console.log("Fetching all services via GET request");
       // Make a GET request when no parameters are needed
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'GET'
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error from get-services function:", error);
+        throw error;
+      }
+      
+      console.log("Services received:", data?.services ? data.services.length : 0);
       return data?.services || [];
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -24,16 +30,23 @@ export class RealServiceListingService {
     try {
       // Ensure filters is not undefined or empty
       if (!filters || Object.keys(filters).length === 0) {
+        console.log("No filters provided, fetching all services");
         return this.getServices();
       }
       
+      console.log("Filtering services with:", filters);
       // Pass filters as body parameter 
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
         body: { filters }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error from get-services function:", error);
+        throw error;
+      }
+      
+      console.log("Filtered services received:", data?.services ? data.services.length : 0);
       return data?.services || [];
     } catch (error) {
       console.error('Error filtering services:', error);
@@ -46,16 +59,23 @@ export class RealServiceListingService {
     try {
       // If query is empty, just get all services
       if (!query || query.trim() === '') {
+        console.log("Empty search query, fetching all services");
         return this.getServices();
       }
       
+      console.log("Searching services with query:", query);
       // Pass query as body parameter
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
         body: { query }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error from get-services function:", error);
+        throw error;
+      }
+      
+      console.log("Search results received:", data?.services ? data.services.length : 0);
       return data?.services || [];
     } catch (error) {
       console.error('Error searching services:', error);

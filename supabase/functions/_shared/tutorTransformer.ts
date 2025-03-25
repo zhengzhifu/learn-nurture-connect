@@ -3,6 +3,9 @@ import { corsHeaders } from './cors.ts';
 
 // Transform tutor data into service format with access control
 export const transformTutorToService = (tutor: any, isAuthenticated: boolean, isApproved: boolean) => {
+  // Extra logging to understand data transformation
+  console.log("Transforming tutor data:", JSON.stringify(tutor, null, 2));
+  
   // Extract profile data
   const profile = tutor.profiles || {};
   
@@ -46,15 +49,38 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
       
       // Full address not shown for privacy reasons
       if (profile.home_address) {
-        const addressParts = profile.home_address.split(',');
-        if (addressParts.length > 1) {
-          service.location = addressParts[addressParts.length - 2].trim() + ', ' + 
-                           addressParts[addressParts.length - 1].trim();
+        try {
+          // Try to parse the JSON string if it's stored that way
+          let addressObj = profile.home_address;
+          if (typeof profile.home_address === 'string') {
+            try {
+              addressObj = JSON.parse(profile.home_address);
+              if (addressObj.city && addressObj.state) {
+                service.location = `${addressObj.city}, ${addressObj.state}`;
+              } else if (addressObj.formatted_address) {
+                const parts = addressObj.formatted_address.split(',');
+                if (parts.length > 1) {
+                  service.location = parts.slice(1).join(',').trim();
+                }
+              }
+            } catch (e) {
+              // If not valid JSON, use the string directly
+              const addressParts = profile.home_address.split(',');
+              if (addressParts.length > 1) {
+                service.location = addressParts[addressParts.length - 2].trim() + ', ' + 
+                               addressParts[addressParts.length - 1].trim();
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing address:", e);
+          service.location = 'Location available upon request';
         }
       }
     }
   }
   
+  console.log("Transformed service data:", JSON.stringify(service, null, 2));
   return service;
 };
 

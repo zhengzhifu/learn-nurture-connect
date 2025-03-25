@@ -15,7 +15,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log("Edge function: get-services received request")
+    console.log("Edge function: get-services received request with method:", req.method)
+    
+    // Inspect headers
+    console.log("Request headers:", JSON.stringify(Object.fromEntries([...req.headers.entries()]), null, 2))
+    
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
     // Parse request body for parameters
@@ -35,7 +39,7 @@ Deno.serve(async (req) => {
           
           if (text && text.trim() !== '') {
             const body = JSON.parse(text);
-            console.log("Parsed body:", JSON.stringify(body));
+            console.log("Parsed body:", JSON.stringify(body, null, 2));
             query = body.query || '';
             filterParams = body.filters || {};
           } else {
@@ -52,11 +56,14 @@ Deno.serve(async (req) => {
     
     // Get user authentication info
     const authHeader = req.headers.get('Authorization')
+    console.log("Auth header present:", !!authHeader);
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     
     // Build and execute query
     console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
+    
+    console.log("Executing query...");
     const { data: tutorsData, error } = await queryBuilder;
     
     if (error) {
@@ -65,11 +72,16 @@ Deno.serve(async (req) => {
     }
     
     console.log("Tutors data retrieved:", tutorsData ? tutorsData.length : 0);
+    if (tutorsData && tutorsData.length === 0) {
+      console.log("No tutors found in database. This might indicate an issue with the query or empty database.");
+    } else if (tutorsData) {
+      console.log("First tutor data sample:", JSON.stringify(tutorsData[0], null, 2));
+    }
     
     // Transform the data with access control based on authentication
-    const services = tutorsData.map(tutor => 
+    const services = tutorsData ? tutorsData.map(tutor => 
       transformTutorToService(tutor, !!userId, isApproved)
-    );
+    ) : [];
     
     console.log("Transformed services:", services.length);
     

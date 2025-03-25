@@ -39,12 +39,12 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
   }
   
   // Apply other filters
-  if (filterParams.types && filterParams.types.length > 0) {
+  if (filterParams && filterParams.types && filterParams.types.length > 0) {
     // For simplicity, we'll assume all tutors are of type 'tutoring'
     // In a real app, you might have a type field to filter by
   }
   
-  if (filterParams.priceRange && filterParams.priceRange.length === 2) {
+  if (filterParams && filterParams.priceRange && filterParams.priceRange.length === 2) {
     const [minPrice, maxPrice] = filterParams.priceRange;
     if (minPrice > 0) {
       queryBuilder = queryBuilder.gte('hourly_rate', minPrice);
@@ -54,15 +54,18 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     }
   }
   
-  if (filterParams.subjects && filterParams.subjects.length > 0) {
+  if (filterParams && filterParams.subjects && filterParams.subjects.length > 0) {
     // This is a complex query since we need to filter by specialties
     // For simplicity, we're not implementing this filter in this example
   }
   
-  if (filterParams.location && filterParams.location.trim() !== '') {
+  if (filterParams && filterParams.location && filterParams.location.trim() !== '') {
     // Simple example - not a geographic query
     queryBuilder = queryBuilder.filter('profiles.home_address', 'ilike', `%${filterParams.location}%`);
   }
+  
+  // Important: Debug the query that's being built
+  console.log("Final query built. About to execute it.");
   
   return queryBuilder;
 };
