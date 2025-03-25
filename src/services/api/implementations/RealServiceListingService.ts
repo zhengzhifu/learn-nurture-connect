@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from '@/types/service';
-import { getDisplayName } from '@/utils/profileUtils';
 import { ServiceListingUtils } from './ServiceListingUtils';
 import { convertToServiceData, safeProfileData } from './serviceUtils';
 
@@ -66,7 +65,7 @@ export class RealServiceListingService {
           profiles:profiles(*)
         `);
       
-      // Apply filters to the query builder
+      // Apply filters to the query builder - fix the method name
       query = ServiceListingUtils.applyFilters(query, filters);
       
       // Execute the query

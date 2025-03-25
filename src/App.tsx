@@ -36,6 +36,7 @@ const App: React.FC = () => {
             <Route path="/browse" element={<ServiceBrowse />} />
             <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            {/* MyTutors route removed as it's not in MVP scope */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

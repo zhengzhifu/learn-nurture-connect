@@ -1,79 +1,44 @@
 
 import { ServiceType, ServiceData } from '@/types/service';
 
-/**
- * Safely gets a property from a potentially null or undefined object
- */
-function safeGet(obj: any, prop: string, defaultValue: any = ''): any {
-  if (!obj) return defaultValue;
-  return obj[prop] !== undefined ? obj[prop] : defaultValue;
-}
-
-/**
- * Converts raw service data from the database to the ServiceData interface
- */
-export function convertToServiceData(rawData: any): ServiceData {
+export const safeProfileData = (profileData: any) => {
   return {
-    id: rawData.id || '',
-    title: rawData.title || '',
-    description: rawData.description || '',
-    type: toServiceType(rawData.serviceType || 'tutoring'),
-    price: parseFloat(rawData.price || '0'),
-    rating: parseFloat(rawData.rating || '0'),
-    location: rawData.location || '',
-    image: rawData.image || '',
-    availability: rawData.availability || [],
-    provider_id: rawData.provider_id || '',
-    subjects: rawData.subjects || [],
-    provider_name: rawData.provider || '',
-    provider_avatar: rawData.providerAvatar || '',
+    id: profileData.id || '',
+    first_name: profileData.first_name || '',
+    last_name: profileData.last_name || '',
+    email: profileData.email || '',
+    user_type: profileData.user_type || 'tutor',
+    phone: profileData.phone || '',
+    avatar_url: profileData.avatar_url || '',
+    home_address: profileData.home_address || '',
+    approval_status: profileData.approval_status || 'pending',
+    school_id: profileData.school_id || null
+  };
+};
+
+export const convertToServiceData = (data: any): ServiceData => {
+  // Ensure all required fields for ServiceData are present
+  return {
+    id: data.id || '',
+    title: data.title || '',
+    description: data.description || '',
+    type: data.type as ServiceType || 'tutoring',
+    price: typeof data.price === 'number' ? data.price : 0,
+    rating: typeof data.rating === 'number' ? data.rating : 0,
+    location: data.location || 'Online',
+    image: data.image || '',
+    availability: Array.isArray(data.availability) ? data.availability : [],
+    provider_id: data.provider_id || '',
+    subjects: Array.isArray(data.subjects) ? data.subjects : [],
     
     // Additional properties
-    provider: rawData.provider || '',
-    providerAvatar: rawData.providerAvatar || '',
-    providerRating: parseFloat(rawData.providerRating || '0'),
-    providerReviews: parseInt(rawData.providerReviews || '0'),
-    priceUnit: rawData.priceUnit || 'hour',
-    locations: rawData.locations || [rawData.location || ''],
-    serviceType: rawData.serviceType || 'tutoring',
-    grade: rawData.grade || '',
-    featured: !!rawData.featured
+    provider_name: data.provider || '',
+    provider_avatar: data.providerAvatar || '',
+    // Map any additional properties that exist in the raw data
+    ...(data.priceUnit ? { priceUnit: data.priceUnit } : {}),
+    ...(data.locations ? { locations: data.locations } : {}),
+    ...(data.serviceType ? { serviceType: data.serviceType } : {}),
+    ...(data.grade ? { grade: data.grade } : {}),
+    ...(data.featured !== undefined ? { featured: data.featured } : {})
   };
-}
-
-/**
- * Safely ensures the provided value is a valid ServiceType
- */
-export function toServiceType(type: string): ServiceType {
-  switch (type.toLowerCase()) {
-    case 'tutoring':
-      return 'tutoring';
-    case 'childcare':
-      return 'childcare';
-    case 'babysitting':
-      return 'babysitting';
-    case 'tutoring_paid':
-      return 'tutoring_paid';
-    case 'tutoring_voluntary':
-      return 'tutoring_voluntary';
-    default:
-      return 'tutoring';
-  }
-}
-
-/**
- * Safely extracts profile data from potentially null objects
- */
-export function safeProfileData(profileData: any): any {
-  if (!profileData) return {};
-  
-  return {
-    id: safeGet(profileData, 'id'),
-    first_name: safeGet(profileData, 'first_name'),
-    last_name: safeGet(profileData, 'last_name'),
-    email: safeGet(profileData, 'email'),
-    user_type: safeGet(profileData, 'user_type'),
-    phone: safeGet(profileData, 'phone'),
-    avatar_url: safeGet(profileData, 'avatar_url')
-  };
-}
+};

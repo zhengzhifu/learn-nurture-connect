@@ -1,5 +1,6 @@
 
 import { ServiceFilters } from '@/types/service';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export class ServiceListingUtils {
   static applyFilters(query: any, filters: ServiceFilters): any {

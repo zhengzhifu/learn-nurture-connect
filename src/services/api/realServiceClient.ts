@@ -1,6 +1,7 @@
 
 import { Profile } from '@/types/auth';
-import { ServiceClient, ServiceData, ServiceFilters } from './serviceClient';
+import { ServiceClient } from './serviceClient';
+import { ServiceData, ServiceFilters } from '@/types/service';
 import { realProfileService } from './realProfileService';
 import { realServiceListingService } from './realServiceListingService';
 import { Review } from '@/types/review';
