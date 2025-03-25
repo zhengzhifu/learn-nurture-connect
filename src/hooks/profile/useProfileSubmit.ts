@@ -17,6 +17,7 @@ export const useProfileSubmit = () => {
     try {
       console.log('Submitting profile update with data:', formData);
       
+      // Create a JSON string with all address details
       const addressData = {
         formatted_address: formData.home_address,
         address_line1: formData.address_line1,
@@ -30,7 +31,19 @@ export const useProfileSubmit = () => {
       };
       
       // Filter out email as it can't be updated through profile
-      const { email, ...updateData } = formData;
+      // Also remove all the individual address fields that don't exist in the database
+      const { 
+        email, 
+        address_line1, 
+        address_line2, 
+        city, 
+        state, 
+        zip_code, 
+        country, 
+        latitude, 
+        longitude,
+        ...updateData 
+      } = formData;
       
       console.log('Calling updateProfile with:', updateData);
       
