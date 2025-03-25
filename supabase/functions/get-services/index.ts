@@ -24,12 +24,29 @@ Deno.serve(async (req) => {
     
     if (req.method === 'POST') {
       try {
-        const body = await req.json();
-        console.log("Request body:", JSON.stringify(body));
-        query = body.query || '';
-        filterParams = body.filters || {};
+        // Check if the request has a body before trying to parse it
+        const contentType = req.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          // Clone the request to ensure we can read the body
+          const clonedReq = req.clone();
+          const text = await clonedReq.text();
+          
+          console.log("Request body text:", text);
+          
+          if (text && text.trim() !== '') {
+            const body = JSON.parse(text);
+            console.log("Parsed body:", JSON.stringify(body));
+            query = body.query || '';
+            filterParams = body.filters || {};
+          } else {
+            console.log("Request body is empty");
+          }
+        } else {
+          console.log("Request is not JSON or content-type header is missing");
+        }
       } catch (e) {
         console.error('Error parsing request body:', e);
+        // Continue with empty parameters rather than failing
       }
     }
     
@@ -38,6 +55,7 @@ Deno.serve(async (req) => {
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     
     // Build and execute query
+    console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
     const { data: tutorsData, error } = await queryBuilder;
     
@@ -67,6 +85,7 @@ Deno.serve(async (req) => {
     );
     
   } catch (error) {
+    console.error("Error in get-services function:", error);
     return handleApiError(error);
   }
 });

@@ -6,7 +6,10 @@ import { toast } from 'sonner';
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
     try {
-      const { data, error } = await supabase.functions.invoke('get-services');
+      // Make a GET request when no parameters are needed
+      const { data, error } = await supabase.functions.invoke('get-services', {
+        method: 'GET'
+      });
       
       if (error) throw error;
       return data?.services || [];
@@ -19,8 +22,14 @@ export class RealServiceListingService {
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
-      // Pass filters as body parameter instead of query
+      // Ensure filters is not undefined or empty
+      if (!filters || Object.keys(filters).length === 0) {
+        return this.getServices();
+      }
+      
+      // Pass filters as body parameter 
       const { data, error } = await supabase.functions.invoke('get-services', {
+        method: 'POST',
         body: { filters }
       });
       
@@ -35,8 +44,14 @@ export class RealServiceListingService {
   
   async searchServices(query: string): Promise<ServiceData[]> {
     try {
-      // Pass query as body parameter instead of query
+      // If query is empty, just get all services
+      if (!query || query.trim() === '') {
+        return this.getServices();
+      }
+      
+      // Pass query as body parameter
       const { data, error } = await supabase.functions.invoke('get-services', {
+        method: 'POST',
         body: { query }
       });
       
