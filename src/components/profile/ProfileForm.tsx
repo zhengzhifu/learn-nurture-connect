@@ -22,6 +22,7 @@ const ProfileForm: React.FC = () => {
     handleParentDataChange,
     handleSchoolChange,
     handleSubmit,
+    handleAvatarChange,
     getInitials
   } = useProfileForm();
 
@@ -34,6 +35,7 @@ const ProfileForm: React.FC = () => {
         handleChange={handleChange} 
         getInitials={getInitials} 
         handleAddressChange={handleAddressChange}
+        onAvatarChange={handleAvatarChange}
       />
 
       <SchoolInfoSection 

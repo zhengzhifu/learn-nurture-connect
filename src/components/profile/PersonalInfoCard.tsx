@@ -25,13 +25,15 @@ interface PersonalInfoCardProps {
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   getInitials: (name: string) => string;
   handleAddressChange?: (addressData: any) => void;
+  onAvatarChange?: (file: File) => void;
 }
 
 const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({ 
   formData, 
   handleChange, 
   getInitials,
-  handleAddressChange
+  handleAddressChange,
+  onAvatarChange
 }) => {
   return (
     <Card className="mb-8">
@@ -44,6 +46,7 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
           formData={formData} 
           handleChange={handleChange} 
           getInitials={getInitials} 
+          onAvatarChange={onAvatarChange}
         />
         
         <Separator />

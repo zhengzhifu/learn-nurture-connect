@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Camera } from 'lucide-react';
 
 interface PersonalInfoFormProps {
   formData: {
@@ -14,24 +16,50 @@ interface PersonalInfoFormProps {
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   getInitials: (name: string) => string;
+  onAvatarChange?: (file: File) => void;
 }
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ 
   formData, 
   handleChange, 
-  getInitials 
+  getInitials,
+  onAvatarChange
 }) => {
   // Generate a display name for the avatar
   const displayName = `${formData.first_name} ${formData.last_name}`.trim() || 'User';
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onAvatarChange) {
+      onAvatarChange(file);
+    }
+  };
   
   return (
     <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
       <div className="mb-4 sm:mb-0">
         <div className="relative">
-          <Avatar className="h-24 w-24">
+          <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
             <AvatarImage src={formData.avatar_url || ''} alt={displayName} />
             <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+            <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1">
+              <Camera className="h-4 w-4 text-white" />
+            </div>
           </Avatar>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleFileChange}
+          />
         </div>
       </div>
       
