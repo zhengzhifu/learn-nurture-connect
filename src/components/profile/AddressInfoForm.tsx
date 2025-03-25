@@ -1,72 +1,14 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-
-// Declare global google namespace to fix TypeScript errors
-declare global {
-  interface Window {
-    google: typeof google;
-  }
-}
-
-// Load Google Maps API script with the API key from Supabase
-const loadGoogleMapsScript = async (callback: () => void) => {
-  const existingScript = document.getElementById('google-maps-api');
-  if (existingScript) {
-    if (callback) callback();
-    return;
-  }
-
-  try {
-    // Fetch the API key from our edge function
-    const response = await supabase.functions.invoke('get-google-maps-key');
-    
-    if (response.error) {
-      console.error('Error fetching Google Maps API key:', response.error);
-      toast.error('Failed to load address autocomplete service');
-      return;
-    }
-    
-    const { data } = response;
-    const apiKey = data?.apiKey;
-    
-    if (!apiKey) {
-      console.error('No API key returned from the server');
-      toast.error('Failed to load address autocomplete service');
-      return;
-    }
-    
-    const script = document.createElement('script');
-    script.id = 'google-maps-api';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = callback;
-    document.head.appendChild(script);
-  } catch (error) {
-    console.error('Error loading Google Maps script:', error);
-    toast.error('Failed to load address autocomplete service');
-  }
-};
+import { useAddressAutocomplete, AddressData } from '@/hooks/useAddressAutocomplete';
 
 interface AddressInfoFormProps {
-  formData: {
-    home_address: string;
-    address_line1?: string;
-    address_line2?: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
-    country?: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  formData: AddressData;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleAddressChange?: (addressData: any) => void;
+  handleAddressChange?: (addressData: AddressData) => void;
 }
 
 const AddressInfoForm: React.FC<AddressInfoFormProps> = ({ 
@@ -74,111 +16,26 @@ const AddressInfoForm: React.FC<AddressInfoFormProps> = ({
   handleChange,
   handleAddressChange 
 }) => {
-  const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [isLoadingScript, setIsLoadingScript] = useState(false);
-  const autocompleteInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-
-  useEffect(() => {
-    const initGoogleMaps = async () => {
-      setIsLoadingScript(true);
-      await loadGoogleMapsScript(() => {
-        setGoogleLoaded(true);
-        setIsLoadingScript(false);
-      });
-    };
-    
-    initGoogleMaps();
-  }, []);
-
-  useEffect(() => {
-    if (googleLoaded && autocompleteInputRef.current && window.google) {
-      try {
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(
-          autocompleteInputRef.current,
-          { types: ['address'] }
-        );
-
-        autocompleteRef.current.addListener('place_changed', () => {
-          if (!autocompleteRef.current) return;
-          
-          const place = autocompleteRef.current.getPlace();
-          console.log('Google Place selected:', place);
-          
-          if (!place.geometry) {
-            toast.warning('No address details available for this selection');
-            return;
-          }
-
-          const addressComponents = place.address_components || [];
-          const formattedAddress = place.formatted_address || '';
-          const lat = place.geometry.location?.lat();
-          const lng = place.geometry.location?.lng();
-
-          // Extract address components
-          let streetNumber = '';
-          let route = '';
-          let city = '';
-          let state = '';
-          let zipCode = '';
-          let country = '';
-
-          addressComponents.forEach(component => {
-            const types = component.types;
-            
-            if (types.includes('street_number')) {
-              streetNumber = component.long_name;
-            } else if (types.includes('route')) {
-              route = component.long_name;
-            } else if (types.includes('locality')) {
-              city = component.long_name;
-            } else if (types.includes('administrative_area_level_1')) {
-              state = component.short_name;
-            } else if (types.includes('postal_code')) {
-              zipCode = component.long_name;
-            } else if (types.includes('country')) {
-              country = component.long_name;
-            }
-          });
-
-          // Create address line 1 (street number + route)
-          const addressLine1 = `${streetNumber} ${route}`.trim();
-
-          // Create address data object
-          const addressData = {
-            home_address: formattedAddress,
-            address_line1: addressLine1,
-            city,
-            state,
-            zip_code: zipCode,
-            country,
-            latitude: lat,
-            longitude: lng
-          };
-
-          console.log('Parsed address data:', addressData);
-
-          // Update the form with the new address data
-          if (handleAddressChange) {
-            handleAddressChange(addressData);
-          } else {
-            // Create a fake event to update the home_address field
-            const event = {
-              target: {
-                name: 'home_address',
-                value: formattedAddress
-              }
-            } as React.ChangeEvent<HTMLInputElement>;
-            
-            handleChange(event);
-          }
-        });
-      } catch (error) {
-        console.error('Error initializing Google Places Autocomplete:', error);
-        toast.error('Failed to initialize address autocomplete');
-      }
+  const onAddressChange = (addressData: AddressData) => {
+    if (handleAddressChange) {
+      handleAddressChange(addressData);
+    } else {
+      // Create a fake event to update the home_address field
+      const event = {
+        target: {
+          name: 'home_address',
+          value: addressData.home_address
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      
+      handleChange(event);
     }
-  }, [googleLoaded, handleChange, handleAddressChange]);
+  };
+  
+  const { autocompleteInputRef, isLoadingScript } = useAddressAutocomplete({
+    initialAddress: formData,
+    onAddressChange
+  });
 
   return (
     <div className="space-y-4">
