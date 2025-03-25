@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FormErrorProps {
-  error: string | null;
+  error: string | null | undefined;
 }
 
 const FormError: React.FC<FormErrorProps> = ({ error }) => {

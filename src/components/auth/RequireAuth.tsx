@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/auth/useAuth';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
-import { isTokenExpired } from '@/services/auth/sessionService';
+import { isTokenExpired, refreshTokenIfNeeded } from '@/services/auth/sessionService';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -25,9 +25,12 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       return;
     }
     
-    const checkToken = () => {
+    const checkToken = async () => {
       // Prevent multiple redirects
       if (hasRedirected) return;
+      
+      // Try to refresh token if needed
+      await refreshTokenIfNeeded();
       
       const isExpired = isTokenExpired();
       console.log('RequireAuth: Directly checking token, isExpired:', isExpired);
@@ -106,12 +109,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
   // Show loading timeout UI if taking too long
   if (isLoading && showTimeout) {
-    return (
-      <LoadingTimeout 
-        onRetry={() => window.location.reload()} 
-        message="This might be due to network issues or an expired session. You can try refreshing the page."
-      />
-    );
+    return <LoadingTimeout onRetry={() => window.location.reload()} message="This might be due to network issues or an expired session. You can try refreshing the page." />;
   }
 
   // Show standard loading UI

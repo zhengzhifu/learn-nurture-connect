@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import SignInForm from '@/components/auth/SignInForm';
 import Button from '@/components/ui-custom/Button';
 import { useAuth } from '@/hooks/auth/useAuth';
-import { isTokenExpired } from '@/services/auth/sessionService';
+import { isTokenExpired, refreshTokenIfNeeded } from '@/services/auth/sessionService';
 
 const SignIn: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -15,16 +15,23 @@ const SignIn: React.FC = () => {
   
   // Redirect to dashboard if already authenticated AND token is valid
   useEffect(() => {
-    // Prevent infinite redirects by only redirecting if we've completed loading
-    if (isAuthenticated && !isLoading) {
-      // Only redirect if token is valid
-      if (!isTokenExpired()) {
-        console.log('SignIn: User is authenticated with valid token, redirecting to dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('SignIn: Token is expired, staying on signin page');
+    const checkAndRedirect = async () => {
+      // Prevent infinite redirects by only redirecting if we've completed loading
+      if (isAuthenticated && !isLoading) {
+        // Try to refresh token if needed
+        await refreshTokenIfNeeded();
+        
+        // Only redirect if token is valid
+        if (!isTokenExpired()) {
+          console.log('SignIn: User is authenticated with valid token, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log('SignIn: Token is expired, staying on signin page');
+        }
       }
-    }
+    };
+    
+    checkAndRedirect();
   }, [isAuthenticated, isLoading, navigate]);
 
   return (
