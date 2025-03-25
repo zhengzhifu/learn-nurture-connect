@@ -22,9 +22,6 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
-    // Log database contents to debug the problem
-    console.log("=== Checking Database State ===")
-    
     // Check if any tutors exist in the database - explicit count
     console.log("Performing direct count query on tutors table");
     const { count: tutorCount, error: countError } = await supabase
@@ -75,9 +72,6 @@ Deno.serve(async (req) => {
     console.log("Auth header present:", !!authHeader);
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     
-    console.log("User authenticated:", !!userId);
-    console.log("User approved:", isApproved);
-    
     // Build query with search and filters
     console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
@@ -97,7 +91,16 @@ Deno.serve(async (req) => {
     if (!tutorsData || tutorsData.length === 0) {
       console.log("No tutors found from query.");
       
-      // Return an empty array instead of mock data
+      // Try a fallback query with explicit joins
+      console.log("Trying fallback query with explicit join");
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('tutors')
+        .select('id, bio, hourly_rate, years_of_experience')
+        .limit(10);
+      
+      console.log("Fallback query results:", "Found", fallbackData?.length || 0, "tutors", "Error:", fallbackError ? JSON.stringify(fallbackError) : "none");
+      
+      // Return an empty array
       return new Response(
         JSON.stringify({ services: [] }),
         {
