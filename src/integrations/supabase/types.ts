@@ -332,6 +332,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      sunset_user: {
+        Args: {
+          user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "user" | "admin"

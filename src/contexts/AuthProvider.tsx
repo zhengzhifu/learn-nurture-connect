@@ -44,12 +44,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleSignUp = async (email: string, password: string, role: UserRole, fullName: string) => {
+  const handleSignUp = async (email: string, password: string, role: UserRole, firstName: string, lastName: string) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      await signUp(email, password, role, fullName);
+      await signUp(email, password, role, firstName, lastName);
       navigate('/signin', { replace: true });
     } catch (error: any) {
       setError(`Registration error: ${error.message}`);

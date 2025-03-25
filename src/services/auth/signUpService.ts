@@ -3,21 +3,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/auth';
 
-// Sign up with email, password, role and full name
-export const signUp = async (email: string, password: string, role: UserRole, fullName: string) => {
+// Sign up with email, password, role, first name and last name
+export const signUp = async (email: string, password: string, role: UserRole, firstName: string, lastName: string) => {
   try {
-    console.log(`Signing up with email: ${email}, role: ${role}, name: ${fullName}`);
-    
-    // Split full name into first and last name
-    let firstName = fullName;
-    let lastName = '';
-    
-    // If there's a space, split by the first space
-    if (fullName.includes(' ')) {
-      const nameParts = fullName.split(' ');
-      firstName = nameParts[0];
-      lastName = nameParts.slice(1).join(' ');
-    }
+    console.log(`Signing up with email: ${email}, role: ${role}, name: ${firstName} ${lastName}`);
     
     const { data, error } = await supabase.auth.signUp({
       email,
