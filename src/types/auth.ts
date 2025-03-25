@@ -5,7 +5,8 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
 
 export interface Profile {
   id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   user_type: UserRole;
   phone?: string;
@@ -16,6 +17,9 @@ export interface Profile {
   school_id?: string;
   other_school_name?: string;
   child_school_id?: string;
+  
+  // Virtual property for backward compatibility
+  full_name?: string;
 }
 
 export interface AuthContextType {
@@ -41,7 +45,7 @@ export interface School {
 
 export interface Availability {
   id: string;
-  user_id: string;
+  tutor_id: string;
   day_of_week: string;
   start_time: string;
   end_time: string;
@@ -51,7 +55,7 @@ export interface Availability {
 
 export interface Specialty {
   id: string;
-  user_id: string;
+  tutor_id: string;
   specialty_type: string;
   specialty_name: string;
   created_at: string;

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Link } from 'react-router-dom';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Input } from "@/components/ui/input";
 import { 
   Form, 
@@ -38,7 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 const SignUpForm: React.FC = () => {
   const { signUp, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+  const [selectedRole, setSelectedRole] = useState<'parent' | 'tutor' | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,7 +66,7 @@ const SignUpForm: React.FC = () => {
   };
 
   const handleRoleChange = (value: string) => {
-    setSelectedRole(value as UserRole);
+    setSelectedRole(value as 'parent' | 'tutor');
     form.setValue('role', value as 'parent' | 'tutor');
   };
 

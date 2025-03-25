@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { Card, CardFooter } from "@/components/ui/card";
 import ApprovalStatusAlert from './ApprovalStatusAlert';
 import PersonalInfoCard from './PersonalInfoCard';
@@ -16,7 +16,8 @@ interface ProfileFormProps {
 const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
   const { profile, user } = useAuth();
   const [formData, setFormData] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     avatar_url: '',
@@ -29,8 +30,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
   // Initialize form data from profile when it becomes available
   useEffect(() => {
     if (profile) {
+      // Create form data from profile
       setFormData({
-        full_name: profile.full_name || '',
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
         email: profile.email || user?.email || '',
         phone: profile.phone || '',
         avatar_url: profile.avatar_url || '',

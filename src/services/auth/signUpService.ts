@@ -8,13 +8,25 @@ export const signUp = async (email: string, password: string, role: UserRole, fu
   try {
     console.log(`Signing up with email: ${email}, role: ${role}, name: ${fullName}`);
     
+    // Split full name into first and last name
+    let firstName = fullName;
+    let lastName = '';
+    
+    // If there's a space, split by the first space
+    if (fullName.includes(' ')) {
+      const nameParts = fullName.split(' ');
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(' ');
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: fullName,
-          role: role,
+          first_name: firstName,
+          last_name: lastName,
+          user_type: role,
         },
       },
     });

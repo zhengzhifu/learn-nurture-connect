@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 
 interface PersonalInfoFormProps {
   formData: {
-    full_name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     phone: string;
     avatar_url: string;
@@ -20,26 +21,40 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   handleChange, 
   getInitials 
 }) => {
+  // Generate a display name for the avatar
+  const displayName = `${formData.first_name} ${formData.last_name}`.trim() || 'User';
+  
   return (
     <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
       <div className="mb-4 sm:mb-0">
         <div className="relative">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={formData.avatar_url || ''} alt={formData.full_name} />
-            <AvatarFallback>{getInitials(formData.full_name || 'User')}</AvatarFallback>
+            <AvatarImage src={formData.avatar_url || ''} alt={displayName} />
+            <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
         </div>
       </div>
       
       <div className="flex-1 space-y-4">
         <div className="grid gap-2">
-          <Label htmlFor="full_name">Full Name</Label>
+          <Label htmlFor="first_name">First Name</Label>
           <Input 
-            id="full_name" 
-            name="full_name" 
-            value={formData.full_name}
+            id="first_name" 
+            name="first_name" 
+            value={formData.first_name}
             onChange={handleChange}
-            placeholder="Enter your full name"
+            placeholder="Enter your first name"
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <Label htmlFor="last_name">Last Name</Label>
+          <Input 
+            id="last_name" 
+            name="last_name" 
+            value={formData.last_name}
+            onChange={handleChange}
+            placeholder="Enter your last name"
           />
         </div>
         
