@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("Edge function: get-services received request")
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
     // Parse request body for parameters
@@ -21,6 +22,7 @@ Deno.serve(async (req) => {
     if (req.method === 'POST') {
       try {
         const body = await req.json();
+        console.log("Request body:", JSON.stringify(body));
         query = body.query || '';
         filterParams = body.filters || {};
       } catch (e) {
@@ -50,6 +52,11 @@ Deno.serve(async (req) => {
         isApproved = profileData?.approval_status === 'approved'
       }
     }
+    
+    console.log("Search query:", query);
+    console.log("Filter params:", JSON.stringify(filterParams));
+    console.log("User authenticated:", !!userId);
+    console.log("User approved:", isApproved);
     
     // Base query to fetch tutors with their profiles
     let queryBuilder = supabase
@@ -106,12 +113,20 @@ Deno.serve(async (req) => {
       // For simplicity, we're not implementing this filter in this example
     }
     
+    if (filterParams.location && filterParams.location.trim() !== '') {
+      // Simple example - not a geographic query
+      queryBuilder = queryBuilder.filter('profiles.home_address', 'ilike', `%${filterParams.location}%`)
+    }
+    
     // Execute the query
     const { data: tutorsData, error } = await queryBuilder
     
     if (error) {
+      console.error("Database query error:", error);
       throw error
     }
+    
+    console.log("Tutors data retrieved:", tutorsData ? tutorsData.length : 0);
     
     // Transform the data into the expected format with proper access control
     const services = tutorsData.map(tutor => {
@@ -172,6 +187,8 @@ Deno.serve(async (req) => {
       
       return service
     })
+    
+    console.log("Transformed services:", services.length);
     
     return new Response(
       JSON.stringify({ services }),
