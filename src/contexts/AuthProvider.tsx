@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
@@ -8,6 +7,7 @@ import {
   signIn, 
   signUp, 
   signOut, 
+  fetchProfile,
   updateUserProfile 
 } from '@/services/auth';
 import { toast } from 'sonner';
