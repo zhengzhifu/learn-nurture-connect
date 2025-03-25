@@ -5,6 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 
+// Declare global google namespace to fix TypeScript errors
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 // Add Google Maps Places API script dynamically
 const loadGoogleMapsScript = (callback: () => void) => {
   const existingScript = document.getElementById('google-maps-api');
