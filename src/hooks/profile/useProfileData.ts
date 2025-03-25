@@ -29,7 +29,7 @@ export const useProfileData = () => {
       try {
         if (profile.home_address && (
           profile.home_address.startsWith('{') || 
-          profile.home_address.includes('"latitude"')
+          profile.home_address.includes('"formatted_address"')
         )) {
           addressData = JSON.parse(profile.home_address);
         }
@@ -54,8 +54,11 @@ export const useProfileData = () => {
         state: typeof addressData === 'object' ? (addressData as any).state || '' : '',
         zip_code: typeof addressData === 'object' ? (addressData as any).zip_code || '' : '',
         country: typeof addressData === 'object' ? (addressData as any).country || '' : '',
-        latitude: typeof addressData === 'object' ? (addressData as any).latitude : undefined,
-        longitude: typeof addressData === 'object' ? (addressData as any).longitude : undefined,
+        // Use the dedicated latitude and longitude columns
+        latitude: profile.latitude !== undefined ? profile.latitude : 
+                 (typeof addressData === 'object' ? (addressData as any).latitude : undefined),
+        longitude: profile.longitude !== undefined ? profile.longitude : 
+                  (typeof addressData === 'object' ? (addressData as any).longitude : undefined),
       });
     }
   }, [profile, user]);

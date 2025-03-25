@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -57,56 +56,46 @@ export const loadGoogleMapsScript = async (callback: () => void): Promise<void> 
  * @param place Google Place result
  * @returns Parsed address data
  */
-export const parseGooglePlaceResult = (place: google.maps.places.PlaceResult) => {
-  if (!place.geometry) {
-    toast.warning('No address details available for this selection');
+export const parseGooglePlaceResult = (place: google.maps.places.PlaceResult): any => {
+  if (!place.geometry || !place.geometry.location) {
+    console.error('No geometry information available for this place');
     return null;
   }
 
-  const addressComponents = place.address_components || [];
-  const formattedAddress = place.formatted_address || '';
-  const lat = place.geometry.location?.lat();
-  const lng = place.geometry.location?.lng();
-
+  // Get latitude and longitude
+  const latitude = place.geometry.location.lat();
+  const longitude = place.geometry.location.lng();
+  
+  // Initialize the address components
+  const addressComponents: Record<string, string> = {
+    street_number: '',
+    route: '',
+    locality: '',
+    administrative_area_level_1: '',
+    postal_code: '',
+    country: ''
+  };
+  
   // Extract address components
-  let streetNumber = '';
-  let route = '';
-  let city = '';
-  let state = '';
-  let zipCode = '';
-  let country = '';
-
-  addressComponents.forEach(component => {
-    const types = component.types;
-    
-    if (types.includes('street_number')) {
-      streetNumber = component.long_name;
-    } else if (types.includes('route')) {
-      route = component.long_name;
-    } else if (types.includes('locality')) {
-      city = component.long_name;
-    } else if (types.includes('administrative_area_level_1')) {
-      state = component.short_name;
-    } else if (types.includes('postal_code')) {
-      zipCode = component.long_name;
-    } else if (types.includes('country')) {
-      country = component.long_name;
+  if (place.address_components) {
+    for (const component of place.address_components) {
+      const type = component.types[0];
+      if (addressComponents.hasOwnProperty(type)) {
+        addressComponents[type] = component.long_name;
+      }
     }
-  });
-
-  // Create address line 1 (street number + route)
-  const addressLine1 = `${streetNumber} ${route}`.trim();
-
-  // Create address data object
+  }
+  
+  // Construct address data
   return {
-    home_address: formattedAddress,
-    address_line1: addressLine1,
+    home_address: place.formatted_address || '',
+    address_line1: `${addressComponents.street_number} ${addressComponents.route}`.trim(),
     address_line2: '',
-    city,
-    state,
-    zip_code: zipCode,
-    country,
-    latitude: lat,
-    longitude: lng
+    city: addressComponents.locality,
+    state: addressComponents.administrative_area_level_1,
+    zip_code: addressComponents.postal_code,
+    country: addressComponents.country,
+    latitude,
+    longitude
   };
 };

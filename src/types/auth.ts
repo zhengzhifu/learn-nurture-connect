@@ -1,3 +1,4 @@
+
 // Auth-related types
 export type UserRole = 'parent' | 'tutor' | 'admin' | 'child' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
@@ -15,6 +16,10 @@ export interface Profile {
   approval_status?: ApprovalStatus;
   school_id?: string;
   other_school_name?: string;
+  
+  // Added dedicated latitude and longitude fields
+  latitude?: number;
+  longitude?: number;
   
   // Virtual property for backward compatibility
   full_name?: string;

@@ -17,7 +17,8 @@ export const useProfileSubmit = () => {
     try {
       console.log('Submitting profile update with data:', formData);
       
-      // Create a JSON string with all address details
+      // Create a JSON string with all address details (without coordinates)
+      // since we now store them in dedicated columns
       const addressData = {
         formatted_address: formData.home_address,
         address_line1: formData.address_line1,
@@ -25,9 +26,7 @@ export const useProfileSubmit = () => {
         city: formData.city,
         state: formData.state,
         zip_code: formData.zip_code,
-        country: formData.country,
-        latitude: formData.latitude,
-        longitude: formData.longitude
+        country: formData.country
       };
       
       // Filter out email as it can't be updated through profile
@@ -40,17 +39,18 @@ export const useProfileSubmit = () => {
         state, 
         zip_code, 
         country, 
-        latitude, 
-        longitude,
         ...updateData 
       } = formData;
       
       console.log('Calling updateProfile with:', updateData);
       
-      // Update profile data with JSON stringified address
+      // Update profile data with JSON stringified address and dedicated latitude/longitude
       await updateProfile({
         ...updateData,
-        home_address: JSON.stringify(addressData)
+        home_address: JSON.stringify(addressData),
+        // Use the dedicated latitude and longitude columns
+        latitude: formData.latitude,
+        longitude: formData.longitude
       });
       
       // If user is a parent, update parent-specific data

@@ -89,6 +89,8 @@ export type Database = {
           home_address: string | null
           id: string
           last_name: string
+          latitude: number | null
+          longitude: number | null
           phone: string | null
           school_id: string | null
           updated_at: string
@@ -105,6 +107,8 @@ export type Database = {
           home_address?: string | null
           id: string
           last_name: string
+          latitude?: number | null
+          longitude?: number | null
           phone?: string | null
           school_id?: string | null
           updated_at?: string
@@ -121,6 +125,8 @@ export type Database = {
           home_address?: string | null
           id?: string
           last_name?: string
+          latitude?: number | null
+          longitude?: number | null
           phone?: string | null
           school_id?: string | null
           updated_at?: string
@@ -307,6 +313,8 @@ export type Database = {
           home_address: string | null
           id: string
           last_name: string
+          latitude: number | null
+          longitude: number | null
           phone: string | null
           school_id: string | null
           updated_at: string
