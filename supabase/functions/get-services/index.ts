@@ -38,10 +38,15 @@ Deno.serve(async (req) => {
           console.log("Request body text:", text);
           
           if (text && text.trim() !== '') {
-            const body = JSON.parse(text);
-            console.log("Parsed body:", JSON.stringify(body, null, 2));
-            query = body.query || '';
-            filterParams = body.filters || {};
+            try {
+              const body = JSON.parse(text);
+              console.log("Parsed body:", JSON.stringify(body, null, 2));
+              query = body.query || '';
+              filterParams = body.filters || {};
+            } catch (e) {
+              console.error("JSON parse error:", e.message);
+              // Continue with empty parameters rather than failing
+            }
           } else {
             console.log("Request body is empty");
           }
@@ -73,8 +78,17 @@ Deno.serve(async (req) => {
     
     console.log("Tutors data retrieved:", tutorsData ? tutorsData.length : 0);
     if (tutorsData && tutorsData.length === 0) {
-      console.log("No tutors found in database. This might indicate an issue with the query or empty database.");
-    } else if (tutorsData) {
+      console.log("No tutors found in database. Running direct count query to verify data exists...");
+      const { count, error: countError } = await supabase
+        .from('tutors')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log("Direct count of tutors in database:", count);
+      
+      if (countError) {
+        console.error("Error counting tutors:", countError);
+      }
+    } else if (tutorsData && tutorsData.length > 0) {
       console.log("First tutor data sample:", JSON.stringify(tutorsData[0], null, 2));
     }
     

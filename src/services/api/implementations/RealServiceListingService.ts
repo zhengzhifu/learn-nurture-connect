@@ -9,7 +9,10 @@ export class RealServiceListingService {
       console.log("Fetching all services via GET request");
       // Make a GET request when no parameters are needed
       const { data, error } = await supabase.functions.invoke('get-services', {
-        method: 'GET'
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (error) {
@@ -38,6 +41,9 @@ export class RealServiceListingService {
       // Pass filters as body parameter 
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: { filters }
       });
       
@@ -67,6 +73,9 @@ export class RealServiceListingService {
       // Pass query as body parameter
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: { query }
       });
       
