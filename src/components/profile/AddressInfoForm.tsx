@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +17,7 @@ const loadGoogleMapsScript = (callback: () => void) => {
   if (!existingScript) {
     const script = document.createElement('script');
     script.id = 'google-maps-api';
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDNJKR-DjcCPtcXw7F4C-2CwvFpnfW6R0s&libraries=places';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places';
     script.async = true;
     script.defer = true;
     script.onload = callback;
