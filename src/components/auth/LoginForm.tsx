@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { Input } from "@/components/ui/input";
 import { 
   Form, 
@@ -33,6 +33,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
   const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,7 +51,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
       console.log('Attempting to sign in with:', values.email);
       await signIn(values.email, values.password);
       
-      // Navigation is handled by the AuthProvider when isAuthenticated becomes true
+      // Explicitly navigate to dashboard after successful sign-in
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error('Sign in error:', err);
       let errorMessage = 'Login failed';

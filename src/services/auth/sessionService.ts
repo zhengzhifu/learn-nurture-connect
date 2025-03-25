@@ -35,13 +35,13 @@ export const isTokenExpired = () => {
   // Parse the token data
   try {
     const authData = JSON.parse(localStorage.getItem(authKey) || '{}');
-    if (!authData.expiresAt) {
+    if (!authData.expiresAt && !authData.expires_at) {
       console.log('No expiration data found in token');
       return true;
     }
     
     // Check if token is expired
-    const expiresAt = new Date(authData.expiresAt * 1000);
+    const expiresAt = new Date((authData.expiresAt || authData.expires_at) * 1000);
     const now = new Date();
     const isExpired = now >= expiresAt;
     
@@ -79,7 +79,7 @@ export const refreshTokenIfNeeded = async () => {
     }
     
     // Calculate how much time is left before the token expires
-    const expiresAt = new Date(data.session.expires_at || 0);
+    const expiresAt = new Date(data.session.expires_at * 1000);
     const now = new Date();
     const timeUntilExpiry = expiresAt.getTime() - now.getTime();
     
@@ -91,6 +91,15 @@ export const refreshTokenIfNeeded = async () => {
       if (refreshError) {
         console.error('Error refreshing token:', refreshError);
         return false;
+      }
+      
+      // Save the refreshed session to localStorage to ensure it's available
+      if (refreshData.session) {
+        localStorage.setItem('sb-auth-token', JSON.stringify({
+          access_token: refreshData.session.access_token,
+          refresh_token: refreshData.session.refresh_token,
+          expires_at: refreshData.session.expires_at
+        }));
       }
       
       console.log('Token refreshed successfully');

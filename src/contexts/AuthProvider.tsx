@@ -11,6 +11,7 @@ import {
   updateUserProfile 
 } from '@/services/auth';
 import { toast } from 'sonner';
+import { refreshTokenIfNeeded } from '@/services/auth/sessionService';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
@@ -22,7 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile, 
     setUser, 
     setIsLoading, 
-    setError 
+    setError,
+    setSession
   } = useAuthState();
 
   const handleSignIn = async (email: string, password: string) => {
@@ -33,6 +35,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signIn(email, password);
       
       if (result.user) {
+        // Make sure token is refreshed if needed before navigation
+        await refreshTokenIfNeeded();
+        
         // Navigate after successful sign in
         navigate('/dashboard', { replace: true });
       }
