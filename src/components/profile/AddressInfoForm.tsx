@@ -1,8 +1,10 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Declare global google namespace to fix TypeScript errors
 declare global {
@@ -11,19 +13,43 @@ declare global {
   }
 }
 
-// Add Google Maps Places API script dynamically
-const loadGoogleMapsScript = (callback: () => void) => {
+// Load Google Maps API script with the API key from Supabase
+const loadGoogleMapsScript = async (callback: () => void) => {
   const existingScript = document.getElementById('google-maps-api');
-  if (!existingScript) {
+  if (existingScript) {
+    if (callback) callback();
+    return;
+  }
+
+  try {
+    // Fetch the API key from our edge function
+    const response = await supabase.functions.invoke('get-google-maps-key');
+    
+    if (response.error) {
+      console.error('Error fetching Google Maps API key:', response.error);
+      toast.error('Failed to load address autocomplete service');
+      return;
+    }
+    
+    const { data } = response;
+    const apiKey = data?.apiKey;
+    
+    if (!apiKey) {
+      console.error('No API key returned from the server');
+      toast.error('Failed to load address autocomplete service');
+      return;
+    }
+    
     const script = document.createElement('script');
     script.id = 'google-maps-api';
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = callback;
     document.head.appendChild(script);
-  } else if (callback) {
-    callback();
+  } catch (error) {
+    console.error('Error loading Google Maps script:', error);
+    toast.error('Failed to load address autocomplete service');
   }
 };
 
@@ -49,13 +75,20 @@ const AddressInfoForm: React.FC<AddressInfoFormProps> = ({
   handleAddressChange 
 }) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
+  const [isLoadingScript, setIsLoadingScript] = useState(false);
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    loadGoogleMapsScript(() => {
-      setGoogleLoaded(true);
-    });
+    const initGoogleMaps = async () => {
+      setIsLoadingScript(true);
+      await loadGoogleMapsScript(() => {
+        setGoogleLoaded(true);
+        setIsLoadingScript(false);
+      });
+    };
+    
+    initGoogleMaps();
   }, []);
 
   useEffect(() => {
@@ -161,11 +194,14 @@ const AddressInfoForm: React.FC<AddressInfoFormProps> = ({
             id="autocomplete_address" 
             name="autocomplete_address"
             ref={autocompleteInputRef}
-            placeholder="Start typing your address for suggestions"
+            placeholder={isLoadingScript ? "Loading address service..." : "Start typing your address for suggestions"}
             className="w-full"
+            disabled={isLoadingScript}
           />
           <p className="text-xs text-muted-foreground">
-            Start typing to see address suggestions
+            {isLoadingScript 
+              ? "Loading address autocomplete service..."
+              : "Start typing to see address suggestions"}
           </p>
         </div>
         
