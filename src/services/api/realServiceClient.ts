@@ -2,7 +2,7 @@
 import { Profile } from '@/types/auth';
 import { ServiceClient } from './serviceClient';
 import type { ServiceData, ServiceFilters } from './serviceClient';
-import { realProfileService } from './realProfileService';
+import { realProfileService } from './profile/profileService';
 import { realServiceListingService } from './realServiceListingService';
 import { Review } from '@/types/review';
 import { realReviewService } from './implementations/RealReviewService';
