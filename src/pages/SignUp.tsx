@@ -17,7 +17,7 @@ const SignUp: React.FC = () => {
               <GraduationCap className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-2xl mt-4">Create an account</CardTitle>
-            <CardDescription>Sign up to get started</CardDescription>
+            <CardDescription>Please enter your information to get started</CardDescription>
           </CardHeader>
           <CardContent>
             <SignUpForm />

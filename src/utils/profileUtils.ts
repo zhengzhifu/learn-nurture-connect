@@ -7,16 +7,8 @@ import { Profile, UserRole } from '@/types/auth';
  */
 export const createFallbackProfile = (user: User): Profile => {
   // Extract first and last name from metadata
-  const fullName = user?.user_metadata?.full_name || '';
   let firstName = user?.user_metadata?.first_name || '';
   let lastName = user?.user_metadata?.last_name || '';
-  
-  // If full name is provided but not first/last, split it
-  if (fullName && (!firstName || !lastName)) {
-    const parts = fullName.split(' ');
-    firstName = firstName || parts[0] || '';
-    lastName = lastName || (parts.length > 1 ? parts.slice(1).join(' ') : '');
-  }
   
   // If we have no names at all, use "User" as default first name
   if (!firstName && !lastName) {
@@ -51,11 +43,6 @@ export const getDisplayName = (profile: Profile | null): string => {
   // If the profile has first_name and last_name, construct full name
   if (profile.first_name || profile.last_name) {
     return `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-  }
-  
-  // If the profile already has a full_name, use it
-  if (profile.full_name) {
-    return profile.full_name;
   }
   
   // Last resort, use email or ID
