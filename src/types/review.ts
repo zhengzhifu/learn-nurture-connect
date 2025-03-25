@@ -12,4 +12,11 @@ export interface Review {
   // Virtual properties for UI display
   reviewer_name?: string;
   reviewer_avatar?: string;
+  
+  // Legacy properties for backward compatibility
+  tutor_id?: string;
+  user_id?: string;
+  content?: string;
+  tutor_name?: string;
+  tutor_avatar?: string;
 }

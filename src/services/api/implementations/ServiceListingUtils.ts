@@ -3,44 +3,45 @@ import { ServiceFilters } from '../serviceClient';
 import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 
 export class ServiceListingUtils {
-  static applyTutorFilters(query: any, filters: ServiceFilters): any {
+  static applyFilters(query: PostgrestFilterBuilder<any>, filters: ServiceFilters): PostgrestFilterBuilder<any> {
     // Apply price range filter
     if (filters.priceRange && filters.priceRange.length === 2) {
       const [minPrice, maxPrice] = filters.priceRange;
       if (minPrice > 0) {
-        query = query.gte('hourly_rate', minPrice);
+        query = query.gte('price', minPrice);
       }
-      if (maxPrice < 200) {  // Assuming 200 is the max reasonable hourly rate
-        query = query.lte('hourly_rate', maxPrice);
+      if (maxPrice < 200) {  // Assuming 200 is the max reasonable price
+        query = query.lte('price', maxPrice);
       }
     }
 
     // Apply location filter if provided
     if (filters.location && filters.location !== 'All') {
-      // This would be more complex in a real app with geolocation
-      // For now we'll just match on a simple string
-      query = query.ilike('profiles.home_address', `%${filters.location}%`);
+      query = query.ilike('location', `%${filters.location}%`);
     }
 
-    // Filter by subjects (this would typically join with a specialties table)
+    // Filter by subjects
     if (filters.subjects && filters.subjects.length > 0) {
-      // This is a simplified approach - in a real app, you'd join with a subjects/specialties table
-      const subjectConditions = filters.subjects.map(
-        subject => `specialty_name.ilike.%${subject}%`
+      // This is a simplified approach. In a real app, this would be more complex
+      // due to how arrays are queried in PostgreSQL
+      query = query.or(
+        filters.subjects.map(subject => `subjects.cs.{${subject}}`).join(',')
       );
-      query = query.or(subjectConditions.join(','));
     }
 
     // Apply service type filters if provided
     if (filters.types && filters.types.length > 0) {
-      // In a real app, this would filter on a service_type column
-      // For simplicity, we're not implementing this in this example
+      // Create an array of OR conditions for each type
+      query = query.in('type', filters.types);
     }
 
     // Apply availability filters if provided
     if (filters.availability && filters.availability.length > 0) {
-      // This would typically join with an availability table
-      // For simplicity, we're not implementing this in this example
+      // This is simplified. In a real app, you'd join with an availability table
+      // or use array contains operations
+      query = query.or(
+        filters.availability.map(slot => `availability.cs.{${slot}}`).join(',')
+      );
     }
 
     return query;

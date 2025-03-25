@@ -12,7 +12,7 @@ export class RealReviewService extends BaseService {
         .from('reviews')
         .select(`
           *,
-          reviewer:reviewer_id(id, first_name, last_name, avatar_url)
+          reviewer:profiles!reviewer_id(id, first_name, last_name, avatar_url)
         `)
         .eq('reviewee_id', userId)
         .order('created_at', { ascending: false });
@@ -24,15 +24,12 @@ export class RealReviewService extends BaseService {
 
       // Map the Supabase response to our Review interface
       return data.map(review => {
-        const reviewerProfile = review.reviewer || {};
-        // Generate full name from first_name and last_name
-        const reviewerName = getDisplayName({
-          id: reviewerProfile.id || '',
-          first_name: reviewerProfile.first_name || '',
-          last_name: reviewerProfile.last_name || '',
-          email: '',
-          user_type: 'parent' // Default type
-        });
+        const reviewer = review.reviewer || {};
+        
+        // Generate name from first_name and last_name
+        const reviewerName = reviewer.first_name && reviewer.last_name
+          ? `${reviewer.first_name} ${reviewer.last_name}`
+          : 'Anonymous';
         
         return {
           id: review.id,
@@ -43,9 +40,16 @@ export class RealReviewService extends BaseService {
           created_at: review.created_at,
           subject: review.subject || '',
           
-          // Reviewer metadata
+          // Add legacy fields for backward compatibility
+          content: review.comment || '',
+          tutor_id: review.reviewee_id,
+          user_id: review.reviewer_id,
+          tutor_name: reviewerName,
+          tutor_avatar: reviewer.avatar_url || '',
+          
+          // New field names
           reviewer_name: reviewerName,
-          reviewer_avatar: reviewerProfile.avatar_url || '',
+          reviewer_avatar: reviewer.avatar_url || '',
         };
       });
     } catch (error) {
@@ -87,20 +91,22 @@ export class RealReviewService extends BaseService {
 
       // Generate full name from first_name and last_name
       const reviewerName = reviewerData 
-        ? getDisplayName({
-            id: review.reviewer_id,
-            first_name: reviewerData.first_name || '',
-            last_name: reviewerData.last_name || '',
-            email: '',
-            user_type: 'parent' // Default type
-          })
+        ? `${reviewerData.first_name || ''} ${reviewerData.last_name || ''}`.trim() || 'Anonymous'
         : 'Anonymous';
 
-      return {
+      const result: Review = {
         ...data,
         reviewer_name: reviewerName,
         reviewer_avatar: reviewerData?.avatar_url || '',
+        // Add legacy fields
+        content: data.comment,
+        tutor_id: data.reviewee_id,
+        user_id: data.reviewer_id,
+        tutor_name: reviewerName,
+        tutor_avatar: reviewerData?.avatar_url || '',
       };
+
+      return result;
     } catch (error: any) {
       console.error('Error in addReview:', error);
       throw new Error(`Failed to add review: ${error.message}`);
@@ -155,20 +161,22 @@ export class RealReviewService extends BaseService {
 
       // Generate full name from first_name and last_name
       const reviewerName = reviewerData 
-        ? getDisplayName({
-            id: data.reviewer_id,
-            first_name: reviewerData.first_name || '',
-            last_name: reviewerData.last_name || '',
-            email: '',
-            user_type: 'parent' // Default type
-          })
+        ? `${reviewerData.first_name || ''} ${reviewerData.last_name || ''}`.trim() || 'Anonymous'
         : 'Anonymous';
 
-      return {
+      const result: Review = {
         ...data,
         reviewer_name: reviewerName,
         reviewer_avatar: reviewerData?.avatar_url || '',
+        // Add legacy fields
+        content: data.comment,
+        tutor_id: data.reviewee_id,
+        user_id: data.reviewer_id,
+        tutor_name: reviewerName,
+        tutor_avatar: reviewerData?.avatar_url || '',
       };
+
+      return result;
     } catch (error: any) {
       console.error('Error in updateReview:', error);
       throw new Error(`Failed to update review: ${error.message}`);

@@ -1,6 +1,7 @@
 
-import { ServiceData, ServiceFilters } from './serviceClient';
+import { ServiceData, ServiceFilters, ServiceType } from '../serviceClient';
 import { mockServices } from './mockData';
+import { toServiceType } from './implementations/serviceUtils';
 
 export class MockServiceListingService {
   async getServices(): Promise<ServiceData[]> {
@@ -10,8 +11,7 @@ export class MockServiceListingService {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     console.log(`MockServiceListingService: getServices returning ${mockServices.length} services`);
-    // Since we updated the Service type to match ServiceData, this is now type-safe
-    return mockServices as ServiceData[];
+    return mockServices;
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
@@ -25,7 +25,7 @@ export class MockServiceListingService {
     
     // Filter by service type
     if (filters.types && filters.types.length > 0) {
-      results = results.filter(service => filters.types?.includes(service.type));
+      results = results.filter(service => filters.types?.includes(toServiceType(service.type)));
     }
     
     // Filter by location
@@ -60,7 +60,7 @@ export class MockServiceListingService {
     }
     
     console.log(`MockServiceListingService: filterServices returning ${results.length} filtered services`);
-    return results as ServiceData[];
+    return results;
   }
   
   async searchServices(query: string): Promise<ServiceData[]> {
@@ -71,7 +71,7 @@ export class MockServiceListingService {
     
     if (!query.trim()) {
       console.log(`MockServiceListingService: searchServices returning all ${mockServices.length} services (empty query)`);
-      return mockServices as ServiceData[];
+      return mockServices;
     }
     
     // Search in title, description and location
@@ -84,6 +84,8 @@ export class MockServiceListingService {
     );
     
     console.log(`MockServiceListingService: searchServices returning ${results.length} matching services for query "${query}"`);
-    return results as ServiceData[];
+    return results;
   }
 }
+
+export const mockServiceListingService = new MockServiceListingService();

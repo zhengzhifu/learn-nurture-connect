@@ -22,20 +22,24 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   };
 
   const formattedDate = formatDistanceToNow(new Date(review.created_at), { addSuffix: true });
+  
+  // Use reviewer_name/avatar as primary, fall back to tutor_name/avatar for backward compatibility
+  const displayName = review.reviewer_name || review.tutor_name || 'Anonymous';
+  const avatarUrl = review.reviewer_avatar || review.tutor_avatar;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={review.tutor_avatar} alt={review.tutor_name} />
-            <AvatarFallback>{getInitials(review.tutor_name)}</AvatarFallback>
+            <AvatarImage src={avatarUrl} alt={displayName} />
+            <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
           
           <div className="flex-1">
             <div className="flex justify-between items-start mb-1">
               <div>
-                <h3 className="font-medium">{review.tutor_name}</h3>
+                <h3 className="font-medium">{displayName}</h3>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span className="flex items-center">
                     {[...Array(5)].map((_, i) => (
@@ -53,7 +57,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               <Badge variant="outline">{review.subject}</Badge>
             </div>
             
-            <p className="text-sm mt-2">{review.content}</p>
+            <p className="text-sm mt-2">{review.comment || review.content}</p>
           </div>
         </div>
       </CardContent>

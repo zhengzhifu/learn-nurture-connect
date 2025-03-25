@@ -1,6 +1,41 @@
 
-import { Profile } from '@/types/auth';
-import { mockProfiles } from './mockData';
+import { Profile, UserRole } from '@/types/auth';
+
+// Mock profiles for testing
+const mockProfiles: Profile[] = [
+  {
+    id: 'user-1',
+    first_name: 'John',
+    last_name: 'Doe',
+    full_name: 'John Doe', 
+    email: 'john.doe@example.com',
+    user_type: 'parent' as UserRole,
+    phone: '+1234567890',
+    avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop',
+    verified: true,
+    home_address: '123 Main St, Anytown, USA',
+    approval_status: 'approved',
+    school_id: 'school-1',
+    other_school_name: '',
+    child_school_id: 'school-2'
+  },
+  {
+    id: 'user-2',
+    first_name: 'Jane',
+    last_name: 'Smith',
+    full_name: 'Jane Smith',
+    email: 'jane.smith@example.com',
+    user_type: 'tutor' as UserRole,
+    phone: '+1987654321',
+    avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop',
+    verified: true,
+    home_address: '456 Elm St, Othertown, USA',
+    approval_status: 'approved',
+    school_id: 'school-3',
+    other_school_name: '',
+    child_school_id: ''
+  },
+];
 
 export class MockProfileService {
   private profiles: Profile[] = mockProfiles;

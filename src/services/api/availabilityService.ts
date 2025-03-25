@@ -1,85 +1,76 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Availability } from '@/types/auth';
-import { BaseService } from './base/BaseService';
+import { toast } from 'sonner';
 
-export class AvailabilityService extends BaseService {
-  
-  async fetchUserAvailability(tutorId: string): Promise<Availability[]> {
-    try {
-      console.log(`Fetching availability for tutor: ${tutorId}`);
-      
-      const { data, error } = await this.supabase
-        .from('availability')
-        .select('*')
-        .eq('tutor_id', tutorId);
-      
-      if (error) {
-        console.error('Error fetching availability:', error);
-        return [];
-      }
-      
-      return data as Availability[];
-    } catch (error) {
-      console.error('Exception in fetchUserAvailability:', error);
+// Fetch all availabilities for a user
+export const fetchUserAvailability = async (userId: string): Promise<Availability[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('availability')
+      .select('*')
+      .eq('tutor_id', userId)
+      .order('day_of_week', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching availability:', error);
       return [];
     }
+
+    return data;
+  } catch (error) {
+    console.error('Exception fetching availability:', error);
+    return [];
   }
-  
-  async addAvailability(tutorId: string, availability: Omit<Availability, 'id' | 'tutor_id' | 'created_at' | 'updated_at'>): Promise<Availability | null> {
-    try {
-      console.log(`Adding availability for tutor: ${tutorId}`, availability);
-      
-      const { data, error } = await this.supabase
-        .from('availability')
-        .insert({
-          tutor_id: tutorId,
-          day_of_week: availability.day_of_week,
-          start_time: availability.start_time,
-          end_time: availability.end_time
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error adding availability:', error);
-        return null;
-      }
-      
-      return data as Availability;
-    } catch (error) {
-      console.error('Exception in addAvailability:', error);
+};
+
+// Add a new availability slot
+export const addAvailability = async (
+  userId: string, 
+  day: string, 
+  startTime: string, 
+  endTime: string
+): Promise<Availability | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('availability')
+      .insert({
+        tutor_id: userId,
+        day_of_week: day,
+        start_time: startTime,
+        end_time: endTime
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding availability:', error);
+      toast.error('Failed to add availability');
       return null;
     }
+
+    return data;
+  } catch (error) {
+    console.error('Exception adding availability:', error);
+    toast.error('Failed to add availability');
+    return null;
   }
-  
-  async removeAvailability(availabilityId: string): Promise<boolean> {
-    try {
-      console.log(`Deleting availability: ${availabilityId}`);
-      
-      const { error } = await this.supabase
-        .from('availability')
-        .delete()
-        .eq('id', availabilityId);
-      
-      if (error) {
-        console.error('Error deleting availability:', error);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Exception in removeAvailability:', error);
-      return false;
+};
+
+// Remove an availability slot
+export const removeAvailability = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('availability')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error removing availability:', error);
+      toast.error('Failed to remove availability');
     }
+  } catch (error) {
+    console.error('Exception removing availability:', error);
+    toast.error('Failed to remove availability');
   }
-}
-
-// Export the class and an instance for direct usage
-export const availabilityService = new AvailabilityService();
-
-// Export the specific methods to maintain backward compatibility
-export const fetchUserAvailability = (tutorId: string) => availabilityService.fetchUserAvailability(tutorId);
-export const addAvailability = (tutorId: string, availability: Omit<Availability, 'id' | 'tutor_id' | 'created_at' | 'updated_at'>) => 
-  availabilityService.addAvailability(tutorId, availability);
-export const removeAvailability = (availabilityId: string) => availabilityService.removeAvailability(availabilityId);
+};
