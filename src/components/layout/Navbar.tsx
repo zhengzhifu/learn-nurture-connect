@@ -79,13 +79,7 @@ const Navbar: React.FC = () => {
           {isActuallyAuthenticated ? (
             <>
               <NavLink to="/dashboard">Dashboard</NavLink>
-              {profile && profile.user_type === 'parent' && (
-                <NavLink to="/tutors">My Tutors</NavLink>
-              )}
               <NavLink to="/reviews">Reviews</NavLink>
-              {profile && profile.user_type === 'admin' && (
-                <NavLink to="/admin">Admin</NavLink>
-              )}
               <ProfileButton />
             </>
           ) : (

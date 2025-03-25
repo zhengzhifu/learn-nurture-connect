@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from '@/types/service';
 import { getDisplayName } from '@/utils/profileUtils';
 import { ServiceListingUtils } from './ServiceListingUtils';
-import { convertToServiceData } from './serviceUtils';
+import { convertToServiceData, safeProfileData } from './serviceUtils';
 
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
@@ -24,23 +24,14 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const profile = item.profiles || {};
-        
-        // Add null checks when accessing profile properties
-        const displayName = getDisplayName({
-          id: profile.id || '',
-          first_name: profile.first_name || '',
-          last_name: profile.last_name || '',
-          email: profile.email || '',
-          user_type: 'tutor'
-        });
+        const profile = safeProfileData(item.profiles || {});
         
         // Create a raw data object to pass to the conversion utility
         const rawData = {
           id: item.id,
-          title: `${displayName} - Tutoring Services`,
+          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: displayName,
+          provider: `${profile.first_name} ${profile.last_name}`,
           providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count
@@ -88,23 +79,14 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const profile = item.profiles || {};
-        
-        // Add null checks when accessing profile properties
-        const displayName = getDisplayName({
-          id: profile.id || '',
-          first_name: profile.first_name || '',
-          last_name: profile.last_name || '',
-          email: profile.email || '',
-          user_type: 'tutor'
-        });
+        const profile = safeProfileData(item.profiles || {});
         
         // Create a raw data object to pass to the conversion utility
         const rawData = {
           id: item.id,
-          title: `${displayName} - Tutoring Services`,
+          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: displayName,
+          provider: `${profile.first_name} ${profile.last_name}`,
           providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count
@@ -150,23 +132,14 @@ export class RealServiceListingService {
       
       // Transform the data into the expected format
       return data.map(item => {
-        const profile = item.profiles || {};
-        
-        // Add null checks when accessing profile properties
-        const displayName = getDisplayName({
-          id: profile.id || '',
-          first_name: profile.first_name || '',
-          last_name: profile.last_name || '',
-          email: profile.email || '',
-          user_type: 'tutor'
-        });
+        const profile = safeProfileData(item.profiles || {});
         
         // Create a raw data object to pass to the conversion utility
         const rawData = {
           id: item.id,
-          title: `${displayName} - Tutoring Services`,
+          title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
           description: item.bio || 'Professional tutoring services',
-          provider: displayName,
+          provider: `${profile.first_name} ${profile.last_name}`,
           providerAvatar: profile.avatar_url || '',
           providerRating: 4.5, // Default rating
           providerReviews: 0, // Default review count

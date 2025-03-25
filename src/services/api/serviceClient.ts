@@ -1,46 +1,9 @@
 
 import { Profile } from '@/types/auth';
-import { ServiceType } from '@/types/service';
+import { ServiceType, ServiceData, ServiceFilters } from '@/types/service';
 import { Review } from '@/types/review';
 
-// Define the ServiceData interface
-export interface ServiceData {
-  id: string;
-  title: string;
-  description?: string;
-  type: ServiceType;
-  price: number;
-  rating: number;
-  location: string;
-  image?: string;
-  availability?: string[];
-  provider_id?: string;
-  subjects?: string[];
-  provider_name?: string;
-  provider_avatar?: string;
-  
-  // Additional fields used in our implementation
-  provider?: string;
-  providerAvatar?: string;
-  providerRating?: number;
-  providerReviews?: number;
-  priceUnit?: string;
-  locations?: string[];
-  serviceType?: string;
-  grade?: string;
-  featured?: boolean;
-}
-
-// Define the ServiceFilters interface
-export interface ServiceFilters {
-  types?: ServiceType[];
-  location?: string;
-  priceRange?: [number, number];
-  subjects?: string[];
-  availability?: string[];
-}
-
-// Service client interface that will be implemented by both mock and real clients
+// Define the ServiceClient interface
 export interface ServiceClient {
   // Profile operations
   fetchUserProfile(userId: string): Promise<Profile | null>;

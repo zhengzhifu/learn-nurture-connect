@@ -11,7 +11,6 @@ import SignIn from '@/pages/SignIn';
 import SignUp from '@/pages/SignUp';
 import Profile from '@/pages/Profile';
 import ServiceBrowse from '@/pages/ServiceBrowse';
-import MyTutors from '@/pages/MyTutors';
 import Reviews from '@/pages/Reviews';
 import Dashboard from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
@@ -21,9 +20,6 @@ import RequireAuth from '@/components/auth/RequireAuth';
 import { AuthProvider } from '@/contexts/AuthProvider';
 
 const queryClient = new QueryClient();
-
-// Add the Admin import
-import Admin from '@/pages/Admin';
 
 const App: React.FC = () => {
   return (
@@ -38,10 +34,8 @@ const App: React.FC = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
             <Route path="/browse" element={<ServiceBrowse />} />
-            <Route path="/tutors" element={<RequireAuth><MyTutors /></RequireAuth>} />
             <Route path="/reviews" element={<RequireAuth><Reviews /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

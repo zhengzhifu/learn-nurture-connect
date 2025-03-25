@@ -1,6 +1,5 @@
 
-import { ServiceFilters } from '../serviceClient';
-import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
+import { ServiceFilters } from '@/types/service';
 
 export class ServiceListingUtils {
   static applyFilters(query: any, filters: ServiceFilters): any {

@@ -1,37 +1,31 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Review } from '@/types/review';
-import { getDisplayName } from '@/utils/profileUtils';
-import { BaseService } from '../base/BaseService';
+import { safeProfileData } from './serviceUtils';
 
-export class RealReviewService extends BaseService {
+export class RealReviewService {
   async getUserReviews(userId: string): Promise<Review[]> {
     try {
-      // Fetch reviews where this user is the reviewee
+      // Fetch reviews for a tutor
       const { data, error } = await supabase
         .from('reviews')
         .select(`
           *,
-          reviewer:profiles!reviewer_id(id, first_name, last_name, avatar_url)
+          reviewer:profiles!reviewer_id(*)
         `)
-        .eq('reviewee_id', userId)
-        .order('created_at', { ascending: false });
-
+        .eq('reviewee_id', userId);
+        
       if (error) {
-        console.error('Error fetching reviews:', error);
+        console.error('Error fetching user reviews:', error);
         return [];
       }
-
-      // Map the Supabase response to our Review interface
+      
+      // Map the data to the Review interface
       return data.map(review => {
-        const reviewer = review.reviewer || {};
+        const reviewerProfile = safeProfileData(review.reviewer || {});
         
-        // Generate name from first_name and last_name with null checks
-        const first_name = reviewer.first_name || '';
-        const last_name = reviewer.last_name || '';
-        const reviewerName = first_name || last_name 
-          ? `${first_name} ${last_name}`.trim()
-          : 'Anonymous';
+        // Get reviewer name
+        const reviewerName = `${reviewerProfile.first_name || ''} ${reviewerProfile.last_name || ''}`.trim() || 'Anonymous';
         
         return {
           id: review.id,
@@ -40,164 +34,155 @@ export class RealReviewService extends BaseService {
           rating: review.rating,
           comment: review.comment || '',
           created_at: review.created_at,
-          subject: review.subject || '',
+          subject: review.subject || 'General',
+          reviewer_name: reviewerName,
+          reviewer_avatar: reviewerProfile.avatar_url || '',
           
-          // Add legacy fields for backward compatibility
-          content: review.comment || '',
+          // Map to legacy fields for backward compatibility
           tutor_id: review.reviewee_id,
           user_id: review.reviewer_id,
-          tutor_name: reviewerName,
-          tutor_avatar: reviewer.avatar_url || '',
-          
-          // New field names
-          reviewer_name: reviewerName,
-          reviewer_avatar: reviewer.avatar_url || '',
-        };
+          content: review.comment || '',
+          tutor_name: 'Tutor',
+          tutor_avatar: ''
+        } as Review;
       });
     } catch (error) {
       console.error('Error in getUserReviews:', error);
       return [];
     }
   }
-
+  
   async addReview(review: Omit<Review, 'id' | 'created_at'>): Promise<Review> {
     try {
-      // Insert the review into the database
       const { data, error } = await supabase
         .from('reviews')
         .insert({
-          reviewer_id: review.reviewer_id,
-          reviewee_id: review.reviewee_id,
+          reviewer_id: review.reviewer_id || review.user_id,
+          reviewee_id: review.reviewee_id || review.tutor_id,
           rating: review.rating,
-          comment: review.comment || '',
-          subject: review.subject || 'General'
+          comment: review.comment || review.content,
+          subject: review.subject
         })
-        .select()
+        .select('*')
         .single();
-
+        
       if (error) {
         console.error('Error adding review:', error);
         throw new Error(`Failed to add review: ${error.message}`);
       }
-
-      // Fetch reviewer profile for the response
+      
+      // Get reviewer profile
       const { data: reviewerData, error: reviewerError } = await supabase
         .from('profiles')
-        .select('first_name, last_name, avatar_url')
-        .eq('id', review.reviewer_id)
+        .select('*')
+        .eq('id', review.reviewer_id || review.user_id)
         .single();
-
+        
       if (reviewerError) {
         console.error('Error fetching reviewer profile:', reviewerError);
       }
-
-      // Generate full name from first_name and last_name
-      const first_name = reviewerData?.first_name || '';
-      const last_name = reviewerData?.last_name || '';
-      const reviewerName = first_name || last_name 
-        ? `${first_name} ${last_name}`.trim()
-        : 'Anonymous';
-
-      const result: Review = {
+      
+      const reviewerProfile = safeProfileData(reviewerData || {});
+      
+      // Get reviewer name
+      const reviewerName = `${reviewerProfile.first_name || ''} ${reviewerProfile.last_name || ''}`.trim() || 'Anonymous';
+      
+      return {
         id: data.id,
         reviewer_id: data.reviewer_id,
         reviewee_id: data.reviewee_id,
         rating: data.rating,
-        comment: data.comment || '',
+        comment: data.comment,
         created_at: data.created_at,
-        subject: data.subject || 'General',
+        subject: data.subject,
         reviewer_name: reviewerName,
-        reviewer_avatar: reviewerData?.avatar_url || '',
-        // Add legacy fields
-        content: data.comment || '',
+        reviewer_avatar: reviewerProfile.avatar_url || '',
+        
+        // Map to legacy fields for backward compatibility
         tutor_id: data.reviewee_id,
         user_id: data.reviewer_id,
-        tutor_name: reviewerName,
-        tutor_avatar: reviewerData?.avatar_url || '',
-      };
-
-      return result;
-    } catch (error: any) {
+        content: data.comment,
+        tutor_name: 'Tutor',
+        tutor_avatar: ''
+      } as Review;
+    } catch (error) {
       console.error('Error in addReview:', error);
-      throw new Error(`Failed to add review: ${error.message}`);
+      throw error;
     }
   }
-
-  async deleteReview(reviewId: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .eq('id', reviewId);
-
-      if (error) {
-        console.error('Error deleting review:', error);
-        throw new Error(`Failed to delete review: ${error.message}`);
-      }
-    } catch (error: any) {
-      console.error('Error in deleteReview:', error);
-      throw new Error(`Failed to delete review: ${error.message}`);
-    }
-  }
-
+  
   async updateReview(reviewId: string, updatedData: Partial<Review>): Promise<Review> {
     try {
       const { data, error } = await supabase
         .from('reviews')
         .update({
           rating: updatedData.rating,
-          comment: updatedData.comment || '',
-          subject: updatedData.subject || 'General'
+          comment: updatedData.comment || updatedData.content,
+          subject: updatedData.subject
         })
         .eq('id', reviewId)
-        .select()
+        .select('*')
         .single();
-
+        
       if (error) {
         console.error('Error updating review:', error);
         throw new Error(`Failed to update review: ${error.message}`);
       }
-
-      // Fetch reviewer profile for the response
+      
+      // Get reviewer profile
       const { data: reviewerData, error: reviewerError } = await supabase
         .from('profiles')
-        .select('first_name, last_name, avatar_url')
+        .select('*')
         .eq('id', data.reviewer_id)
         .single();
-
+        
       if (reviewerError) {
         console.error('Error fetching reviewer profile:', reviewerError);
       }
-
-      // Generate full name from first_name and last_name
-      const first_name = reviewerData?.first_name || '';
-      const last_name = reviewerData?.last_name || '';
-      const reviewerName = first_name || last_name 
-        ? `${first_name} ${last_name}`.trim()
-        : 'Anonymous';
-
-      const result: Review = {
+      
+      const reviewerProfile = safeProfileData(reviewerData || {});
+      
+      // Get reviewer name
+      const reviewerName = `${reviewerProfile.first_name || ''} ${reviewerProfile.last_name || ''}`.trim() || 'Anonymous';
+      
+      return {
         id: data.id,
         reviewer_id: data.reviewer_id,
         reviewee_id: data.reviewee_id,
         rating: data.rating,
-        comment: data.comment || '',
+        comment: data.comment,
         created_at: data.created_at,
-        subject: data.subject || 'General',
+        subject: data.subject,
         reviewer_name: reviewerName,
-        reviewer_avatar: reviewerData?.avatar_url || '',
-        // Add legacy fields
-        content: data.comment || '',
+        reviewer_avatar: reviewerProfile.avatar_url || '',
+        
+        // Map to legacy fields for backward compatibility
         tutor_id: data.reviewee_id,
         user_id: data.reviewer_id,
-        tutor_name: reviewerName,
-        tutor_avatar: reviewerData?.avatar_url || '',
-      };
-
-      return result;
-    } catch (error: any) {
+        content: data.comment,
+        tutor_name: 'Tutor',
+        tutor_avatar: ''
+      } as Review;
+    } catch (error) {
       console.error('Error in updateReview:', error);
-      throw new Error(`Failed to update review: ${error.message}`);
+      throw error;
+    }
+  }
+  
+  async deleteReview(reviewId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .eq('id', reviewId);
+        
+      if (error) {
+        console.error('Error deleting review:', error);
+        throw new Error(`Failed to delete review: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Error in deleteReview:', error);
+      throw error;
     }
   }
 }

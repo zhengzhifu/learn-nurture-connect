@@ -8,7 +8,7 @@ export interface Service {
   description?: string;
   type: ServiceType;
   price: number;
-  rating: number; // Changed from optional to required to match ServiceData
+  rating: number;
   location: string;
   image?: string;
   availability: string[];
@@ -41,6 +41,15 @@ export interface ServiceData {
   serviceType?: string;
   grade?: string;
   featured?: boolean;
+}
+
+// Define the ServiceFilters interface
+export interface ServiceFilters {
+  types?: ServiceType[];
+  location?: string;
+  priceRange?: [number, number];
+  subjects?: string[];
+  availability?: string[];
 }
 
 export interface ServiceSubject {

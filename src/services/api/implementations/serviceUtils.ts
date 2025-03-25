@@ -1,6 +1,13 @@
 
-import { ServiceType } from '@/types/service';
-import { ServiceData } from '@/types/service';
+import { ServiceType, ServiceData } from '@/types/service';
+
+/**
+ * Safely gets a property from a potentially null or undefined object
+ */
+function safeGet(obj: any, prop: string, defaultValue: any = ''): any {
+  if (!obj) return defaultValue;
+  return obj[prop] !== undefined ? obj[prop] : defaultValue;
+}
 
 /**
  * Converts raw service data from the database to the ServiceData interface
@@ -10,7 +17,7 @@ export function convertToServiceData(rawData: any): ServiceData {
     id: rawData.id || '',
     title: rawData.title || '',
     description: rawData.description || '',
-    type: (rawData.serviceType || 'tutoring') as ServiceType,
+    type: toServiceType(rawData.serviceType || 'tutoring'),
     price: parseFloat(rawData.price || '0'),
     rating: parseFloat(rawData.rating || '0'),
     location: rawData.location || '',
@@ -52,4 +59,21 @@ export function toServiceType(type: string): ServiceType {
     default:
       return 'tutoring';
   }
+}
+
+/**
+ * Safely extracts profile data from potentially null objects
+ */
+export function safeProfileData(profileData: any): any {
+  if (!profileData) return {};
+  
+  return {
+    id: safeGet(profileData, 'id'),
+    first_name: safeGet(profileData, 'first_name'),
+    last_name: safeGet(profileData, 'last_name'),
+    email: safeGet(profileData, 'email'),
+    user_type: safeGet(profileData, 'user_type'),
+    phone: safeGet(profileData, 'phone'),
+    avatar_url: safeGet(profileData, 'avatar_url')
+  };
 }

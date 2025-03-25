@@ -1,66 +1,53 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { BaseService } from '../base/BaseService';
-import { ServiceData } from '../serviceClient';
-import { getDisplayName } from '@/utils/profileUtils';
+import { ServiceData } from '@/types/service';
+import { convertToServiceData, safeProfileData } from './serviceUtils';
 
-export class RealServiceFetcher extends BaseService {
-  async fetchServiceById(serviceId: string): Promise<ServiceData | null> {
+export class RealServiceFetcher {
+  async getServiceById(serviceId: string): Promise<ServiceData | null> {
     try {
-      console.log(`Fetching service details for ID: ${serviceId}`);
-      
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('tutors')
         .select(`
           *,
-          profiles:id(*)
+          profiles:profiles(*)
         `)
         .eq('id', serviceId)
         .single();
-        
+      
       if (error) {
-        console.error('Error fetching service details:', error);
+        console.error('Error fetching service by ID:', error);
         return null;
       }
       
-      if (!data) {
-        console.log('No service found with ID:', serviceId);
-        return null;
-      }
+      // Extract profile data safely
+      const profile = safeProfileData(data.profiles || {});
       
-      // Extract tutor profile data and create display name from first_name and last_name
-      const tutorProfile = data.profiles || {};
-      const tutorName = getDisplayName({
-        id: tutorProfile.id || '',
-        first_name: tutorProfile.first_name || '',
-        last_name: tutorProfile.last_name || '',
-        email: tutorProfile.email || '',
-        user_type: 'tutor'
-      });
-      
-      // Transform the data into the expected ServiceData format
-      const serviceData: ServiceData = {
+      // Create a raw data object to pass to the conversion utility
+      const rawData = {
         id: data.id,
-        title: `${tutorName} - Tutoring Services`,
+        title: `${profile.first_name} ${profile.last_name} - Tutoring Services`,
         description: data.bio || 'Professional tutoring services',
-        provider: tutorName,
-        providerAvatar: tutorProfile.avatar_url || '',
+        provider: `${profile.first_name} ${profile.last_name}`,
+        providerAvatar: profile.avatar_url || '',
         providerRating: 4.5, // Default rating
         providerReviews: 0, // Default review count
         price: data.hourly_rate || 35,
         priceUnit: 'hour',
         locations: ['Online'], // Default location
+        location: 'Online',
         availability: ['Weekdays', 'Weekends'], // Default availability
         serviceType: 'tutoring',
+        type: 'tutoring',
+        rating: 4.5,
         subjects: ['General'], // Default subjects
         grade: 'All Grades',
         featured: false
       };
       
-      console.log('Service data fetched successfully:', serviceData);
-      return serviceData;
+      return convertToServiceData(rawData);
     } catch (error) {
-      console.error('Exception in fetchServiceById:', error);
+      console.error('Error in getServiceById:', error);
       return null;
     }
   }
