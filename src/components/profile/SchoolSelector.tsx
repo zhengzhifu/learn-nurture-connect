@@ -32,6 +32,7 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
   const [showOtherInput, setShowOtherInput] = useState(!!otherSchoolName);
   const [newSchoolName, setNewSchoolName] = useState(otherSchoolName || '');
   const [newSchoolAddress, setNewSchoolAddress] = useState('');
+  const [selectedSchool, setSelectedSchool] = useState<string>(selectedSchoolId || '');
 
   useEffect(() => {
     const loadSchools = async () => {
@@ -39,6 +40,11 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
       try {
         const schoolsData = await fetchApprovedSchools();
         setSchools(schoolsData);
+        
+        // If we have a selected school ID but no selection state yet
+        if (selectedSchoolId && !selectedSchool) {
+          setSelectedSchool(selectedSchoolId);
+        }
       } catch (error) {
         console.error('Error loading schools:', error);
       } finally {
@@ -47,14 +53,27 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
     };
 
     loadSchools();
-  }, []);
+  }, [selectedSchoolId]);
+
+  // Update local state when props change (for when navigating directly to profile page)
+  useEffect(() => {
+    if (selectedSchoolId) {
+      setSelectedSchool(selectedSchoolId);
+      setShowOtherInput(false);
+    } else if (otherSchoolName) {
+      setShowOtherInput(true);
+      setNewSchoolName(otherSchoolName);
+    }
+  }, [selectedSchoolId, otherSchoolName]);
 
   const handleSchoolChange = (value: string) => {
     if (value === 'other') {
       setShowOtherInput(true);
+      setSelectedSchool('other');
       onSchoolChange(undefined, newSchoolName);
     } else {
       setShowOtherInput(false);
+      setSelectedSchool(value);
       onSchoolChange(value, undefined);
     }
   };
@@ -76,17 +95,30 @@ const SchoolSelector: React.FC<SchoolSelectorProps> = ({
     }
   };
 
+  const getDisplayValue = () => {
+    if (showOtherInput && otherSchoolName) {
+      return otherSchoolName;
+    }
+
+    if (selectedSchool && selectedSchool !== 'other') {
+      const school = schools.find(s => s.id === selectedSchool);
+      return school?.name || "Select a school";
+    }
+
+    return "Select a school";
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-2">
         <Label htmlFor="school">{label}</Label>
         <Select
-          value={showOtherInput ? 'other' : selectedSchoolId}
+          value={showOtherInput ? 'other' : selectedSchool}
           onValueChange={handleSchoolChange}
           disabled={isLoading}
         >
           <SelectTrigger id="school">
-            <SelectValue placeholder="Select a school" />
+            <SelectValue placeholder="Select a school">{getDisplayValue()}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {schools.map((school) => (
