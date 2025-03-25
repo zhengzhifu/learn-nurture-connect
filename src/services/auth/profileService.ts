@@ -32,8 +32,14 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       }
       
       if (directData) {
-        console.log('ProfileService: Profile fetched via direct query:', directData);
-        return directData as Profile;
+        // Add full_name for backward compatibility
+        const profile: Profile = {
+          ...directData,
+          full_name: `${directData.first_name || ''} ${directData.last_name || ''}`.trim()
+        };
+        
+        console.log('ProfileService: Profile fetched via direct query:', profile);
+        return profile;
       }
       
       return null;
@@ -44,8 +50,14 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       return null;
     }
 
-    console.log('ProfileService: Profile data fetched via RPC:', data);
-    return data as Profile;
+    // Add full_name for backward compatibility
+    const profile: Profile = {
+      ...data,
+      full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+    };
+    
+    console.log('ProfileService: Profile data fetched via RPC:', profile);
+    return profile;
   } catch (error: any) {
     console.error('ProfileService: Exception fetching profile:', error);
     return null;
@@ -84,10 +96,21 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
     if (!existingProfile) {
       console.log('ProfileService: Profile does not exist, creating new profile');
       
+      // Split full_name into first_name and last_name if provided
+      let firstName = data.first_name;
+      let lastName = data.last_name;
+      
+      if (!firstName && !lastName && data.full_name) {
+        const parts = data.full_name.split(' ');
+        firstName = parts[0];
+        lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      }
+      
       // Create a complete profile with user data
       const profileData = {
         id: userId,
-        full_name: data.full_name || authData.user?.user_metadata?.full_name || 'User',
+        first_name: firstName || authData.user?.user_metadata?.first_name || 'User',
+        last_name: lastName || authData.user?.user_metadata?.last_name || '',
         email: authData.user?.email || '',
         user_type: data.user_type || authData.user?.user_metadata?.role || 'parent',
         phone: data.phone || '',
@@ -114,16 +137,34 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
         throw insertError;
       }
       
-      console.log('ProfileService: New profile created successfully:', newProfile);
+      // Add full_name for backward compatibility
+      const profile: Profile = {
+        ...newProfile,
+        full_name: `${newProfile.first_name || ''} ${newProfile.last_name || ''}`.trim()
+      };
+      
+      console.log('ProfileService: New profile created successfully:', profile);
       toast.success('Profile created successfully');
-      return newProfile;
+      return profile;
+    }
+    
+    // Prepare update data
+    const updateData: any = { ...data };
+    
+    // Split full_name into first_name and last_name if provided
+    if (!updateData.first_name && !updateData.last_name && updateData.full_name) {
+      const parts = updateData.full_name.split(' ');
+      updateData.first_name = parts[0];
+      updateData.last_name = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      // Remove full_name as it's not in the database
+      delete updateData.full_name;
     }
     
     // Update existing profile
-    console.log('ProfileService: Updating existing profile');
+    console.log('ProfileService: Updating existing profile with data:', updateData);
     const { data: updatedProfile, error: updateError } = await supabase
       .from('profiles')
-      .update(data)
+      .update(updateData)
       .eq('id', userId)
       .select('*')
       .single();
@@ -134,9 +175,15 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
       throw updateError;
     }
     
-    console.log('ProfileService: Profile updated successfully:', updatedProfile);
+    // Add full_name for backward compatibility
+    const profile: Profile = {
+      ...updatedProfile,
+      full_name: `${updatedProfile.first_name || ''} ${updatedProfile.last_name || ''}`.trim()
+    };
+    
+    console.log('ProfileService: Profile updated successfully:', profile);
     toast.success('Profile updated successfully');
-    return updatedProfile;
+    return profile;
   } catch (error: any) {
     console.error('ProfileService: Error in updateUserProfile:', error);
     toast.error(`Failed to update profile: ${error.message}`);

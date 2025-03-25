@@ -1,6 +1,6 @@
 
 // Auth-related types
-export type UserRole = 'parent' | 'tutor' | 'admin' | null;
+export type UserRole = 'parent' | 'tutor' | 'admin' | 'child' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
 
 export interface Profile {
@@ -59,4 +59,15 @@ export interface Specialty {
   specialty_type: string;
   specialty_name: string;
   created_at: string;
+}
+
+// Extension of Profile for Tutor-specific data
+export interface Tutor extends Profile {
+  subjects?: string[];
+  hourlyRate?: number; 
+  rating?: number;
+  reviewCount?: number;
+  availability?: string[];
+  bio?: string;
+  isBookmarked?: boolean;
 }

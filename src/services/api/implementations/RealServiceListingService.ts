@@ -1,165 +1,171 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from '../serviceClient';
-import { BaseService } from '../base/BaseService';
-import { realServiceFetcher } from './RealServiceFetcher';
+import { getDisplayName } from '@/utils/profileUtils';
+import { ServiceListingUtils } from './ServiceListingUtils';
 
-export class RealServiceListingService extends BaseService {
+export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceListingService: getServices called');
+      // Fetch tutors with their associated profiles
+      const { data, error } = await supabase
+        .from('tutors')
+        .select(`
+          *,
+          profiles:id(*)
+        `)
+        .limit(20);
       
-      // Using a separate query for profiles to avoid RLS recursion issues
-      const { data, error } = await this.supabase
-        .from('tutor_services')
-        .select('*');
-        
       if (error) {
-        console.error('Error fetching services from Supabase:', error);
-        throw error; // Throw the error to be caught by the calling function
-      }
-
-      console.log('Raw tutor_services data:', data);
-      
-      if (!data || data.length === 0) {
-        console.log('No tutor services found in the database');
+        console.error('Error fetching services:', error);
         return [];
       }
-
-      // Transform and fetch profile data separately to handle the services
-      const services: ServiceData[] = await Promise.all(
-        data.map(item => realServiceFetcher.transformServiceData(item))
-      );
       
-      console.log(`RealServiceListingService: getServices returning ${services.length} services:`, services);
-      return services;
+      // Transform the data into the expected format
+      return data.map(item => {
+        const tutorProfile = item.profiles || {};
+        const tutorName = getDisplayName({
+          id: tutorProfile.id || '',
+          first_name: tutorProfile.first_name || '',
+          last_name: tutorProfile.last_name || '',
+          email: tutorProfile.email || '',
+          user_type: 'tutor'
+        });
+        
+        return {
+          id: item.id,
+          title: `${tutorName} - Tutoring Services`,
+          description: item.bio || 'Professional tutoring services',
+          provider: tutorName,
+          providerAvatar: tutorProfile.avatar_url || '',
+          providerRating: 4.5, // Default rating
+          providerReviews: 0, // Default review count
+          price: item.hourly_rate || 35,
+          priceUnit: 'hour',
+          locations: ['Online'], // Default location
+          availability: ['Weekdays', 'Weekends'], // Default availability
+          serviceType: 'tutoring',
+          subjects: ['General'], // Default subjects
+          grade: 'All Grades',
+          featured: false
+        };
+      });
     } catch (error) {
-      console.error('Exception fetching services:', error);
+      console.error('Error in getServices:', error);
       return [];
     }
   }
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceListingService: filterServices called with filters:', JSON.stringify(filters, null, 2));
+      // Start with a base query
+      let query = supabase
+        .from('tutors')
+        .select(`
+          *,
+          profiles:id(*)
+        `);
       
-      let query = this.supabase
-        .from('tutor_services')
-        .select('*');
-      
-      // Apply database-level filters
-      query = this.applyDatabaseFilters(query, filters);
+      // Apply filters to the query builder
+      query = ServiceListingUtils.applyTutorFilters(query, filters);
       
       // Execute the query
       const { data, error } = await query;
       
       if (error) {
         console.error('Error filtering services:', error);
-        throw error; // Throw the error to be caught by the calling function
-      }
-      
-      if (!data || data.length === 0) {
-        console.log('No services found matching the filters');
         return [];
       }
       
-      // Transform data to ServiceData objects
-      let services = await Promise.all(
-        data.map(item => realServiceFetcher.transformServiceData(item))
-      );
-      
-      // Apply client-side filters
-      services = this.applyClientSideFilters(services, filters);
-      
-      console.log(`RealServiceListingService: filterServices returning ${services.length} filtered results:`, services);
-      return services;
+      // Transform the data into the expected format
+      return data.map(item => {
+        const tutorProfile = item.profiles || {};
+        const tutorName = getDisplayName({
+          id: tutorProfile.id || '',
+          first_name: tutorProfile.first_name || '',
+          last_name: tutorProfile.last_name || '',
+          email: tutorProfile.email || '',
+          user_type: 'tutor'
+        });
+        
+        return {
+          id: item.id,
+          title: `${tutorName} - Tutoring Services`,
+          description: item.bio || 'Professional tutoring services',
+          provider: tutorName,
+          providerAvatar: tutorProfile.avatar_url || '',
+          providerRating: 4.5, // Default rating
+          providerReviews: 0, // Default review count
+          price: item.hourly_rate || 35,
+          priceUnit: 'hour',
+          locations: ['Online'], // Default location
+          availability: ['Weekdays', 'Weekends'], // Default availability
+          serviceType: 'tutoring',
+          subjects: ['General'], // Default subjects
+          grade: 'All Grades',
+          featured: false
+        };
+      });
     } catch (error) {
-      console.error('Error filtering services:', error);
+      console.error('Error in filterServices:', error);
       return [];
     }
   }
   
   async searchServices(query: string): Promise<ServiceData[]> {
     try {
-      console.log('RealServiceListingService: searchServices called with query:', query);
-      
-      if (!query.trim()) {
-        console.log('RealServiceListingService: searchServices returning all services (empty query)');
-        return this.getServices();
-      }
-      
-      // Search across multiple fields
-      const { data, error } = await this.supabase
-        .from('tutor_services')
-        .select('*')
-        .or(`service_type.ilike.%${query}%,location_address.ilike.%${query}%`);
+      // Search across multiple tables using full text search
+      const { data, error } = await supabase
+        .from('tutors')
+        .select(`
+          *,
+          profiles:id(*)
+        `)
+        .or(`
+          profiles.first_name.ilike.%${query}%,
+          profiles.last_name.ilike.%${query}%,
+          bio.ilike.%${query}%
+        `)
+        .limit(20);
       
       if (error) {
         console.error('Error searching services:', error);
-        throw error; // Throw the error to be caught by the calling function
-      }
-      
-      if (!data || data.length === 0) {
-        console.log('No services found matching the search query');
         return [];
       }
       
-      // Transform data to ServiceData objects
-      const services: ServiceData[] = await Promise.all(
-        data.map(item => realServiceFetcher.transformServiceData(item))
-      );
-      
-      console.log(`RealServiceListingService: searchServices returning ${services.length} results:`, services);
-      return services;
+      // Transform the data into the expected format
+      return data.map(item => {
+        const tutorProfile = item.profiles || {};
+        const tutorName = getDisplayName({
+          id: tutorProfile.id || '',
+          first_name: tutorProfile.first_name || '',
+          last_name: tutorProfile.last_name || '',
+          email: tutorProfile.email || '',
+          user_type: 'tutor'
+        });
+        
+        return {
+          id: item.id,
+          title: `${tutorName} - Tutoring Services`,
+          description: item.bio || 'Professional tutoring services',
+          provider: tutorName,
+          providerAvatar: tutorProfile.avatar_url || '',
+          providerRating: 4.5, // Default rating
+          providerReviews: 0, // Default review count
+          price: item.hourly_rate || 35,
+          priceUnit: 'hour',
+          locations: ['Online'], // Default location
+          availability: ['Weekdays', 'Weekends'], // Default availability
+          serviceType: 'tutoring',
+          subjects: ['General'], // Default subjects
+          grade: 'All Grades',
+          featured: false
+        };
+      });
     } catch (error) {
-      console.error('Error searching services:', error);
+      console.error('Error in searchServices:', error);
       return [];
     }
-  }
-  
-  private applyDatabaseFilters(query: any, filters: ServiceFilters): any {
-    // Filter by service type
-    if (filters.types && filters.types.length > 0) {
-      // Convert types array to SQL-friendly format
-      const typeConditions = filters.types.map(type => `service_type.ilike.%${type}%`).join(',');
-      query = query.or(typeConditions);
-    }
-    
-    // Filter by location
-    if (filters.location) {
-      query = query.ilike('location_address', `%${filters.location}%`);
-    }
-    
-    // Filter by price range
-    if (filters.priceRange) {
-      const [min, max] = filters.priceRange;
-      query = query.gte('hourly_rate', min).lte('hourly_rate', max);
-    }
-    
-    return query;
-  }
-  
-  private applyClientSideFilters(services: ServiceData[], filters: ServiceFilters): ServiceData[] {
-    let filteredServices = services;
-    
-    // Client-side filtering for subjects and availability
-    // These are arrays, so they're harder to filter in the database query
-    if (filters.subjects && filters.subjects.length > 0) {
-      filteredServices = filteredServices.filter(service => 
-        service.subjects?.some(subject => 
-          filters.subjects?.includes(subject)
-        )
-      );
-    }
-    
-    if (filters.availability && filters.availability.length > 0) {
-      filteredServices = filteredServices.filter(service => 
-        service.availability.some(slot => 
-          filters.availability?.includes(slot)
-        )
-      );
-    }
-    
-    return filteredServices;
   }
 }
 

@@ -1,125 +1,98 @@
 
-import { Profile } from '@/types/auth';
+import { Tutor } from '@/types/auth';
 
-// Define the Tutor interface which extends Profile with additional tutor-specific properties
-export interface Tutor extends Profile {
-  subjects: string[];
-  hourlyRate: number;
-  rating: number;
-  reviewCount: number;
-  availability: string[];
-  bio: string;
-  isBookmarked: boolean;
-}
-
-// Mock tutors data
-export const MOCK_TUTORS: Tutor[] = [
+// Define the mock tutor data
+export const mockTutors: Tutor[] = [
   {
-    id: '101',
-    full_name: 'Emily Johnson',
-    email: 'emily.j@example.com',
-    user_type: 'tutor',
-    phone: '123-456-7890',
-    avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    id: "tutor-1",
+    first_name: "Jane",
+    last_name: "Doe",
+    full_name: "Jane Doe",
+    email: "jane.doe@example.com",
+    user_type: "tutor",
+    phone: "555-123-4567",
+    avatar_url: "https://i.pravatar.cc/150?u=janedoe",
     verified: true,
-    subjects: ['Mathematics', 'Physics', 'Calculus'],
-    hourlyRate: 35,
-    rating: 4.9,
+    subjects: ["Math", "Science", "Physics"],
+    hourlyRate: 45,
+    rating: 4.8,
     reviewCount: 24,
-    availability: ['Weekdays afternoons', 'Weekends'],
-    bio: 'Math specialist with 5+ years of teaching experience. I focus on making complex concepts easy to understand.',
+    availability: ["Weekdays", "Weekends"],
+    bio: "Experienced math and science tutor with a PhD in Physics.",
     isBookmarked: true
   },
   {
-    id: '102',
-    full_name: 'Michael Chen',
-    email: 'michael.c@example.com',
-    user_type: 'tutor',
-    phone: '234-567-8901',
-    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    id: "tutor-2",
+    first_name: "John",
+    last_name: "Smith",
+    full_name: "John Smith",
+    email: "john.smith@example.com",
+    user_type: "tutor",
+    phone: "555-987-6543",
+    avatar_url: "https://i.pravatar.cc/150?u=johnsmith",
     verified: true,
-    subjects: ['Chemistry', 'Biology', 'Science'],
+    subjects: ["English", "Literature", "Writing"],
     hourlyRate: 40,
-    rating: 4.8,
-    reviewCount: 19,
-    availability: ['Weekends', 'Weeknights'],
-    bio: 'Passionate about making science accessible to all students. PhD candidate in Biochemistry.',
+    rating: 4.6,
+    reviewCount: 18,
+    availability: ["Weekdays"],
+    bio: "English literature expert with 10 years of teaching experience.",
     isBookmarked: false
   },
   {
-    id: '103',
-    full_name: 'Sarah Williams',
-    email: 'sarah.w@example.com',
-    user_type: 'tutor',
-    phone: '345-678-9012',
-    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
+    id: "tutor-3",
+    first_name: "Maria",
+    last_name: "Garcia",
+    full_name: "Maria Garcia",
+    email: "maria.garcia@example.com",
+    user_type: "tutor",
+    phone: "555-456-7890",
+    avatar_url: "https://i.pravatar.cc/150?u=mariagarcia",
     verified: true,
-    subjects: ['English Literature', 'Writing', 'Grammar'],
-    hourlyRate: 30,
-    rating: 4.7,
-    reviewCount: 31,
-    availability: ['Weekdays', 'Flexible hours'],
-    bio: 'English teacher with a focus on essay writing and literary analysis. I help students find their voice.',
+    subjects: ["Spanish", "French", "ESL"],
+    hourlyRate: 50,
+    rating: 4.9,
+    reviewCount: 32,
+    availability: ["Weekdays", "Weekends"],
+    bio: "Multilingual language instructor specialized in Spanish and French.",
     isBookmarked: true
   },
   {
-    id: '104',
-    full_name: 'David Martinez',
-    email: 'david.m@example.com',
-    user_type: 'tutor',
-    phone: '456-789-0123',
-    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
+    id: "tutor-4",
+    first_name: "David",
+    last_name: "Wang",
+    full_name: "David Wang",
+    email: "david.wang@example.com",
+    user_type: "tutor",
+    phone: "555-111-2222",
+    avatar_url: "https://i.pravatar.cc/150?u=davidwang",
     verified: false,
-    subjects: ['Computer Science', 'Programming', 'Web Development'],
-    hourlyRate: 45,
-    rating: 4.6,
+    subjects: ["Computer Science", "Programming", "Math"],
+    hourlyRate: 55,
+    rating: 4.5,
     reviewCount: 12,
-    availability: ['Evenings', 'Weekends'],
-    bio: 'Software engineer by day, programming tutor by night. I specialize in teaching practical coding skills.',
+    availability: ["Weekends"],
+    bio: "Software engineer teaching programming and computer science concepts.",
     isBookmarked: false
   }
 ];
 
-// Mock Tutor Service class
-export class MockTutorService {
-  // Get all tutors for a user
-  async getUserTutors(userId: string): Promise<Tutor[]> {
-    console.log('MockTutorService: getUserTutors called for user:', userId);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // In a real application, we would filter tutors related to the specific user
-    // For mock purposes, we're returning all tutors
-    console.log(`MockTutorService: returning ${MOCK_TUTORS.length} tutors`);
-    return MOCK_TUTORS;
-  }
-  
-  // Get a specific tutor by ID
-  async getTutorById(tutorId: string): Promise<Tutor | null> {
-    console.log('MockTutorService: getTutorById called for tutor:', tutorId);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const tutor = MOCK_TUTORS.find(t => t.id === tutorId) || null;
-    console.log(`MockTutorService: ${tutor ? 'Found' : 'Did not find'} tutor with ID ${tutorId}`);
-    return tutor;
-  }
-  
-  // Toggle bookmark status for a tutor
-  async toggleTutorBookmark(tutorId: string, userId: string): Promise<boolean> {
-    console.log(`MockTutorService: toggleTutorBookmark called for tutor ${tutorId} and user ${userId}`);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    // In a real implementation, this would update a database record
-    // For mock purposes, we'll just return success
-    console.log('MockTutorService: bookmark toggled successfully');
-    return true;
-  }
-}
+export const getTutorById = (id: string): Tutor | undefined => {
+  return mockTutors.find(tutor => tutor.id === id);
+};
 
-// Create and export a singleton instance
-export const mockTutorService = new MockTutorService();
+export const getAllTutors = (): Tutor[] => {
+  return mockTutors;
+};
+
+export const getFilteredTutors = (subject?: string, maxRate?: number): Tutor[] => {
+  return mockTutors.filter(tutor => {
+    // Apply subject filter if provided
+    const subjectMatch = !subject || tutor.subjects?.includes(subject);
+    
+    // Apply rate filter if provided
+    const rateMatch = !maxRate || (tutor.hourlyRate !== undefined && tutor.hourlyRate <= maxRate);
+    
+    return subjectMatch && rateMatch;
+  });
+};

@@ -10,7 +10,7 @@ export class RealProfileService extends BaseService {
       
       const { data, error } = await this.supabase
         .from('profiles')
-        .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+        .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -21,8 +21,18 @@ export class RealProfileService extends BaseService {
         return null;
       }
 
-      console.log('RealProfileService: fetchUserProfile returning:', data);
-      return data as Profile;
+      if (data) {
+        // Add full_name for backward compatibility
+        const profile: Profile = {
+          ...data,
+          full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+        };
+        
+        console.log('RealProfileService: fetchUserProfile returning:', profile);
+        return profile;
+      }
+      
+      return null;
     } catch (error) {
       console.error('Exception fetching profile:', error);
       return null;
@@ -60,10 +70,21 @@ export class RealProfileService extends BaseService {
       if (!existingProfile) {
         console.log('RealProfileService: Profile does not exist, creating a new one');
         
+        // Split full_name into first_name and last_name if provided
+        let firstName = data.first_name;
+        let lastName = data.last_name;
+        
+        if (!firstName && !lastName && data.full_name) {
+          const parts = data.full_name.split(' ');
+          firstName = parts[0];
+          lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+        }
+        
         // Prepare profile data from user metadata and input data
         const profileData = {
           id: userId,
-          full_name: data.full_name || userData.user.user_metadata?.full_name || 'User',
+          first_name: firstName || userData.user.user_metadata?.first_name || 'User',
+          last_name: lastName || userData.user.user_metadata?.last_name || '',
           email: userData.user.email || '',
           user_type: data.user_type || userData.user.user_metadata?.role || 'parent',
           phone: data.phone || '',
@@ -81,7 +102,7 @@ export class RealProfileService extends BaseService {
         const { data: newProfile, error: insertError } = await this.supabase
           .from('profiles')
           .insert(profileData)
-          .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+          .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
           .single();
           
         if (insertError) {
@@ -92,18 +113,36 @@ export class RealProfileService extends BaseService {
           throw new Error(`Failed to create profile: ${insertError.message}`);
         }
         
-        console.log('RealProfileService: Created new profile:', newProfile);
+        // Add full_name for backward compatibility
+        const profile: Profile = {
+          ...newProfile,
+          full_name: `${newProfile.first_name || ''} ${newProfile.last_name || ''}`.trim()
+        };
+        
+        console.log('RealProfileService: Created new profile:', profile);
         toast.success('Profile created successfully');
-        return newProfile as Profile;
+        return profile;
+      }
+      
+      // Prepare update data
+      const updateData: any = { ...data };
+      
+      // Split full_name into first_name and last_name if provided
+      if (!updateData.first_name && !updateData.last_name && updateData.full_name) {
+        const parts = updateData.full_name.split(' ');
+        updateData.first_name = parts[0];
+        updateData.last_name = parts.length > 1 ? parts.slice(1).join(' ') : '';
+        // Remove full_name as it's not in the database
+        delete updateData.full_name;
       }
       
       // Proceed with the update
-      console.log('RealProfileService: Proceeding with update - sending to Supabase:', data);
+      console.log('RealProfileService: Proceeding with update - sending to Supabase:', updateData);
       const { data: updatedData, error } = await this.supabase
         .from('profiles')
-        .update(data)
+        .update(updateData)
         .eq('id', userId)
-        .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+        .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .single();
       
       if (error) {
@@ -112,48 +151,19 @@ export class RealProfileService extends BaseService {
         console.error('Error message:', error.message);
         console.error('Error details:', error.details);
         
-        // If we get a "no rows affected" error, try inserting instead
-        if (error.code === '22000' || error.code === 'PGRST116') {
-          console.log('RealProfileService: Update failed, trying insert as fallback');
-          
-          // Prepare complete profile data
-          const profileData = {
-            id: userId,
-            full_name: data.full_name || userData.user.user_metadata?.full_name || 'User',
-            email: userData.user.email || '',
-            user_type: data.user_type || userData.user.user_metadata?.role || 'parent',
-            phone: data.phone || '',
-            avatar_url: data.avatar_url || '',
-            home_address: data.home_address || '',
-            verified: false,
-            school_id: data.school_id,
-            other_school_name: data.other_school_name,
-            child_school_id: data.child_school_id
-          };
-          
-          const { data: insertedData, error: insertError } = await this.supabase
-            .from('profiles')
-            .insert(profileData)
-            .select('id, full_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
-            .single();
-            
-          if (insertError) {
-            console.error('Error in fallback insert:', insertError);
-            throw insertError;
-          }
-          
-          console.log('RealProfileService: Fallback insert successful:', insertedData);
-          toast.success('Profile created successfully');
-          return insertedData as Profile;
-        }
-        
-        // Otherwise throw the original error
+        // If we get an error, try a different approach or throw the error
         throw error;
       }
       
-      console.log('RealProfileService: updateUserProfile successful! Returning:', updatedData);
+      // Add full_name for backward compatibility
+      const profile: Profile = {
+        ...updatedData,
+        full_name: `${updatedData.first_name || ''} ${updatedData.last_name || ''}`.trim()
+      };
+      
+      console.log('RealProfileService: updateUserProfile successful! Returning:', profile);
       toast.success('Profile updated successfully');
-      return updatedData as Profile;
+      return profile;
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(`Failed to update profile: ${error.message}`);

@@ -35,7 +35,15 @@ const Admin: React.FC = () => {
           .order('created_at', { ascending: false });
           
         if (usersError) throw usersError;
-        setUsers(usersData || []);
+        
+        // Transform data to match Profile type and add backward compatibility
+        const transformedUsers: Profile[] = (usersData || []).map((user: any) => ({
+          ...user,
+          // Add full_name for backward compatibility
+          full_name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+        }));
+        
+        setUsers(transformedUsers);
         
         const schoolsData = await fetchApprovedSchools();
         setSchools(schoolsData || []);
