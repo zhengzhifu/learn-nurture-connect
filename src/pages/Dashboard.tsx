@@ -7,25 +7,52 @@ import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/auth/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardError from '@/components/dashboard/DashboardError';
-import { isTokenExpired } from '@/services/auth/sessionService';
+import LoadingTimeout from '@/components/dashboard/LoadingTimeout';
+import { isTokenExpired, refreshTokenIfNeeded } from '@/services/auth/sessionService';
 
 const Dashboard = () => {
   const { profile, user, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [showTimeout, setShowTimeout] = useState(false);
 
+  // Set a timeout for the loading state
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        setShowTimeout(true);
+      }, 5000); // Show timeout message after 5 seconds
+    } else {
+      setShowTimeout(false);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
+
+  // Handle authentication
   useEffect(() => {
     if (hasRedirected) return;
     
-    if (!isLoading) {
-      const tokenExpired = isTokenExpired();
-      
-      if (!user || tokenExpired) {
-        console.log('Dashboard: No valid user session, redirecting to signin');
-        setHasRedirected(true);
-        navigate('/signin', { replace: true });
+    const checkAuth = async () => {
+      if (!isLoading) {
+        // Refresh token if needed
+        await refreshTokenIfNeeded();
+        
+        const tokenExpired = isTokenExpired();
+        
+        if (!user || tokenExpired) {
+          console.log('Dashboard: No valid user session, redirecting to signin');
+          setHasRedirected(true);
+          navigate('/signin', { replace: true });
+        }
       }
-    }
+    };
+    
+    checkAuth();
   }, [user, isLoading, navigate, hasRedirected]);
 
   const userData = profile ? {
@@ -38,6 +65,7 @@ const Dashboard = () => {
     avatar_url: user.user_metadata?.avatar_url,
   } : null);
 
+  // Show error state
   if (error) {
     return (
       <PageWrapper>
@@ -51,6 +79,21 @@ const Dashboard = () => {
     );
   }
 
+  // Show timeout message
+  if (isLoading && showTimeout) {
+    return (
+      <PageWrapper>
+        <Navbar />
+        <LoadingTimeout 
+          onRetry={() => window.location.reload()}
+          message="If this persists, your session might be invalid or there might be a problem with your profile data."
+        />
+        <Footer />
+      </PageWrapper>
+    );
+  }
+
+  // Don't render dashboard if not authenticated or data is still loading
   if (!isLoading && !userData) {
     return null;
   }

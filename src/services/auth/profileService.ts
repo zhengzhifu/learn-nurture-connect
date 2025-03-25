@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
@@ -8,57 +9,69 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     console.log('ProfileService: Fetching profile for user:', userId);
     
-    // Use the security definer function through RPC to avoid RLS issues
-    const { data, error } = await supabase
-      .rpc('get_current_user_profile')
-      .maybeSingle();
-      
-    if (error) {
-      console.error('ProfileService: Error fetching profile:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      
-      // Fall back to direct query if RPC fails (this will work with new RLS policies)
-      const { data: directData, error: directError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+    // Add a timeout to ensure the function doesn't hang indefinitely
+    const timeoutPromise = new Promise<null>((_, reject) => {
+      setTimeout(() => reject(new Error('Profile fetch timed out')), 5000);
+    });
+    
+    // Create the RPC promise
+    const rpcPromise = async () => {
+      const { data, error } = await supabase
+        .rpc('get_current_user_profile')
         .maybeSingle();
         
-      if (directError) {
-        console.error('ProfileService: Error in direct profile query:', directError);
+      if (error) {
+        console.error('ProfileService: Error fetching profile via RPC:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        // Fall back to direct query
+        const { data: directData, error: directError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (directError) {
+          console.error('ProfileService: Error in direct profile query:', directError);
+          return null;
+        }
+        
+        if (directData) {
+          // Add full_name for backward compatibility
+          const profile: Profile = {
+            ...directData,
+            full_name: `${directData.first_name || ''} ${directData.last_name || ''}`.trim()
+          };
+          
+          console.log('ProfileService: Profile fetched via direct query:', profile);
+          return profile;
+        }
+        
         return null;
       }
-      
-      if (directData) {
-        // Add full_name for backward compatibility
-        const profile: Profile = {
-          ...directData,
-          full_name: `${directData.first_name || ''} ${directData.last_name || ''}`.trim()
-        };
-        
-        console.log('ProfileService: Profile fetched via direct query:', profile);
-        return profile;
+
+      if (!data) {
+        console.log('ProfileService: No profile found, will create one on demand');
+        return null;
       }
+
+      // Add full_name for backward compatibility
+      const profile: Profile = {
+        ...data,
+        full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+      };
       
-      return null;
-    }
-
-    if (!data) {
-      console.log('ProfileService: No profile found, will create one on demand');
-      return null;
-    }
-
-    // Add full_name for backward compatibility
-    const profile: Profile = {
-      ...data,
-      full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+      console.log('ProfileService: Profile data fetched via RPC:', profile);
+      return profile;
     };
-    
-    console.log('ProfileService: Profile data fetched via RPC:', profile);
+
+    // Race the fetch against the timeout
+    const profile = await Promise.race([rpcPromise(), timeoutPromise]);
     return profile;
   } catch (error: any) {
     console.error('ProfileService: Exception fetching profile:', error);
+    // Make sure we always return null on error, don't leave promises hanging
     return null;
   }
 };
