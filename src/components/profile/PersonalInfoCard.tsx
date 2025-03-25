@@ -19,15 +19,19 @@ interface PersonalInfoCardProps {
     state?: string;
     zip_code?: string;
     country?: string;
+    latitude?: number;
+    longitude?: number;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   getInitials: (name: string) => string;
+  handleAddressChange?: (addressData: any) => void;
 }
 
 const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({ 
   formData, 
   handleChange, 
-  getInitials 
+  getInitials,
+  handleAddressChange
 }) => {
   return (
     <Card className="mb-8">
@@ -46,7 +50,8 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
         
         <AddressInfoForm 
           formData={formData} 
-          handleChange={handleChange} 
+          handleChange={handleChange}
+          handleAddressChange={handleAddressChange} 
         />
       </CardContent>
     </Card>
