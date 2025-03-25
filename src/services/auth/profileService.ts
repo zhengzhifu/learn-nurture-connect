@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
@@ -118,8 +117,7 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>):
         home_address: data.home_address || '',
         verified: false,
         school_id: data.school_id,
-        other_school_name: data.other_school_name,
-        child_school_id: data.child_school_id
+        other_school_name: data.other_school_name
       };
       
       console.log('ProfileService: Creating new profile with data:', profileData);

@@ -40,7 +40,6 @@ export class RealProfileService extends BaseService {
         school_id: data.school_id || '',
         // Add empty strings for fields that might not exist in the database
         other_school_name: '',
-        child_school_id: '',
         verified: false,
         // Add derived full_name for backward compatibility
         full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
@@ -143,7 +142,6 @@ export class RealProfileService extends BaseService {
           school_id: newProfile.school_id || '',
           // Add empty strings for fields that might not exist in the database
           other_school_name: '',
-          child_school_id: '',
           verified: false,
           // Add derived full_name for backward compatibility
           full_name: `${newProfile.first_name || ''} ${newProfile.last_name || ''}`.trim()
@@ -172,9 +170,6 @@ export class RealProfileService extends BaseService {
       }
       if ('other_school_name' in updateData) {
         delete updateData.other_school_name;
-      }
-      if ('child_school_id' in updateData) {
-        delete updateData.child_school_id;
       }
       
       // Proceed with the update
@@ -214,7 +209,6 @@ export class RealProfileService extends BaseService {
         school_id: updatedData.school_id || '',
         // Add empty strings for fields that might not exist in the database
         other_school_name: '',
-        child_school_id: '',
         verified: false,
         // Add derived full_name for backward compatibility
         full_name: `${updatedData.first_name || ''} ${updatedData.last_name || ''}`.trim()

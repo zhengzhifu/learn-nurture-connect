@@ -16,8 +16,7 @@ const mockProfiles: Profile[] = [
     home_address: '123 Main St, Anytown, USA',
     approval_status: 'approved',
     school_id: 'school-1',
-    other_school_name: '',
-    child_school_id: 'school-2'
+    other_school_name: ''
   },
   {
     id: 'user-2',
@@ -32,8 +31,7 @@ const mockProfiles: Profile[] = [
     home_address: '456 Elm St, Othertown, USA',
     approval_status: 'approved',
     school_id: 'school-3',
-    other_school_name: '',
-    child_school_id: ''
+    other_school_name: ''
   },
 ];
 
@@ -71,7 +69,6 @@ export class MockProfileService {
         approval_status: data.approval_status || 'pending',
         school_id: data.school_id || '',
         other_school_name: data.other_school_name || '',
-        child_school_id: data.child_school_id || '',
         verified: false
       };
       
