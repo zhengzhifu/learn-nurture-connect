@@ -2,48 +2,24 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Input } from "@/components/ui/input";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormDescription 
-} from "@/components/ui/form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form } from "@/components/ui/form";
 import Button from '@/components/ui-custom/Button';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-
-const formSchema = z.object({
-  firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
-  lastName: z.string().min(1, { message: 'Last name is required' }),
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6, { message: 'Confirm your password' }),
-  role: z.enum(['parent', 'tutor'], { 
-    required_error: 'Please select a role' 
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { signUpFormSchema, SignUpFormValues } from '@/types/auth/signUp';
+import FormError from './FormError';
+import PersonalInfoFields from './PersonalInfoFields';
+import PasswordFields from './PasswordFields';
+import RoleSelector from './RoleSelector';
 
 const SignUpForm: React.FC = () => {
   const { signUp, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<'parent' | 'tutor' | null>(null);
   
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -54,7 +30,7 @@ const SignUpForm: React.FC = () => {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: SignUpFormValues) => {
     try {
       setError(null);
       console.log('Submitting form with values:', values);
@@ -77,128 +53,16 @@ const SignUpForm: React.FC = () => {
     <div className="w-full max-w-md mx-auto">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <FormError error={error} />
           
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your first name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <PersonalInfoFields form={form} />
           
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <PasswordFields form={form} />
           
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your email address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="Create a password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="Confirm your password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>I am a:</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={handleRoleChange}
-                    value={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    <div className={`flex items-center space-x-3 rounded-md border p-4 cursor-pointer ${selectedRole === 'parent' ? 'border-primary bg-primary/5' : 'border-input'}`}>
-                      <RadioGroupItem value="parent" id="parent" />
-                      <label
-                        htmlFor="parent"
-                        className="flex flex-col cursor-pointer"
-                      >
-                        <span className="font-medium">Parent</span>
-                        <span className="text-sm text-muted-foreground">
-                          I'm looking for tutors or babysitters for my child
-                        </span>
-                      </label>
-                    </div>
-                    
-                    <div className={`flex items-center space-x-3 rounded-md border p-4 cursor-pointer ${selectedRole === 'tutor' ? 'border-primary bg-primary/5' : 'border-input'}`}>
-                      <RadioGroupItem value="tutor" id="tutor" />
-                      <label
-                        htmlFor="tutor"
-                        className="flex flex-col cursor-pointer"
-                      >
-                        <span className="font-medium">Tutor/Babysitter</span>
-                        <span className="text-sm text-muted-foreground">
-                          I want to offer tutoring or babysitting services
-                        </span>
-                      </label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-                <FormDescription>
-                  You'll be able to specify your exact services in your profile
-                </FormDescription>
-              </FormItem>
-            )}
+          <RoleSelector 
+            form={form} 
+            selectedRole={selectedRole} 
+            handleRoleChange={handleRoleChange} 
           />
           
           <Button type="submit" fullWidth disabled={isLoading}>
