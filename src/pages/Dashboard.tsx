@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '@/components/utils/PageWrapper';
@@ -6,7 +5,6 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/auth/useAuth';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
-import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardError from '@/components/dashboard/DashboardError';
 import { isTokenExpired } from '@/services/auth/sessionService';
 
@@ -15,9 +13,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Additional verification that we have a valid session
   useEffect(() => {
-    // Prevent multiple redirects
     if (hasRedirected) return;
     
     if (!isLoading) {
@@ -31,7 +27,6 @@ const Dashboard = () => {
     }
   }, [user, isLoading, navigate, hasRedirected]);
 
-  // Create a safe user data object to prevent any circular references
   const userData = profile ? {
     full_name: profile.full_name || 'User',
     user_type: profile.user_type || 'parent',
@@ -55,9 +50,8 @@ const Dashboard = () => {
     );
   }
 
-  // Additional guard to ensure we have user data before rendering
   if (!isLoading && !userData) {
-    return null; // Will be handled by the redirect in useEffect
+    return null;
   }
 
   return (
@@ -79,8 +73,6 @@ const Dashboard = () => {
                 )}. Here's an overview of your TutorFind account.
               </p>
             </div>
-            
-            <DashboardStats />
             
             <div className="bg-muted/40 rounded-lg p-6 text-center">
               <h3 className="text-xl font-medium mb-2">MVP Version Notice</h3>
