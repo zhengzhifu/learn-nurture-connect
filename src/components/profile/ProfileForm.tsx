@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth/useAuth';
 import { Card, CardFooter } from "@/components/ui/card";
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import ApprovalStatusAlert from './ApprovalStatusAlert';
 import PersonalInfoCard from './PersonalInfoCard';
 import SchoolInfoSection from './SchoolInfoSection';
 import TutorServiceDetails from './TutorServiceDetails';
+import ParentInfoForm from './ParentInfoForm';
 import ProfileFormActions from './ProfileFormActions';
 
 interface ProfileFormProps {
@@ -24,8 +27,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
     school_id: undefined as string | undefined,
     other_school_name: undefined as string | undefined,
     home_address: '',
-    child_school_id: undefined as string | undefined
   });
+  
+  const [parentData, setParentData] = useState({
+    num_children: 0,
+    preferred_communication: 'email'
+  });
+  
+  const [isLoadingParentData, setIsLoadingParentData] = useState(false);
 
   // Initialize form data from profile when it becomes available
   useEffect(() => {
@@ -40,14 +49,47 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
         school_id: profile.school_id,
         other_school_name: profile.other_school_name,
         home_address: profile.home_address || '',
-        child_school_id: profile.child_school_id
       });
+      
+      // Fetch parent data if user is a parent
+      if (profile.user_type === 'parent' && user?.id) {
+        fetchParentData(user.id);
+      }
     }
   }, [profile, user]);
+  
+  const fetchParentData = async (userId: string) => {
+    setIsLoadingParentData(true);
+    try {
+      const { data, error } = await supabase
+        .from('parents')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching parent data:', error);
+        toast.error('Failed to load parent information');
+      } else if (data) {
+        setParentData({
+          num_children: data.num_children || 0,
+          preferred_communication: data.preferred_communication || 'email'
+        });
+      }
+    } catch (error) {
+      console.error('Exception fetching parent data:', error);
+    } finally {
+      setIsLoadingParentData(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleParentDataChange = (field: string, value: string | number) => {
+    setParentData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSchoolChange = (schoolId: string | undefined, otherSchoolName: string | undefined) => {
@@ -58,16 +100,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
     }));
   };
 
-  const handleChildSchoolChange = (schoolId: string | undefined, otherSchoolName: string | undefined) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      child_school_id: schoolId,
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    
+    // Combine profile and parent data if user is a parent
+    const combinedData = {
+      ...formData,
+      ...(profile?.user_type === 'parent' && {
+        parentData: parentData
+      })
+    };
+    
+    await onSubmit(combinedData);
   };
 
   // Helper to get initials from name
@@ -95,10 +139,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ onSubmit, isSaving }) => {
         userType={profile?.user_type}
         schoolId={formData.school_id}
         otherSchoolName={formData.other_school_name}
-        childSchoolId={formData.child_school_id}
         onSchoolChange={handleSchoolChange}
-        onChildSchoolChange={handleChildSchoolChange}
       />
+      
+      {profile?.user_type === 'parent' && !isLoadingParentData && (
+        <ParentInfoForm 
+          numChildren={parentData.num_children}
+          preferredCommunication={parentData.preferred_communication}
+          handleParentDataChange={handleParentDataChange}
+        />
+      )}
 
       {profile?.user_type === 'tutor' && user?.id && (
         <TutorServiceDetails 

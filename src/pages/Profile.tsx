@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileLoadingState from '@/components/profile/ProfileLoadingState';
 import ProfileForm from '@/components/profile/ProfileForm';
@@ -21,11 +22,34 @@ const Profile: React.FC = () => {
     try {
       console.log('Submitting profile update with data:', formData);
       
+      // Extract parent data if present
+      const { parentData, ...profileData } = formData;
+      
       // Filter out email as it can't be updated through profile
-      const { email, ...updateData } = formData;
+      const { email, ...updateData } = profileData;
       
       console.log('Calling updateProfile with:', updateData);
+      
+      // Update profile data
       await updateProfile(updateData);
+      
+      // If user is a parent, update parent-specific data
+      if (profile?.user_type === 'parent' && parentData && profile.id) {
+        console.log('Updating parent data:', parentData);
+        
+        const { error } = await supabase
+          .from('parents')
+          .upsert({ 
+            id: profile.id,
+            num_children: parentData.num_children,
+            preferred_communication: parentData.preferred_communication
+          });
+          
+        if (error) {
+          console.error('Error updating parent data:', error);
+          toast.error('Failed to update parent information');
+        }
+      }
       
       // Stay on profile page but show success message
       toast.success('Profile updated successfully');

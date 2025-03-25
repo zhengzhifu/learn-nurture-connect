@@ -1,4 +1,3 @@
-
 // Auth-related types
 export type UserRole = 'parent' | 'tutor' | 'admin' | 'child' | null;
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | string;
@@ -16,10 +15,15 @@ export interface Profile {
   approval_status?: ApprovalStatus;
   school_id?: string;
   other_school_name?: string;
-  child_school_id?: string;
   
   // Virtual property for backward compatibility
   full_name?: string;
+}
+
+export interface ParentProfile {
+  id: string;
+  num_children: number;
+  preferred_communication: string;
 }
 
 export interface AuthContextType {
