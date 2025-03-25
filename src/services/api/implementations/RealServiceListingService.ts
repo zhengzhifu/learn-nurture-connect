@@ -6,7 +6,9 @@ import { toast } from 'sonner';
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
     try {
-      const { data } = await supabase.functions.invoke('get-services');
+      const { data, error } = await supabase.functions.invoke('get-services');
+      
+      if (error) throw error;
       return data?.services || [];
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -17,11 +19,12 @@ export class RealServiceListingService {
   
   async filterServices(filters: ServiceFilters): Promise<ServiceData[]> {
     try {
-      const { data } = await supabase.functions.invoke('get-services', {
-        query: {
-          filters: JSON.stringify(filters)
-        }
+      // Pass filters as body parameter instead of query
+      const { data, error } = await supabase.functions.invoke('get-services', {
+        body: { filters }
       });
+      
+      if (error) throw error;
       return data?.services || [];
     } catch (error) {
       console.error('Error filtering services:', error);
@@ -32,11 +35,12 @@ export class RealServiceListingService {
   
   async searchServices(query: string): Promise<ServiceData[]> {
     try {
-      const { data } = await supabase.functions.invoke('get-services', {
-        query: {
-          query
-        }
+      // Pass query as body parameter instead of query
+      const { data, error } = await supabase.functions.invoke('get-services', {
+        body: { query }
       });
+      
+      if (error) throw error;
       return data?.services || [];
     } catch (error) {
       console.error('Error searching services:', error);

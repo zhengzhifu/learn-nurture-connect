@@ -14,11 +14,19 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
-    // Parse request parameters
-    const url = new URL(req.url)
-    const searchParams = url.searchParams
-    const query = searchParams.get('query') || ''
-    const filterParams = JSON.parse(searchParams.get('filters') || '{}')
+    // Parse request body for parameters
+    let query = '';
+    let filterParams = {};
+    
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        query = body.query || '';
+        filterParams = body.filters || {};
+      } catch (e) {
+        console.error('Error parsing request body:', e);
+      }
+    }
     
     // Get user session if available
     const authHeader = req.headers.get('Authorization')
