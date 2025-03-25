@@ -13,6 +13,12 @@ interface PersonalInfoCardProps {
     phone: string;
     avatar_url: string;
     home_address: string;
+    address_line1?: string;
+    address_line2?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    country?: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   getInitials: (name: string) => string;
@@ -39,7 +45,7 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
         <Separator />
         
         <AddressInfoForm 
-          formData={{ home_address: formData.home_address }} 
+          formData={formData} 
           handleChange={handleChange} 
         />
       </CardContent>
