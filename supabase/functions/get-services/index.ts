@@ -22,6 +22,29 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
+    // Perform a direct count query first
+    console.log("Performing direct count query on tutors table")
+    const { count: tutorCount, error: countError } = await supabase
+      .from('tutors')
+      .select('*', { count: 'exact', head: true })
+    
+    console.log("Direct count of tutors in database:", tutorCount, "Error:", countError ? JSON.stringify(countError) : "none")
+    
+    // Also try a simple select to see if we get any results
+    console.log("Trying a simple select from tutors table")
+    const { data: simpleTutors, error: simpleError } = await supabase
+      .from('tutors')
+      .select('*')
+      .limit(5)
+    
+    console.log("Simple select results:", 
+                simpleTutors ? `Found ${simpleTutors.length} tutors` : "No tutors found", 
+                "Error:", simpleError ? JSON.stringify(simpleError) : "none")
+    
+    if (simpleTutors && simpleTutors.length > 0) {
+      console.log("First tutor from simple query:", JSON.stringify(simpleTutors[0], null, 2))
+    }
+    
     // Parse request body for parameters
     let query = '';
     let filterParams = {};
@@ -78,24 +101,34 @@ Deno.serve(async (req) => {
     
     console.log("Tutors data retrieved:", tutorsData ? tutorsData.length : 0);
     if (tutorsData && tutorsData.length === 0) {
-      console.log("No tutors found in database. Running direct count query to verify data exists...");
-      const { count, error: countError } = await supabase
+      console.log("No tutors found from main query. Let's try a simpler approach");
+      
+      // Try a different query approach as a fallback
+      console.log("Trying fallback query with explicit join");
+      const { data: fallbackData, error: fallbackError } = await supabase
         .from('tutors')
-        .select('*', { count: 'exact', head: true });
+        .select(`
+          *,
+          profiles:profiles(*)
+        `)
+        .eq('profiles.approval_status', 'approved');
       
-      console.log("Direct count of tutors in database:", count);
+      console.log("Fallback query results:", 
+                  fallbackData ? `Found ${fallbackData.length} tutors` : "No tutors found", 
+                  "Error:", fallbackError ? JSON.stringify(fallbackError) : "none");
       
-      if (countError) {
-        console.error("Error counting tutors:", countError);
+      if (fallbackData && fallbackData.length > 0) {
+        console.log("Using fallback data instead");
+        tutorsData = fallbackData;
       }
     } else if (tutorsData && tutorsData.length > 0) {
       console.log("First tutor data sample:", JSON.stringify(tutorsData[0], null, 2));
     }
     
     // Transform the data with access control based on authentication
-    const services = tutorsData ? tutorsData.map(tutor => 
-      transformTutorToService(tutor, !!userId, isApproved)
-    ) : [];
+    const services = tutorsData && tutorsData.length > 0 
+      ? tutorsData.map(tutor => transformTutorToService(tutor, !!userId, isApproved))
+      : [];
     
     console.log("Transformed services:", services.length);
     

@@ -21,6 +21,8 @@ export class RealServiceListingService {
       }
       
       console.log("Services received:", data?.services ? data.services.length : 0);
+      console.log("Raw response data:", JSON.stringify(data));
+      
       return data?.services || [];
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -38,7 +40,7 @@ export class RealServiceListingService {
       }
       
       console.log("Filtering services with:", filters);
-      // Pass filters as body parameter 
+      // Pass filters as body parameter with explicit Content-Type header
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
         headers: {
@@ -70,7 +72,7 @@ export class RealServiceListingService {
       }
       
       console.log("Searching services with query:", query);
-      // Pass query as body parameter
+      // Pass query as body parameter with explicit Content-Type header
       const { data, error } = await supabase.functions.invoke('get-services', {
         method: 'POST',
         headers: {
