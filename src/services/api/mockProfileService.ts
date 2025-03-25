@@ -1,63 +1,60 @@
 
 import { Profile } from '@/types/auth';
-import { mockProfiles, mockSchools } from './mockData';
-import { toast } from 'sonner';
+import { mockProfiles } from './mockData';
 
-// Class to provide mock profile service
 export class MockProfileService {
-  fetchUserProfile(userId: string): Promise<Profile | null> {
-    return new Promise((resolve) => {
-      console.log('MockProfileService: Fetching profile for user:', userId);
-      
-      // Simulate network delay
-      setTimeout(() => {
-        const profile = mockProfiles.find(p => p.id === userId);
-        console.log('MockProfileService: Profile fetched:', profile);
-        resolve(profile || null);
-      }, 500);
-    });
+  private profiles: Profile[] = mockProfiles;
+
+  async fetchUserProfile(userId: string): Promise<Profile | null> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Find user profile by ID
+    const profile = this.profiles.find(p => p.id === userId);
+    
+    // If profile found return it, otherwise return null
+    return profile ? { ...profile } : null;
   }
   
-  updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile> {
-    return new Promise((resolve, reject) => {
-      console.log('MockProfileService: Updating profile for user:', userId, data);
+  async updateUserProfile(userId: string, data: Partial<Profile>): Promise<Profile | null> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Find user profile index
+    const profileIndex = this.profiles.findIndex(p => p.id === userId);
+    
+    if (profileIndex === -1) {
+      // Create a new profile if it doesn't exist
+      const newProfile: Profile = {
+        id: userId,
+        first_name: data.first_name || 'New',
+        last_name: data.last_name || 'User',
+        full_name: data.full_name || `${data.first_name || 'New'} ${data.last_name || 'User'}`,
+        email: data.email || 'user@example.com',
+        user_type: data.user_type || 'parent',
+        home_address: data.home_address || '',
+        approval_status: data.approval_status || 'pending',
+        school_id: data.school_id || '',
+        other_school_name: data.other_school_name || '',
+        child_school_id: data.child_school_id || '',
+        verified: false
+      };
       
-      // Simulate network delay
-      setTimeout(() => {
-        try {
-          // Check if profile exists
-          let profile = mockProfiles.find(p => p.id === userId);
-          
-          if (!profile) {
-            // Create new profile if it doesn't exist
-            profile = {
-              id: userId,
-              full_name: data.full_name || 'New User',
-              email: data.email || 'user@example.com',
-              user_type: data.user_type || 'parent',
-              home_address: data.home_address || '',
-              approval_status: 'pending',
-              school_id: data.school_id,
-              other_school_name: data.other_school_name,
-              child_school_id: data.child_school_id
-            };
-            
-            mockProfiles.push(profile);
-            toast.success('Profile created successfully');
-          } else {
-            // Update existing profile
-            Object.assign(profile, data);
-            toast.success('Profile updated successfully');
-          }
-          
-          console.log('MockProfileService: Profile updated:', profile);
-          resolve({ ...profile });
-        } catch (error) {
-          console.error('MockProfileService: Error updating profile:', error);
-          reject(new Error('Failed to update profile'));
-        }
-      }, 800);
-    });
+      this.profiles.push(newProfile);
+      return { ...newProfile };
+    }
+    
+    // Update existing profile
+    this.profiles[profileIndex] = {
+      ...this.profiles[profileIndex],
+      ...data,
+      // Make sure full_name is updated if first_name or last_name changes
+      full_name: data.full_name || data.first_name || data.last_name 
+        ? `${data.first_name || this.profiles[profileIndex].first_name} ${data.last_name || this.profiles[profileIndex].last_name}`
+        : this.profiles[profileIndex].full_name
+    };
+    
+    return { ...this.profiles[profileIndex] };
   }
 }
 

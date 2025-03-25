@@ -13,11 +13,22 @@ export interface ServiceData {
   rating: number;
   location: string;
   image?: string;
-  availability: string[];
+  availability?: string[];
   provider_id?: string;
   subjects?: string[];
   provider_name?: string;
   provider_avatar?: string;
+  
+  // Additional fields used in our implementation
+  provider?: string;
+  providerAvatar?: string;
+  providerRating?: number;
+  providerReviews?: number;
+  priceUnit?: string;
+  locations?: string[];
+  serviceType?: string;
+  grade?: string;
+  featured?: boolean;
 }
 
 // Define the ServiceFilters interface

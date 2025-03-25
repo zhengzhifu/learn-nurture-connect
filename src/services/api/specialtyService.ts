@@ -51,7 +51,7 @@ export class SpecialtyService extends BaseService {
     }
   }
   
-  async deleteSpecialty(specialtyId: string): Promise<boolean> {
+  async removeSpecialty(specialtyId: string): Promise<boolean> {
     try {
       console.log(`Deleting specialty: ${specialtyId}`);
       
@@ -67,10 +67,16 @@ export class SpecialtyService extends BaseService {
       
       return true;
     } catch (error) {
-      console.error('Exception in deleteSpecialty:', error);
+      console.error('Exception in removeSpecialty:', error);
       return false;
     }
   }
 }
 
 export const specialtyService = new SpecialtyService();
+
+// Export the specific methods to maintain backward compatibility
+export const fetchUserSpecialties = (tutorId: string) => specialtyService.fetchUserSpecialties(tutorId);
+export const addSpecialty = (tutorId: string, specialty: Omit<Specialty, 'id' | 'tutor_id' | 'created_at'>) => 
+  specialtyService.addSpecialty(tutorId, specialty);
+export const removeSpecialty = (specialtyId: string) => specialtyService.removeSpecialty(specialtyId);

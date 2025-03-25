@@ -10,7 +10,7 @@ export class RealProfileService extends BaseService {
       
       const { data, error } = await this.supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+        .select('id, first_name, last_name, email, user_type, avatar_url, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .eq('id', userId)
         .maybeSingle();
 
@@ -25,6 +25,7 @@ export class RealProfileService extends BaseService {
         // Add full_name for backward compatibility
         const profile: Profile = {
           ...data,
+          verified: false, // Add default value since this field doesn't exist in DB
           full_name: `${data.first_name || ''} ${data.last_name || ''}`.trim()
         };
         
@@ -90,7 +91,6 @@ export class RealProfileService extends BaseService {
           phone: data.phone || '',
           avatar_url: data.avatar_url || '',
           home_address: data.home_address || '',
-          verified: false,
           school_id: data.school_id,
           other_school_name: data.other_school_name,
           child_school_id: data.child_school_id
@@ -102,7 +102,7 @@ export class RealProfileService extends BaseService {
         const { data: newProfile, error: insertError } = await this.supabase
           .from('profiles')
           .insert(profileData)
-          .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+          .select('id, first_name, last_name, email, user_type, avatar_url, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
           .single();
           
         if (insertError) {
@@ -116,6 +116,7 @@ export class RealProfileService extends BaseService {
         // Add full_name for backward compatibility
         const profile: Profile = {
           ...newProfile,
+          verified: false, // Add default value since this field doesn't exist in DB
           full_name: `${newProfile.first_name || ''} ${newProfile.last_name || ''}`.trim()
         };
         
@@ -136,13 +137,18 @@ export class RealProfileService extends BaseService {
         delete updateData.full_name;
       }
       
+      // Remove verified field as it doesn't exist in DB
+      if ('verified' in updateData) {
+        delete updateData.verified;
+      }
+      
       // Proceed with the update
       console.log('RealProfileService: Proceeding with update - sending to Supabase:', updateData);
       const { data: updatedData, error } = await this.supabase
         .from('profiles')
         .update(updateData)
         .eq('id', userId)
-        .select('id, first_name, last_name, email, user_type, avatar_url, verified, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
+        .select('id, first_name, last_name, email, user_type, avatar_url, phone, home_address, approval_status, school_id, other_school_name, child_school_id')
         .single();
       
       if (error) {
@@ -158,6 +164,7 @@ export class RealProfileService extends BaseService {
       // Add full_name for backward compatibility
       const profile: Profile = {
         ...updatedData,
+        verified: false, // Add default value since this field doesn't exist in DB
         full_name: `${updatedData.first_name || ''} ${updatedData.last_name || ''}`.trim()
       };
       

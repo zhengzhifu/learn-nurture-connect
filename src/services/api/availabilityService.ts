@@ -53,7 +53,7 @@ export class AvailabilityService extends BaseService {
     }
   }
   
-  async deleteAvailability(availabilityId: string): Promise<boolean> {
+  async removeAvailability(availabilityId: string): Promise<boolean> {
     try {
       console.log(`Deleting availability: ${availabilityId}`);
       
@@ -69,10 +69,17 @@ export class AvailabilityService extends BaseService {
       
       return true;
     } catch (error) {
-      console.error('Exception in deleteAvailability:', error);
+      console.error('Exception in removeAvailability:', error);
       return false;
     }
   }
 }
 
+// Export the class and an instance for direct usage
 export const availabilityService = new AvailabilityService();
+
+// Export the specific methods to maintain backward compatibility
+export const fetchUserAvailability = (tutorId: string) => availabilityService.fetchUserAvailability(tutorId);
+export const addAvailability = (tutorId: string, availability: Omit<Availability, 'id' | 'tutor_id' | 'created_at' | 'updated_at'>) => 
+  availabilityService.addAvailability(tutorId, availability);
+export const removeAvailability = (availabilityId: string) => availabilityService.removeAvailability(availabilityId);
