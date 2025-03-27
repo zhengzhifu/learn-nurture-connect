@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { FilterProps } from './FilterTypes';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ServiceTypeFilter from './ServiceTypeFilter';
 import LocationFilter from './LocationFilter';
 import PriceRangeFilter from './PriceRangeFilter';
@@ -28,39 +29,43 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   closeFilters
 }) => {
   return (
-    <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">Filter Services</h2>
+    <div className="flex flex-col h-full">
+      <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
+      
+      <ScrollArea className="flex-1 px-4 pb-2" style={{ maxHeight: "60vh" }}>
+        <ServiceTypeFilter 
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
+        />
 
-      <ServiceTypeFilter 
-        selectedTypes={selectedTypes}
-        setSelectedTypes={setSelectedTypes}
-      />
+        <LocationFilter 
+          locationFilter={locationFilter}
+          setLocationFilter={setLocationFilter}
+        />
 
-      <LocationFilter 
-        locationFilter={locationFilter}
-        setLocationFilter={setLocationFilter}
-      />
+        <PriceRangeFilter 
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+        />
 
-      <PriceRangeFilter 
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-      />
+        <SubjectsFilter 
+          selectedSubjects={selectedSubjects}
+          setSelectedSubjects={setSelectedSubjects}
+        />
 
-      <SubjectsFilter 
-        selectedSubjects={selectedSubjects}
-        setSelectedSubjects={setSelectedSubjects}
-      />
+        <AvailabilityFilter 
+          selectedAvailability={selectedAvailability}
+          setSelectedAvailability={setSelectedAvailability}
+        />
+      </ScrollArea>
 
-      <AvailabilityFilter 
-        selectedAvailability={selectedAvailability}
-        setSelectedAvailability={setSelectedAvailability}
-      />
-
-      <FilterActions 
-        clearFilters={clearFilters}
-        applyFilters={applyFilters}
-        closeFilters={closeFilters}
-      />
+      <div className="border-t mt-2 px-4 py-3 bg-background sticky bottom-0">
+        <FilterActions 
+          clearFilters={clearFilters}
+          applyFilters={applyFilters}
+          closeFilters={closeFilters}
+        />
+      </div>
     </div>
   );
 };
