@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import AvailabilityManager from './AvailabilityManager';
 import SpecialtyManager from './SpecialtyManager';
+import HourlyRateSetup from './HourlyRateSetup';
 
 interface TutorServiceDetailsProps {
   userId: string;
@@ -18,6 +19,10 @@ const TutorServiceDetails: React.FC<TutorServiceDetailsProps> = ({ userId, userT
         <CardDescription>Manage your availability and specialties</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
+        <HourlyRateSetup userId={userId} />
+        
+        <Separator />
+        
         <AvailabilityManager userId={userId} />
         
         <Separator />
