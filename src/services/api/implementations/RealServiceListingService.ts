@@ -2,8 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceData, ServiceFilters } from '@/types/service';
 import { toast } from 'sonner';
-import { mockTutors } from '@/services/api/mockTutorService';
-import { convertToServiceData } from './serviceUtils';
 
 export class RealServiceListingService {
   async getServices(): Promise<ServiceData[]> {
@@ -24,18 +22,13 @@ export class RealServiceListingService {
       
       console.log("Services received:", data?.services ? data.services.length : 0);
       
-      // If no services are returned, use mock data in development environment
-      if (!data?.services || data.services.length === 0) {
-        console.log("No actual services found, using mock data");
-        return this.getMockServices();
-      }
-      
+      // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error fetching services:', error);
       toast.error('Failed to load services');
-      // Fall back to mock data in case of errors
-      return this.getMockServices();
+      // Return empty array instead of mock data
+      return [];
     }
   }
   
@@ -64,18 +57,13 @@ export class RealServiceListingService {
       
       console.log("Filtered services received:", data?.services ? data.services.length : 0);
       
-      // If no filtered services are returned, try to filter the mock data
-      if (!data?.services || data.services.length === 0) {
-        console.log("No filtered services found, using filtered mock data");
-        return this.getFilteredMockServices(filters);
-      }
-      
+      // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error filtering services:', error);
       toast.error('Failed to filter services');
-      // Fall back to filtered mock data
-      return this.getFilteredMockServices(filters);
+      // Return empty array instead of filtered mock data
+      return [];
     }
   }
   
@@ -104,76 +92,14 @@ export class RealServiceListingService {
       
       console.log("Search results received:", data?.services ? data.services.length : 0);
       
-      // If no search results, search the mock data
-      if (!data?.services || data.services.length === 0) {
-        console.log("No search results found, searching mock data");
-        return this.getSearchedMockServices(query);
-      }
-      
+      // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error searching services:', error);
       toast.error('Failed to search services');
-      // Fall back to searched mock data
-      return this.getSearchedMockServices(query);
+      // Return empty array instead of searched mock data
+      return [];
     }
-  }
-  
-  // Helper method to convert mock tutors to services format
-  private getMockServices(): ServiceData[] {
-    console.log("Using mock tutor data for services");
-    return mockTutors.map(tutor => ({
-      id: tutor.id,
-      title: `${tutor.full_name} - Tutoring Services`,
-      description: tutor.bio,
-      type: 'tutoring',
-      price: tutor.hourlyRate || 35,
-      rating: tutor.rating || 4.5,
-      location: 'Online',
-      image: tutor.avatar_url,
-      provider_name: tutor.full_name,
-      provider_avatar: tutor.avatar_url,
-      availability: tutor.availability || ['Flexible schedule'],
-      subjects: tutor.subjects || ['General'],
-    }));
-  }
-  
-  // Filter mock services based on filters
-  private getFilteredMockServices(filters: ServiceFilters): ServiceData[] {
-    let filteredServices = this.getMockServices();
-    
-    // Apply type filter
-    if (filters.types && filters.types.length > 0) {
-      filteredServices = filteredServices.filter(service => 
-        filters.types!.includes(service.type)
-      );
-    }
-    
-    // Apply location filter
-    if (filters.location) {
-      filteredServices = filteredServices.filter(service => 
-        service.location.toLowerCase().includes(filters.location!.toLowerCase())
-      );
-    }
-    
-    // Apply price range filter
-    if (filters.priceRange && filters.priceRange.length === 2) {
-      filteredServices = filteredServices.filter(service => 
-        service.price >= filters.priceRange![0] && service.price <= filters.priceRange![1]
-      );
-    }
-    
-    return filteredServices;
-  }
-  
-  // Search mock services based on query
-  private getSearchedMockServices(query: string): ServiceData[] {
-    const normalizedQuery = query.toLowerCase();
-    return this.getMockServices().filter(service => 
-      service.title.toLowerCase().includes(normalizedQuery) || 
-      (service.description && service.description.toLowerCase().includes(normalizedQuery)) ||
-      (service.provider_name && service.provider_name.toLowerCase().includes(normalizedQuery))
-    );
   }
 }
 
