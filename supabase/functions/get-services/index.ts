@@ -22,34 +22,21 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
-    // Check if any tutors exist in the database - explicit count
-    console.log("Performing direct count query on tutors table");
-    const { count: tutorCount, error: countError } = await supabase
-      .from('tutors')
-      .select('*', { count: 'exact', head: true });
+    // DIAGNOSTIC: Check database connection and configuration
+    console.log("Supabase URL:", supabaseUrl)
+    console.log("Connected with anon key (first 10 chars):", supabaseAnonKey.substring(0, 10) + "...")
     
-    console.log("Direct count of tutors in database:", tutorCount, "Error:", countError ? JSON.stringify(countError) : "none");
-    
-    // Try a simple select to confirm we can read the table
-    console.log("Trying a simple select from tutors table");
-    const { data: simpleTutors, error: simpleError } = await supabase
-      .from('tutors')
-      .select('id');
-    
-    console.log("Simple select results:", "Found", simpleTutors?.length || 0, "tutors", "Error:", simpleError ? JSON.stringify(simpleError) : "none");
-
-    // Fetch specific tutor to verify it exists
-    console.log("Checking for specific tutor with ID 842a450a-eca3-4e23-a02e-b2f93706d208");
-    const { data: specificTutor, error: specificError } = await supabase
+    // Check if any tutors exist in the database - with more detailed diagnostics
+    console.log("Performing direct tutor count query without filters");
+    const { data: tutorList, error: listError } = await supabase
       .from('tutors')
       .select('id, bio')
-      .eq('id', '842a450a-eca3-4e23-a02e-b2f93706d208');
+      .limit(10);
     
-    console.log("Specific tutor query results:", 
-      "Found:", specificTutor?.length > 0 ? "Yes" : "No", 
-      "Data:", JSON.stringify(specificTutor || []), 
-      "Error:", specificError ? JSON.stringify(specificError) : "none"
-    );
+    console.log("Direct tutor list results:", 
+      "Count:", tutorList?.length || 0, 
+      "Data:", JSON.stringify(tutorList || []), 
+      "Error:", listError ? JSON.stringify(listError) : "none");
     
     // Parse request body for parameters
     let query = '';
@@ -86,6 +73,22 @@ Deno.serve(async (req) => {
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     console.log("Authentication details:", { userId, isApproved });
     
+    // If no tutors were found in direct query, return empty array immediately
+    if (!tutorList || tutorList.length === 0) {
+      console.log("No tutors found in direct database query. Returning empty array.");
+      
+      return new Response(
+        JSON.stringify({ services: [] }),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+          status: 200,
+        }
+      );
+    }
+    
     // Build query with search and filters
     console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
@@ -108,17 +111,6 @@ Deno.serve(async (req) => {
     // If no tutors were found, return empty array
     if (!tutorsData || tutorsData.length === 0) {
       console.log("No tutors found from query.");
-      
-      // Try a fallback query with explicit joins
-      console.log("Trying fallback query with explicit join");
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('tutors')
-        .select('id, bio, hourly_rate, years_of_experience')
-        .limit(10);
-      
-      console.log("Fallback query results:", "Found", fallbackData?.length || 0, "tutors", "Error:", fallbackError ? JSON.stringify(fallbackError) : "none");
-      
-      // Return an empty array
       return new Response(
         JSON.stringify({ services: [] }),
         {

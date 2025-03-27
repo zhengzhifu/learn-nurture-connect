@@ -21,13 +21,14 @@ export class RealServiceListingService {
       }
       
       console.log("Services received:", data?.services ? data.services.length : 0);
+      console.log("Raw services data:", JSON.stringify(data));
       
       // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error fetching services:', error);
       toast.error('Failed to load services');
-      // Return empty array instead of mock data
+      // Return empty array
       return [];
     }
   }
@@ -56,13 +57,14 @@ export class RealServiceListingService {
       }
       
       console.log("Filtered services received:", data?.services ? data.services.length : 0);
+      console.log("Raw filtered data:", JSON.stringify(data));
       
       // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error filtering services:', error);
       toast.error('Failed to filter services');
-      // Return empty array instead of filtered mock data
+      // Return empty array
       return [];
     }
   }
@@ -91,13 +93,14 @@ export class RealServiceListingService {
       }
       
       console.log("Search results received:", data?.services ? data.services.length : 0);
+      console.log("Raw search data:", JSON.stringify(data));
       
       // Return whatever services we got, even if it's an empty array
       return data?.services || [];
     } catch (error) {
       console.error('Error searching services:', error);
       toast.error('Failed to search services');
-      // Return empty array instead of searched mock data
+      // Return empty array
       return [];
     }
   }
