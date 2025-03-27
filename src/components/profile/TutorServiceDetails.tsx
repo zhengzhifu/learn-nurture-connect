@@ -16,7 +16,7 @@ const TutorServiceDetails: React.FC<TutorServiceDetailsProps> = ({ userId, userT
     <Card className="mb-8">
       <CardHeader>
         <CardTitle>Service Details</CardTitle>
-        <CardDescription>Manage your availability and specialties</CardDescription>
+        <CardDescription>Manage your tutoring services, rates, availability and specialties</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         <HourlyRateSetup userId={userId} />
