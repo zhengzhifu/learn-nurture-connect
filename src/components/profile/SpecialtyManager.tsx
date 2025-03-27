@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { 
   Select,
   SelectContent,
@@ -15,39 +14,28 @@ import { fetchUserSpecialties, addSpecialty, removeSpecialty } from '@/services/
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { 
+  specialtyCategories, 
+  getSpecialtiesByCategory, 
+  getSpecialtyDisplayName,
+  formatSpecialtyForStorage,
+  parseSpecialtyFromStorage,
+  SpecialtyCategory,
+  SpecialtyOption
+} from '@/utils/specialtyOptions';
 
 interface SpecialtyManagerProps {
   userId: string;
   userType: 'tutor' | 'parent' | null;
 }
 
-const specialtyTypes = {
-  tutor: [
-    { value: 'subject', label: 'Subject' },
-    { value: 'grade_level', label: 'Grade Level' },
-    { value: 'language', label: 'Language' },
-    { value: 'test_prep', label: 'Test Preparation' }
-  ],
-  babysitter: [
-    { value: 'age_group', label: 'Age Group' },
-    { value: 'activity', label: 'Activity' },
-    { value: 'special_needs', label: 'Special Needs' },
-    { value: 'first_aid', label: 'First Aid/Safety' }
-  ]
-};
-
 const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType }) => {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [specialtyType, setSpecialtyType] = useState(
-    userType === 'tutor' ? 'subject' : 'age_group'
-  );
-  const [specialtyName, setSpecialtyName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<SpecialtyCategory>('science');
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
   
-  // Determine which specialty types to show based on user type
-  const availableSpecialtyTypes = userType === 'tutor' 
-    ? specialtyTypes.tutor 
-    : specialtyTypes.babysitter;
+  const availableSpecialties = getSpecialtiesByCategory(selectedCategory);
 
   useEffect(() => {
     if (userId) {
@@ -68,16 +56,29 @@ const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType })
   };
 
   const handleAddSpecialty = async () => {
-    if (!specialtyName.trim()) {
-      toast.error('Please enter a specialty name');
+    if (!selectedSpecialty) {
+      toast.error('Please select a specialty');
       return;
     }
 
+    const specialty = availableSpecialties.find(s => s.name === selectedSpecialty);
+    if (!specialty) {
+      toast.error('Invalid specialty selected');
+      return;
+    }
+
+    const formattedSpecialty = formatSpecialtyForStorage(specialty);
+
     try {
-      const newSpecialty = await addSpecialty(userId, specialtyType, specialtyName);
+      const newSpecialty = await addSpecialty(
+        userId, 
+        specialty.category, 
+        specialty.name
+      );
+      
       if (newSpecialty) {
         setSpecialties([...specialties, newSpecialty]);
-        setSpecialtyName('');
+        setSelectedSpecialty('');
         toast.success('Specialty added successfully');
       }
     } catch (error) {
@@ -95,10 +96,23 @@ const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType })
     }
   };
 
-  const getSpecialtyTypeLabel = (type: string) => {
-    const allTypes = [...specialtyTypes.tutor, ...specialtyTypes.babysitter];
-    const found = allTypes.find(t => t.value === type);
-    return found ? found.label : type;
+  const handleCategoryChange = (category: SpecialtyCategory) => {
+    setSelectedCategory(category);
+    setSelectedSpecialty('');  // Reset specialty selection when category changes
+  };
+
+  const getCategoryLabel = (category: string): string => {
+    const foundCategory = specialtyCategories.find(c => c.value === category);
+    return foundCategory ? foundCategory.label : category;
+  };
+
+  // Helper to get the display name of a specialty
+  const getSpecialtyLabel = (specialty: Specialty): string => {
+    const parsedSpecialty = parseSpecialtyFromStorage(`${specialty.specialty_type}:${specialty.specialty_name}`);
+    if (parsedSpecialty) {
+      return getSpecialtyDisplayName(parsedSpecialty);
+    }
+    return specialty.specialty_name;
   };
 
   return (
@@ -108,15 +122,15 @@ const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType })
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-1">
-            <Label htmlFor="specialtyType">Type</Label>
-            <Select value={specialtyType} onValueChange={setSpecialtyType}>
-              <SelectTrigger id="specialtyType">
-                <SelectValue placeholder="Select type" />
+            <Label htmlFor="specialtyCategory">Category</Label>
+            <Select value={selectedCategory} onValueChange={(value) => handleCategoryChange(value as SpecialtyCategory)}>
+              <SelectTrigger id="specialtyCategory">
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {availableSpecialtyTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
+                {specialtyCategories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -126,15 +140,22 @@ const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType })
           <div className="md:col-span-2">
             <Label htmlFor="specialtyName">Specialty</Label>
             <div className="flex gap-2">
-              <Input
-                id="specialtyName"
-                value={specialtyName}
-                onChange={(e) => setSpecialtyName(e.target.value)}
-                placeholder={`Enter ${getSpecialtyTypeLabel(specialtyType).toLowerCase()}`}
-              />
+              <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                <SelectTrigger id="specialtyName">
+                  <SelectValue placeholder="Select specialty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSpecialties.map((specialty) => (
+                    <SelectItem key={specialty.name} value={specialty.name}>
+                      {getSpecialtyDisplayName(specialty)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button 
                 type="button" 
                 onClick={handleAddSpecialty}
+                disabled={!selectedSpecialty}
               >
                 Add
               </Button>
@@ -150,9 +171,9 @@ const SpecialtyManager: React.FC<SpecialtyManagerProps> = ({ userId, userType })
             {specialties.map((specialty) => (
               <Badge key={specialty.id} variant="secondary" className="flex items-center gap-1 px-3 py-2">
                 <span className="text-xs font-semibold text-muted-foreground">
-                  {getSpecialtyTypeLabel(specialty.specialty_type)}:
+                  {getCategoryLabel(specialty.specialty_type)}:
                 </span>
-                <span>{specialty.specialty_name}</span>
+                <span>{getSpecialtyLabel(specialty)}</span>
                 <button
                   onClick={() => handleRemoveSpecialty(specialty.id)}
                   className="ml-1 text-muted-foreground hover:text-foreground"

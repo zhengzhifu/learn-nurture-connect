@@ -31,6 +31,26 @@ export const addSpecialty = async (
   specialtyName: string
 ): Promise<Specialty | null> => {
   try {
+    // Check if this specialty already exists for this user
+    const { data: existingSpecialties, error: checkError } = await supabase
+      .from('specialties')
+      .select('*')
+      .eq('tutor_id', userId)
+      .eq('specialty_type', specialtyType)
+      .eq('specialty_name', specialtyName);
+      
+    if (checkError) {
+      console.error('Error checking existing specialty:', checkError);
+      toast.error('Failed to check existing specialties');
+      return null;
+    }
+    
+    if (existingSpecialties && existingSpecialties.length > 0) {
+      toast.error('You already have this specialty added');
+      return null;
+    }
+    
+    // Add the new specialty
     const { data, error } = await supabase
       .from('specialties')
       .insert({

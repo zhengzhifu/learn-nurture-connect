@@ -58,6 +58,25 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     queryBuilder = queryBuilder.ilike('profiles.home_address', `%${filterParams.location}%`);
   }
   
+  // Apply subjects filter if provided
+  if (filterParams.subjects && filterParams.subjects.length > 0) {
+    console.log("Applying subjects filter:", filterParams.subjects);
+    
+    // Since we're filtering on a joined table (specialties), we need to use a more complex approach
+    // We'll get all tutors that have ANY of the selected subjects (OR condition)
+    const subjectFilters = filterParams.subjects.map((subject: string) => {
+      // Parse the subject format "category:name"
+      const [category, name] = subject.split(':');
+      if (!category || !name) return null;
+      
+      return `and(specialties.specialty_type.eq.${category},specialties.specialty_name.eq.${name})`;
+    }).filter(Boolean);
+    
+    if (subjectFilters.length > 0) {
+      queryBuilder = queryBuilder.or(subjectFilters.join(','));
+    }
+  }
+  
   // Log query construction completion
   console.log("Query built and ready to execute");
   
