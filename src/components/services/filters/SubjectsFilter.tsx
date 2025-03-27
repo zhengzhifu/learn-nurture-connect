@@ -1,22 +1,37 @@
 
-import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { 
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, Check } from 'lucide-react';
-import { 
-  specialtyCategories, 
-  specialtyOptions, 
-  getSpecialtyDisplayName 
-} from '@/utils/specialtyOptions';
+import React from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+// Define available subjects with their categories
+const AVAILABLE_SUBJECTS = {
+  'Academic': [
+    'Mathematics',
+    'Physics',
+    'Chemistry',
+    'Biology',
+    'Computer Science',
+    'Literature',
+    'History',
+    'Economics'
+  ],
+  'Languages': [
+    'English',
+    'Spanish',
+    'French',
+    'German',
+    'Chinese',
+    'Japanese'
+  ],
+  'Arts': [
+    'Music',
+    'Painting',
+    'Photography',
+    'Writing'
+  ]
+};
 
 interface SubjectsFilterProps {
   selectedSubjects: string[];
@@ -27,90 +42,75 @@ const SubjectsFilter: React.FC<SubjectsFilterProps> = ({
   selectedSubjects,
   setSelectedSubjects
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleSubject = (subject: string) => {
-    if (selectedSubjects.includes(subject)) {
-      setSelectedSubjects(selectedSubjects.filter(s => s !== subject));
+  const [openCategories, setOpenCategories] = React.useState<Record<string, boolean>>({
+    'Academic': true,
+    'Languages': false,
+    'Arts': false
+  });
+  
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+  
+  const handleSubjectChange = (subject: string, category: string) => {
+    const formattedSubject = `${category}:${subject}`;
+    
+    if (selectedSubjects.includes(formattedSubject)) {
+      setSelectedSubjects(selectedSubjects.filter(s => s !== formattedSubject));
     } else {
-      setSelectedSubjects([...selectedSubjects, subject]);
+      setSelectedSubjects([...selectedSubjects, formattedSubject]);
     }
   };
-
-  // Group subjects by category for the dropdown
-  const subjectsByCategory = specialtyCategories.map(category => ({
-    category,
-    subjects: specialtyOptions
-      .filter(option => option.category === category.value)
-      .map(option => ({
-        value: `${option.category}:${option.name}`,
-        label: getSpecialtyDisplayName(option)
-      }))
-  }));
-
+  
+  const isSelected = (subject: string, category: string) => {
+    return selectedSubjects.includes(`${category}:${subject}`);
+  };
+  
   return (
     <div className="mb-4">
       <h3 className="text-sm font-semibold mb-2">Subjects</h3>
       
-      <div className="flex flex-wrap gap-2 mb-2">
-        {selectedSubjects.map((subject) => {
-          const [category, name] = subject.split(':');
-          const option = specialtyOptions.find(o => o.category === category && o.name === name);
-          const displayName = option ? getSpecialtyDisplayName(option) : subject;
+      {Object.entries(AVAILABLE_SUBJECTS).map(([category, subjects]) => (
+        <Collapsible 
+          key={category}
+          open={openCategories[category]} 
+          onOpenChange={() => toggleCategory(category)}
+          className="mb-2"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-medium">
+            <span>{category}</span>
+            {openCategories[category] ? 
+              <ChevronUp className="h-4 w-4" /> : 
+              <ChevronDown className="h-4 w-4" />
+            }
+          </CollapsibleTrigger>
           
-          return (
-            <Badge
-              key={subject}
-              variant="default"
-              className="cursor-pointer"
-              onClick={() => toggleSubject(subject)}
-            >
-              {displayName}
-              <span className="ml-1">×</span>
-            </Badge>
-          );
-        })}
-      </div>
-      
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="w-full justify-between"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            Select Subjects
-            <ChevronDown className="h-4 w-4 opacity-50" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 max-h-80 overflow-auto">
-          <DropdownMenuLabel>Subject Categories</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-          {subjectsByCategory.map(({ category, subjects }) => (
-            <React.Fragment key={category.value}>
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
-                  {category.label}
-                </DropdownMenuLabel>
-                {subjects.map((subject) => (
-                  <DropdownMenuItem 
-                    key={subject.value}
-                    onClick={() => toggleSubject(subject.value)}
-                    className="flex items-center justify-between cursor-pointer"
-                  >
-                    {subject.label}
-                    {selectedSubjects.includes(subject.value) && (
-                      <Check className="h-4 w-4" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-            </React.Fragment>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <CollapsibleContent className="pt-1 pb-2">
+            <div className="flex flex-wrap">
+              {subjects.map(subject => (
+                <div key={`${category}:${subject}`} className="w-1/2 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`${category}-${subject}`}
+                      checked={isSelected(subject, category)}
+                      onCheckedChange={() => handleSubjectChange(subject, category)}
+                    />
+                    <Label 
+                      htmlFor={`${category}-${subject}`}
+                      className="text-xs cursor-pointer"
+                    >
+                      {subject}
+                    </Label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      ))}
     </div>
   );
 };
