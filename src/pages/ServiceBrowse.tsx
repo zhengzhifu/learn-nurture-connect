@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import PageWrapper from '@/components/utils/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -12,6 +12,16 @@ import { Info } from 'lucide-react';
 const ServiceBrowse: React.FC = () => {
   const { isAuthenticated, profile } = useAuth();
   const isApproved = profile?.approval_status === 'approved';
+  
+  console.log("ServiceBrowse: Auth state:", { 
+    isAuthenticated, 
+    profile: profile ? {
+      id: profile.id,
+      approval_status: profile.approval_status,
+      avatar_url: profile.avatar_url
+    } : null,
+    isApproved
+  });
   
   const {
     serviceList,
@@ -35,7 +45,16 @@ const ServiceBrowse: React.FC = () => {
     fetchServices
   } = useServiceBrowse();
 
-  // We removed the useEffect here to avoid duplicate fetches
+  // Log service list when it changes
+  useEffect(() => {
+    if (serviceList && serviceList.length > 0) {
+      console.log("ServiceBrowse: Service list first item:", { 
+        id: serviceList[0].id,
+        image: serviceList[0].image,
+        provider_avatar: serviceList[0].provider_avatar
+      });
+    }
+  }, [serviceList]);
 
   const handleServiceClick = (serviceId: string) => {
     console.log('Service clicked:', serviceId);

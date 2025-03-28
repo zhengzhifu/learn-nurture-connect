@@ -7,6 +7,7 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
   const profile = tutor.profiles || {};
   
   // Add debug logging for profile data
+  console.log("Transforming tutor data:", JSON.stringify(tutor, null, 2));
   console.log("Profile data for tutor ID", tutor.id, ":", JSON.stringify(profile, null, 2));
   
   // Handle availability

@@ -58,6 +58,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
           };
           
           console.log('ProfileFetchService: Profile fetched via direct query:', profile);
+          console.log('ProfileFetchService: Approval status:', profile.approval_status);
           return profile;
         }
         
@@ -76,6 +77,7 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
       };
       
       console.log('ProfileFetchService: Profile data fetched via RPC:', profile);
+      console.log('ProfileFetchService: Approval status:', profile.approval_status);
       return profile;
     };
 

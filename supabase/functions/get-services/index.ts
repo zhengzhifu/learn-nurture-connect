@@ -46,9 +46,12 @@ Deno.serve(async (req) => {
     // Get user authentication info
     const authHeader = req.headers.get('Authorization')
     console.log("Auth header present:", !!authHeader);
+    console.log("Auth header value (truncated):", authHeader ? `${authHeader.substring(0, 15)}...` : "none");
+    
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
     console.log("User authenticated:", !!userId);
     console.log("User approved:", isApproved);
+    console.log("Authentication details:", { userId, isApproved });
     
     // Check if any tutors exist in the database
     console.log("Performing direct tutor count query without filters");
@@ -125,6 +128,11 @@ Deno.serve(async (req) => {
       console.log("Sample transformed service (first record):", 
         JSON.stringify(services[0], null, 2)
       );
+      
+      // Log specific info about image URLs
+      services.forEach((service, i) => {
+        console.log(`Service ${i+1} (ID: ${service.id}) Image URL:`, service.image || "NULL");
+      });
     }
     
     return new Response(
