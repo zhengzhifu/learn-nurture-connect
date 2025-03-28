@@ -32,7 +32,7 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
     <div className="flex flex-col h-full">
       <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
       
-      <ScrollArea className="flex-1 px-4 pb-2" style={{ maxHeight: "60vh" }}>
+      <ScrollArea className="flex-1 px-4 pb-2" style={{ maxHeight: "calc(80vh - 140px)" }}>
         <ServiceTypeFilter 
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}

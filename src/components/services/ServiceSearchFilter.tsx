@@ -64,7 +64,7 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             Filters
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0" align="end">
+        <PopoverContent className="w-[300px] md:w-[350px] p-0" align="end" side="bottom">
           <FilterPopoverContent 
             selectedTypes={selectedTypes}
             setSelectedTypes={setSelectedTypes}
