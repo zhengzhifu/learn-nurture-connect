@@ -25,7 +25,7 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     title: `Tutoring Services`,
     description: tutor.bio || 'Professional tutoring services',
     type: 'tutoring',
-    price: tutor.hourly_rate || 35,
+    price: tutor.hourly_rate !== null ? tutor.hourly_rate : 35, // Handle 0 as a valid price
     rating: 4.5, // Default rating
     location: 'Online', // Default location
     image: null,

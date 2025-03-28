@@ -23,6 +23,7 @@ const HourlyRateSetup: React.FC<HourlyRateSetupProps> = ({ userId }) => {
         setIsLoading(true);
         const rate = await fetchTutorRate(userId);
         
+        // Consider 0 as a "free" service rate
         if (rate === 0) {
           setIsFree(true);
           setHourlyRate(0);
