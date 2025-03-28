@@ -25,10 +25,10 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     title: `Tutoring Services`,
     description: tutor.bio || 'Professional tutoring services',
     type: 'tutoring',
-    price: tutor.hourly_rate !== null ? tutor.hourly_rate : 35, // Handle 0 as a valid price
+    price: tutor.hourly_rate !== null ? tutor.hourly_rate : 0, // If null, set to 0 (free)
     rating: 4.5, // Default rating
     location: 'Online', // Default location
-    image: null,
+    image: profile.avatar_url, // Use avatar from the profile
     availability: availability,
     subjects: subjects,
   };
@@ -37,7 +37,6 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
   if (isAuthenticated) {
     // Authenticated users can see first name and partial details
     service.provider_name = profile.first_name;
-    service.image = profile.avatar_url;
     
     if (isApproved) {
       // Approved users see most details
