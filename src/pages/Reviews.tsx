@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ServiceClientFactory } from '@/services/api/serviceClientFactory';
 import { Review } from '@/types/review';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { toast } from 'sonner';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import { Card, CardContent } from '@/components/ui/card';
