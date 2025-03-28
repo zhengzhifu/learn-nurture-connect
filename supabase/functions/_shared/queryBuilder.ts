@@ -11,8 +11,7 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     .select(`
       id, bio, hourly_rate, years_of_experience,
       profiles!inner (
-        id, first_name, last_name, email, avatar_url, home_address, approval_status, phone, school_id,
-        school:schools (id, name, address)
+        id, first_name, last_name, email, avatar_url, home_address, approval_status, phone, school_id
       ),
       specialties (specialty_name, specialty_type),
       availability (day_of_week, start_time, end_time)

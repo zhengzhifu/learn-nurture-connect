@@ -118,10 +118,53 @@ Deno.serve(async (req) => {
       );
     }
     
+    // Fetch schools information separately to avoid the relationship error
+    console.log("Fetching schools information separately");
+    const schoolIds = tutorsData
+      .map(tutor => tutor.profiles.school_id)
+      .filter(id => id !== null && id !== undefined);
+    
+    console.log("School IDs to fetch:", schoolIds);
+    
+    let schoolsMap = {};
+    if (schoolIds.length > 0) {
+      const { data: schools, error: schoolError } = await supabase
+        .from('schools')
+        .select('id, name, address')
+        .in('id', schoolIds);
+        
+      console.log("Schools query result:", {
+        Count: schools?.length || 0,
+        Error: schoolError ? schoolError.message : "none"
+      });
+      
+      if (schools && schools.length > 0) {
+        // Create a map of school ID to school data for quick lookups
+        schoolsMap = schools.reduce((map, school) => {
+          map[school.id] = school;
+          return map;
+        }, {});
+        
+        console.log("Schools map created with keys:", Object.keys(schoolsMap));
+      }
+    }
+    
     // Transform the data with access control based on authentication
-    const services = tutorsData.map(tutor => 
-      transformTutorToService(tutor, !!userId, isApproved)
-    );
+    const services = tutorsData.map(tutor => {
+      // Add school information to the tutor object
+      const schoolId = tutor.profiles.school_id;
+      const schoolData = schoolId && schoolsMap[schoolId] ? schoolsMap[schoolId] : null;
+      
+      const tutorWithSchool = {
+        ...tutor,
+        profiles: {
+          ...tutor.profiles,
+          school: schoolData
+        }
+      };
+      
+      return transformTutorToService(tutorWithSchool, !!userId, isApproved);
+    });
     
     // Log sample service after transformation
     if (services.length > 0) {
@@ -129,9 +172,10 @@ Deno.serve(async (req) => {
         JSON.stringify(services[0], null, 2)
       );
       
-      // Log specific info about image URLs
+      // Log specific info about image URLs and schools
       services.forEach((service, i) => {
         console.log(`Service ${i+1} (ID: ${service.id}) Image URL:`, service.image || "NULL");
+        console.log(`Service ${i+1} (ID: ${service.id}) School:`, service.school || "NULL");
       });
     }
     

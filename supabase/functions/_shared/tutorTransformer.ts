@@ -1,110 +1,73 @@
 
+// Import the cors headers
 import { corsHeaders } from './cors.ts';
 
-// Transform tutor data into service format with access control
-export const transformTutorToService = (tutor: any, isAuthenticated: boolean, isApproved: boolean) => {
-  // Extract profile data
+// Main transformer function to convert tutor data to service format
+export function transformTutorToService(tutor: any, isAuthenticated: boolean, isApproved: boolean) {
   const profile = tutor.profiles || {};
   
-  // Add debug logging for profile data
-  console.log("Transforming tutor data:", JSON.stringify(tutor, null, 2));
-  console.log("Profile data for tutor ID", tutor.id, ":", JSON.stringify(profile, null, 2));
+  // Debug log for image URL
+  console.log("Transforming tutor to service:");
+  console.log("- Tutor ID:", tutor.id);
+  console.log("- Avatar URL:", profile.avatar_url || "NULL");
+  console.log("- School:", profile.school ? profile.school.name : "NULL");
+  console.log("- Access control:", { isAuthenticated, isApproved });
   
-  // Handle availability
-  const availability = tutor.availability 
-    ? tutor.availability.map((a: any) => `${a.day_of_week} ${a.start_time}-${a.end_time}`)
-    : ['Flexible'];
+  // Format the name
+  const firstName = profile.first_name || '';
+  const lastName = profile.last_name || '';
+  const fullName = `${firstName} ${lastName}`.trim();
   
-  // Handle specialties
-  const subjects = tutor.specialties 
-    ? tutor.specialties.map((s: any) => s.specialty_name)
-    : ['General'];
+  // Format specialties into subject strings
+  const subjects = tutor.specialties && Array.isArray(tutor.specialties)
+    ? tutor.specialties.map((s: any) => `${s.specialty_type}:${s.specialty_name}`)
+    : [];
   
-  // Get school information
-  const school = profile.school ? profile.school : null;
-  console.log("School data for tutor ID", tutor.id, ":", JSON.stringify(school, null, 2));
+  // Format availability for display
+  const availability = tutor.availability && Array.isArray(tutor.availability)
+    ? tutor.availability.map((a: any) => {
+        return `${a.day_of_week} ${a.start_time}-${a.end_time}`;
+      })
+    : [];
   
-  // Base service object
-  const service = {
+  // Basic service data that's available to everyone
+  const serviceData: any = {
     id: tutor.id,
-    title: `Tutoring Services`,
+    title: `${fullName} - Tutoring Services`,
     description: tutor.bio || 'Professional tutoring services',
     type: 'tutoring',
-    price: tutor.hourly_rate !== null ? tutor.hourly_rate : 0, // If null, set to 0 (free)
-    rating: 4.5, // Default rating
-    location: 'Online', // Default location
-    image: profile.avatar_url || undefined, // Use avatar from the profile
+    price: tutor.hourly_rate || 0,
+    rating: 4.5, // Default rating since we don't have ratings yet
+    location: profile.home_address || 'Online',
+    image: profile.avatar_url || null,
     availability: availability,
     subjects: subjects,
-    school: school ? school.name : null, // Add school name if available
   };
+
+  // Include school information if available
+  if (profile.school) {
+    serviceData.school = profile.school.name || null;
+  }
   
-  // Log if avatar_url is found or missing
-  console.log(`Tutor ID ${tutor.id} - Avatar URL:`, profile.avatar_url || "Not found");
-  console.log(`Tutor ID ${tutor.id} - School:`, service.school || "Not found");
-  
-  // Add fields based on authentication and approval status
+  // Add provider information only if authenticated
   if (isAuthenticated) {
-    // Authenticated users can see first name and partial details
-    service.provider_name = profile.first_name;
+    serviceData.provider_id = tutor.id;
+    serviceData.provider_name = fullName;
+    serviceData.provider_avatar = profile.avatar_url || null;
     
+    // Add contact information only if user is approved
     if (isApproved) {
-      // Approved users see most details
-      service.provider_name = `${profile.first_name} ${profile.last_name.charAt(0)}.`;
-      service.provider_id = profile.id;
-      service.provider_avatar = profile.avatar_url;
-      service.contact_email = profile.email;
-      service.contact_phone = profile.phone;
-      
-      // Full address not shown for privacy reasons
-      if (profile.home_address) {
-        try {
-          // Try to parse the JSON string if it's stored that way
-          let addressObj = profile.home_address;
-          if (typeof profile.home_address === 'string') {
-            try {
-              addressObj = JSON.parse(profile.home_address);
-              if (addressObj.city && addressObj.state) {
-                service.location = `${addressObj.city}, ${addressObj.state}`;
-              } else if (addressObj.formatted_address) {
-                const parts = addressObj.formatted_address.split(',');
-                if (parts.length > 1) {
-                  service.location = parts.slice(1).join(',').trim();
-                }
-              }
-            } catch (e) {
-              // If not valid JSON, use the string directly
-              const addressParts = profile.home_address.split(',');
-              if (addressParts.length > 1) {
-                service.location = addressParts[addressParts.length - 2].trim() + ', ' + 
-                               addressParts[addressParts.length - 1].trim();
-              }
-            }
-          }
-        } catch (e) {
-          service.location = 'Location available upon request';
-        }
-      }
+      serviceData.contact_email = profile.email || null;
+      serviceData.contact_phone = profile.phone || null;
     }
   }
   
-  // Log the final service object for debugging
-  console.log(`Final service object for tutor ${tutor.id}:`, JSON.stringify(service, null, 2));
-  return service;
-};
-
-// Helper function to handle errors in the API
-export const handleApiError = (error: Error) => {
-  console.error('Error:', error);
+  console.log("Transformed service data:", {
+    id: serviceData.id,
+    title: serviceData.title,
+    school: serviceData.school || "NULL",
+    image: serviceData.image || "NULL",
+  });
   
-  return new Response(
-    JSON.stringify({ error: error.message }),
-    {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-      },
-      status: 500,
-    }
-  );
-};
+  return serviceData;
+}
