@@ -7,6 +7,3 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Re-export from types for backward compatibility
 export type { UserRole, Profile } from '@/types/auth';
-
-// Re-export useAuth hook for backward compatibility
-export { useAuth } from '@/hooks/auth/useAuth';
