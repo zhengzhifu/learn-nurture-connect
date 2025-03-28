@@ -3,9 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, Clock, MapPin, GraduationCap } from 'lucide-react';
+import { Star, Clock, MapPin, GraduationCap, Lock } from 'lucide-react';
 import Button from '@/components/ui-custom/Button';
 import { Profile } from '@/types/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Tutor extends Profile {
   rating?: number;
@@ -33,19 +34,37 @@ const TutorCard: React.FC<TutorCardProps> = ({
   onToggleBookmark,
   onViewDetails
 }) => {
+  const { isAuthenticated } = useAuth();
+  
   // Extract just the first name
   const firstName = tutor.first_name || tutor.full_name?.split(' ')[0] || '';
+  
+  // Default placeholder for unauthenticated users
+  const placeholderAvatar = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158";
   
   return (
     <Card className={`overflow-hidden transition-shadow hover:shadow-md ${selected ? 'ring-2 ring-primary' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={tutor.avatar_url || ''} alt={firstName} />
-            <AvatarFallback>{firstName.substring(0, 2).toUpperCase()}</AvatarFallback>
+            {isAuthenticated ? (
+              <AvatarImage src={tutor.avatar_url || ''} alt={firstName} />
+            ) : (
+              <AvatarImage src={placeholderAvatar} alt="Tutor" />
+            )}
+            <AvatarFallback>
+              {isAuthenticated ? firstName.substring(0, 2).toUpperCase() : 'T'}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-xl">{firstName}</CardTitle>
+            {isAuthenticated ? (
+              <CardTitle className="text-xl">{firstName}</CardTitle>
+            ) : (
+              <div className="flex items-center">
+                <CardTitle className="text-xl">Tutor</CardTitle>
+                <Lock className="ml-2 h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
             
             <div className="flex items-center gap-1 mt-1">
               {tutor.rating && (
@@ -60,14 +79,14 @@ const TutorCard: React.FC<TutorCardProps> = ({
       </CardHeader>
       
       <CardContent className="pb-2">
-        {tutor.school && (
+        {isAuthenticated && tutor.school && (
           <div className="flex items-start gap-2 mb-2">
             <GraduationCap className="h-4 w-4 mt-0.5 text-muted-foreground" />
             <span className="text-sm">{tutor.school.name}</span>
           </div>
         )}
         
-        {tutor.home_address && (
+        {isAuthenticated && tutor.home_address && (
           <div className="flex items-start gap-2 mb-2">
             <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
             <span className="text-sm">{tutor.home_address}</span>
@@ -84,7 +103,7 @@ const TutorCard: React.FC<TutorCardProps> = ({
       </CardContent>
       
       <CardFooter className="pt-2 flex flex-col gap-2">
-        {showSelectButton && (
+        {isAuthenticated && showSelectButton && (
           <Button
             className="w-full"
             variant={selected ? "secondary" : "default"}
@@ -100,7 +119,7 @@ const TutorCard: React.FC<TutorCardProps> = ({
             variant="outline"
             onClick={() => onViewDetails(tutor.id)}
           >
-            View Details
+            {isAuthenticated ? "View Details" : "Sign In to View Details"}
           </Button>
         )}
       </CardFooter>

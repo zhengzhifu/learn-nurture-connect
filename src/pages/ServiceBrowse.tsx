@@ -68,7 +68,7 @@ const ServiceBrowse: React.FC = () => {
           <Alert className="mb-6">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Sign in to see more details about these services including provider information and availability.
+              Sign in to see more details about tutors including names, locations, and complete availability.
             </AlertDescription>
           </Alert>
         )}

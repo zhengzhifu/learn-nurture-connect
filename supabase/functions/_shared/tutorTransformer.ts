@@ -50,24 +50,26 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
   // Basic service data that's available to everyone
   const serviceData: any = {
     id: tutor.id,
-    title: `${firstName} - Tutoring Services`,
-    description: tutor.bio || 'Professional tutoring services',
     type: 'tutoring',
     price: tutor.hourly_rate || 0,
     rating: 4.5, // Default rating since we don't have ratings yet
-    location: formattedAddress,
-    image: profile.avatar_url || null,
-    availability: availability,
     subjects: subjects,
   };
 
-  // Include school information if available
-  if (profile.school) {
-    serviceData.school = profile.school.name || null;
-  }
-  
-  // Add provider information only if authenticated - only expose first name
+  // Include additional information only if user is authenticated
   if (isAuthenticated) {
+    serviceData.title = `${firstName} - Tutoring Services`;
+    serviceData.description = tutor.bio || 'Professional tutoring services';
+    serviceData.location = formattedAddress;
+    serviceData.image = profile.avatar_url || null;
+    serviceData.availability = availability;
+    
+    // Include school information if available
+    if (profile.school) {
+      serviceData.school = profile.school.name || null;
+    }
+    
+    // Add provider information - only expose first name
     serviceData.provider_id = tutor.id;
     serviceData.provider_name = firstName; // Only expose first name
     serviceData.provider_avatar = profile.avatar_url || null;
@@ -77,6 +79,13 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
       serviceData.contact_email = profile.email || null;
       serviceData.contact_phone = profile.phone || null;
     }
+  } else {
+    // Provide generic information for unauthenticated users
+    serviceData.title = 'Tutor - Tutoring Services';
+    serviceData.description = 'Sign in to view tutor details';
+    serviceData.location = 'Sign in to view location';
+    serviceData.image = null; // No image for unauthenticated users
+    serviceData.availability = [];
   }
   
   console.log("Transformed service data:", {
@@ -85,6 +94,7 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
     school: serviceData.school || "NULL",
     image: serviceData.image || "NULL",
     location: serviceData.location,
+    isAuthenticated
   });
   
   return serviceData;
