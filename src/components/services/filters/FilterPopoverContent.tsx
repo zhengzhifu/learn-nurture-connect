@@ -29,34 +29,36 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   closeFilters
 }) => {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-[80vh]">
       <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
       
-      <ScrollArea className="flex-1 px-4 pb-2" style={{ maxHeight: "calc(80vh - 140px)" }}>
-        <ServiceTypeFilter 
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
-        />
+      <ScrollArea className="flex-1 px-4 pb-2 overflow-y-auto">
+        <div className="pr-2"> {/* Add padding to the right to ensure content doesn't overlap with scrollbar */}
+          <ServiceTypeFilter 
+            selectedTypes={selectedTypes}
+            setSelectedTypes={setSelectedTypes}
+          />
 
-        <LocationFilter 
-          locationFilter={locationFilter}
-          setLocationFilter={setLocationFilter}
-        />
+          <LocationFilter 
+            locationFilter={locationFilter}
+            setLocationFilter={setLocationFilter}
+          />
 
-        <PriceRangeFilter 
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-        />
+          <PriceRangeFilter 
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+          />
 
-        <SubjectsFilter 
-          selectedSubjects={selectedSubjects}
-          setSelectedSubjects={setSelectedSubjects}
-        />
+          <SubjectsFilter 
+            selectedSubjects={selectedSubjects}
+            setSelectedSubjects={setSelectedSubjects}
+          />
 
-        <AvailabilityFilter 
-          selectedAvailability={selectedAvailability}
-          setSelectedAvailability={setSelectedAvailability}
-        />
+          <AvailabilityFilter 
+            selectedAvailability={selectedAvailability}
+            setSelectedAvailability={setSelectedAvailability}
+          />
+        </div>
       </ScrollArea>
 
       <div className="border-t mt-2 px-4 py-3 bg-background sticky bottom-0">
