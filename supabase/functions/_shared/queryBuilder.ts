@@ -1,15 +1,21 @@
 
 // Build Supabase query with filters
 export const buildTutorQuery = (supabase: any, query: string, filterParams: any) => {
+  console.log("Building query with search:", query);
+  console.log("Filter params:", JSON.stringify(filterParams, null, 2));
+  
+  console.log("Building base query for tutors...");
   // Base query to fetch tutors with their profiles
   let queryBuilder = supabase
     .from('tutors')
     .select(`
       id, bio, hourly_rate, years_of_experience,
-      profiles (id, first_name, last_name, email, avatar_url, home_address, approval_status),
+      profiles (id, first_name, last_name, email, avatar_url, home_address, approval_status, phone),
       specialties (specialty_name, specialty_type),
       availability (day_of_week, start_time, end_time)
     `);
+  
+  console.log("Base query constructed for tutors");
   
   // Apply search filter if provided
   if (query && query.trim() !== '') {
@@ -43,5 +49,6 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
     }
   }
   
+  console.log("Query built and ready to execute");
   return queryBuilder;
 };

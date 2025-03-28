@@ -6,6 +6,9 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
   // Extract profile data
   const profile = tutor.profiles || {};
   
+  // Add debug logging for profile data
+  console.log("Profile data for tutor ID", tutor.id, ":", JSON.stringify(profile, null, 2));
+  
   // Handle availability
   const availability = tutor.availability 
     ? tutor.availability.map((a: any) => `${a.day_of_week} ${a.start_time}-${a.end_time}`)
@@ -29,6 +32,9 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     availability: availability,
     subjects: subjects,
   };
+  
+  // Log if avatar_url is found or missing
+  console.log(`Tutor ID ${tutor.id} - Avatar URL:`, profile.avatar_url || "Not found");
   
   // Add fields based on authentication and approval status
   if (isAuthenticated) {
@@ -75,6 +81,8 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     }
   }
   
+  // Log the final service object for debugging
+  console.log(`Final service object for tutor ${tutor.id}:`, JSON.stringify(service, null, 2));
   return service;
 };
 

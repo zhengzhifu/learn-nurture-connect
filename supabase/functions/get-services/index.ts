@@ -45,13 +45,22 @@ Deno.serve(async (req) => {
     
     // Get user authentication info
     const authHeader = req.headers.get('Authorization')
+    console.log("Auth header present:", !!authHeader);
     const { userId, isApproved } = await getUserAuthInfo(supabase, authHeader);
+    console.log("User authenticated:", !!userId);
+    console.log("User approved:", isApproved);
     
     // Check if any tutors exist in the database
+    console.log("Performing direct tutor count query without filters");
     const { data: tutorList, error: listError } = await supabase
       .from('tutors')
-      .select('id, bio')
-      .limit(10);
+      .select('id, bio');
+    
+    console.log("Direct tutor list results:", {
+      Count: tutorList?.length,
+      Data: JSON.stringify(tutorList?.slice(0, 3)),
+      Error: listError ? listError.message : "none"
+    });
     
     // If no tutors were found in direct query, return empty array immediately
     if (!tutorList || tutorList.length === 0) {
@@ -68,10 +77,18 @@ Deno.serve(async (req) => {
     }
     
     // Build query with search and filters
+    console.log("Building query with:", { query, filterParams });
     const queryBuilder = buildTutorQuery(supabase, query, filterParams);
     
+    console.log("Executing query...");
     // Execute query
     const { data: tutorsData, error } = await queryBuilder;
+    
+    console.log("Query execution result:");
+    console.log("- Status:", error ? `Error: ${error.message}` : "200 OK");
+    console.log("- Count:", tutorsData?.length || null);
+    console.log("- Error:", error ? error.message : "none");
+    console.log("- Data length:", tutorsData?.length);
     
     if (error) {
       throw new Error(`Error fetching tutors: ${error.message}`);
@@ -90,11 +107,25 @@ Deno.serve(async (req) => {
         }
       );
     }
+
+    // Log sample tutor data to examine structure
+    if (tutorsData.length > 0) {
+      console.log("Sample tutor data (first record):", 
+        JSON.stringify(tutorsData[0], null, 2)
+      );
+    }
     
     // Transform the data with access control based on authentication
     const services = tutorsData.map(tutor => 
       transformTutorToService(tutor, !!userId, isApproved)
     );
+    
+    // Log sample service after transformation
+    if (services.length > 0) {
+      console.log("Sample transformed service (first record):", 
+        JSON.stringify(services[0], null, 2)
+      );
+    }
     
     return new Response(
       JSON.stringify({ services }),
