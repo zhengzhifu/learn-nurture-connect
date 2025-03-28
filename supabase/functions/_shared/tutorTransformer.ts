@@ -20,6 +20,10 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     ? tutor.specialties.map((s: any) => s.specialty_name)
     : ['General'];
   
+  // Get school information
+  const school = profile.school ? profile.school : null;
+  console.log("School data for tutor ID", tutor.id, ":", JSON.stringify(school, null, 2));
+  
   // Base service object
   const service = {
     id: tutor.id,
@@ -32,10 +36,12 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     image: profile.avatar_url || undefined, // Use avatar from the profile
     availability: availability,
     subjects: subjects,
+    school: school ? school.name : null, // Add school name if available
   };
   
   // Log if avatar_url is found or missing
   console.log(`Tutor ID ${tutor.id} - Avatar URL:`, profile.avatar_url || "Not found");
+  console.log(`Tutor ID ${tutor.id} - School:`, service.school || "Not found");
   
   // Add fields based on authentication and approval status
   if (isAuthenticated) {

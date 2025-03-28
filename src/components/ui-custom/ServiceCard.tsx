@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Button from './Button';
-import { Star, MapPin, Clock, User } from 'lucide-react';
+import { Star, MapPin, Clock, User, School } from 'lucide-react';
 import { ServiceData } from '@/services/api/serviceClient';
 import ServiceDetailsModal from './ServiceDetailsModal';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -83,6 +83,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                   </AvatarFallback>
                 </Avatar>
                 <span>{service.provider_name}</span>
+              </div>
+            )}
+            
+            {/* School information - show regardless of authentication */}
+            {service.school && (
+              <div className="flex items-center text-sm text-muted-foreground mb-2">
+                <School className="w-4 h-4 mr-1" />
+                <span>{service.school}</span>
               </div>
             )}
             

@@ -14,6 +14,7 @@ export interface Service {
   availability: string[];
   provider_id: string;
   subjects?: string[];
+  school?: string;
 }
 
 export interface ServiceData {
@@ -30,6 +31,7 @@ export interface ServiceData {
   subjects?: string[];
   provider_name?: string;
   provider_avatar?: string;
+  school?: string;
   
   // Additional fields for authentication and approval visibility
   contact_email?: string;

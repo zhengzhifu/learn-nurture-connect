@@ -12,7 +12,8 @@ export const safeProfileData = (profileData: any) => {
     avatar_url: profileData.avatar_url || '',
     home_address: profileData.home_address || '',
     approval_status: profileData.approval_status || 'pending',
-    school_id: profileData.school_id || null
+    school_id: profileData.school_id || null,
+    school: profileData.school || null
   };
 };
 
@@ -30,6 +31,7 @@ export const convertToServiceData = (data: any): ServiceData => {
     availability: Array.isArray(data.availability) ? data.availability : [],
     provider_id: data.provider_id || '',
     subjects: Array.isArray(data.subjects) ? data.subjects : [],
+    school: data.school || null,
     
     // Additional properties
     provider_name: data.provider || '',
