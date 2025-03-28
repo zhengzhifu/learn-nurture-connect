@@ -3,9 +3,6 @@ import { corsHeaders } from './cors.ts';
 
 // Transform tutor data into service format with access control
 export const transformTutorToService = (tutor: any, isAuthenticated: boolean, isApproved: boolean) => {
-  // Extra logging to understand data transformation
-  console.log("Transforming tutor data:", JSON.stringify(tutor, null, 2));
-  
   // Extract profile data
   const profile = tutor.profiles || {};
   
@@ -28,7 +25,7 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
     price: tutor.hourly_rate !== null ? tutor.hourly_rate : 0, // If null, set to 0 (free)
     rating: 4.5, // Default rating
     location: 'Online', // Default location
-    image: profile.avatar_url, // Use avatar from the profile
+    image: profile.avatar_url || undefined, // Use avatar from the profile
     availability: availability,
     subjects: subjects,
   };
@@ -72,14 +69,12 @@ export const transformTutorToService = (tutor: any, isAuthenticated: boolean, is
             }
           }
         } catch (e) {
-          console.error("Error parsing address:", e);
           service.location = 'Location available upon request';
         }
       }
     }
   }
   
-  console.log("Transformed service data:", JSON.stringify(service, null, 2));
   return service;
 };
 

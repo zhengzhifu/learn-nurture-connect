@@ -14,7 +14,7 @@ export const getUserAuthInfo = async (supabase: any, authHeader: string | null) 
       // Check if user is approved
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('approval_status')
+        .select('approval_status, avatar_url')
         .eq('id', userId)
         .single();
         
