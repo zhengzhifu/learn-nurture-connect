@@ -33,16 +33,19 @@ const TutorCard: React.FC<TutorCardProps> = ({
   onToggleBookmark,
   onViewDetails
 }) => {
+  // Extract just the first name
+  const firstName = tutor.first_name || tutor.full_name?.split(' ')[0] || '';
+  
   return (
     <Card className={`overflow-hidden transition-shadow hover:shadow-md ${selected ? 'ring-2 ring-primary' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={tutor.avatar_url || ''} alt={tutor.full_name} />
-            <AvatarFallback>{tutor.full_name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={tutor.avatar_url || ''} alt={firstName} />
+            <AvatarFallback>{firstName.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-xl">{tutor.full_name}</CardTitle>
+            <CardTitle className="text-xl">{firstName}</CardTitle>
             
             <div className="flex items-center gap-1 mt-1">
               {tutor.rating && (

@@ -13,9 +13,10 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
   console.log("- School:", profile.school ? profile.school.name : "NULL");
   console.log("- Access control:", { isAuthenticated, isApproved });
   
-  // Format the name
+  // Format the name - Only use first name for display
   const firstName = profile.first_name || '';
   const lastName = profile.last_name || '';
+  // Store the full name but only expose firstName in the title
   const fullName = `${firstName} ${lastName}`.trim();
   
   // Parse and extract formatted address if it's stored as JSON string
@@ -49,7 +50,7 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
   // Basic service data that's available to everyone
   const serviceData: any = {
     id: tutor.id,
-    title: `${fullName} - Tutoring Services`,
+    title: `${firstName} - Tutoring Services`,
     description: tutor.bio || 'Professional tutoring services',
     type: 'tutoring',
     price: tutor.hourly_rate || 0,
@@ -65,10 +66,10 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
     serviceData.school = profile.school.name || null;
   }
   
-  // Add provider information only if authenticated
+  // Add provider information only if authenticated - only expose first name
   if (isAuthenticated) {
     serviceData.provider_id = tutor.id;
-    serviceData.provider_name = fullName;
+    serviceData.provider_name = firstName; // Only expose first name
     serviceData.provider_avatar = profile.avatar_url || null;
     
     // Add contact information only if user is approved

@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
@@ -23,8 +24,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   getInitials,
   onAvatarChange
 }) => {
-  // Generate a display name for the avatar
-  const displayName = `${formData.first_name} ${formData.last_name}`.trim() || 'User';
+  // Only use first name for display
+  const displayName = formData.first_name.trim() || 'User';
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleAvatarClick = () => {
