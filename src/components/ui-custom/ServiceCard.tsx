@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Button from './Button';
-import { Star, MapPin, Clock, User, School } from 'lucide-react';
+import { Star, MapPin, Clock, User, School, Book } from 'lucide-react';
 import { ServiceData } from '@/services/api/serviceClient';
 import ServiceDetailsModal from './ServiceDetailsModal';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth/useAuth';
+import { Badge } from "@/components/ui/badge";
 
 interface ServiceCardProps {
   service: ServiceData;
@@ -110,6 +111,34 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               </div>
             )}
           </div>
+          
+          {/* Specialties section - visible to everyone */}
+          {service.subjects && service.subjects.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-start gap-1 flex-wrap">
+                <Book className="w-4 h-4 text-muted-foreground mt-1 mr-1" />
+                {service.subjects.slice(0, 3).map((subject, index) => {
+                  // Extract subject name from format "category:name"
+                  const subjectName = subject.includes(':') 
+                    ? subject.split(':')[1].charAt(0).toUpperCase() + subject.split(':')[1].slice(1)
+                    : subject;
+                  
+                  return (
+                    <Badge 
+                      key={index} 
+                      variant="secondary"
+                      className="text-xs mr-1 mb-1"
+                    >
+                      {subjectName}
+                    </Badge>
+                  );
+                })}
+                {service.subjects.length > 3 && (
+                  <Badge variant="outline" className="text-xs mb-1">+{service.subjects.length - 3} more</Badge>
+                )}
+              </div>
+            </div>
+          )}
           
           {service.description && (
             <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
