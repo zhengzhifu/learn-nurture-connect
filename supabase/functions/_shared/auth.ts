@@ -22,8 +22,5 @@ export const getUserAuthInfo = async (supabase: any, authHeader: string | null) 
     }
   }
   
-  console.log("User authenticated:", !!userId);
-  console.log("User approved:", isApproved);
-  
   return { userId, isApproved };
 };

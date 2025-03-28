@@ -1,11 +1,7 @@
 
 // Build Supabase query with filters
 export const buildTutorQuery = (supabase: any, query: string, filterParams: any) => {
-  console.log("Building query with search:", query);
-  console.log("Filter params:", JSON.stringify(filterParams));
-  
   // Base query to fetch tutors with their profiles
-  console.log("Building base query for tutors...");
   let queryBuilder = supabase
     .from('tutors')
     .select(`
@@ -15,30 +11,23 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
       availability (day_of_week, start_time, end_time)
     `);
   
-  console.log("Base query constructed for tutors");
-  
   // Apply search filter if provided
   if (query && query.trim() !== '') {
-    console.log("Applying search query filter:", query);
     queryBuilder = queryBuilder.or(`bio.ilike.%${query}%,profiles.first_name.ilike.%${query}%,profiles.last_name.ilike.%${query}%`);
   }
   
   // Apply type filter if provided
   if (filterParams.types && filterParams.types.length > 0) {
-    console.log("Applying type filter:", filterParams.types);
     // In this case all tutors are of type 'tutoring', so no additional filtering needed
   }
   
   // Apply location filter if provided
   if (filterParams.location && filterParams.location.trim() !== '') {
-    console.log("Applying location filter:", filterParams.location);
     queryBuilder = queryBuilder.ilike('profiles.home_address', `%${filterParams.location}%`);
   }
   
   // Apply subjects filter if provided
   if (filterParams.subjects && filterParams.subjects.length > 0) {
-    console.log("Applying subjects filter:", filterParams.subjects);
-    
     // Since we're filtering on a joined table (specialties), we need to use a more complex approach
     // We'll get all tutors that have ANY of the selected subjects (OR condition)
     const subjectFilters = filterParams.subjects.map((subject: string) => {
@@ -53,9 +42,6 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
       queryBuilder = queryBuilder.or(subjectFilters.join(','));
     }
   }
-  
-  // Log query construction completion
-  console.log("Query built and ready to execute");
   
   return queryBuilder;
 };
