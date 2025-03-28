@@ -29,6 +29,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   const availabilityText = service.availability && service.availability.length > 0 
     ? service.availability.join(', ') 
     : 'Flexible';
+    
+  // Ensure location is displayed properly
+  const displayLocation = service.location || 'Online';
 
   const isApproved = profile?.approval_status === 'approved';
   
@@ -96,7 +99,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             
             <div className="flex items-center text-muted-foreground text-sm mb-2">
               <MapPin className="w-4 h-4 mr-1" />
-              <span>{service.location}</span>
+              <span>{displayLocation}</span>
             </div>
             
             {/* Only show availability if authenticated */}

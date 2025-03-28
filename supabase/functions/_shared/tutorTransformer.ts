@@ -18,6 +18,22 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
   const lastName = profile.last_name || '';
   const fullName = `${firstName} ${lastName}`.trim();
   
+  // Parse and extract formatted address if it's stored as JSON string
+  let formattedAddress = 'Online';
+  try {
+    if (profile.home_address && typeof profile.home_address === 'string') {
+      if (profile.home_address.includes('formatted_address')) {
+        const addressObj = JSON.parse(profile.home_address);
+        formattedAddress = addressObj.formatted_address || 'Online';
+      } else {
+        formattedAddress = profile.home_address;
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing address JSON:', error);
+    formattedAddress = profile.home_address || 'Online';
+  }
+  
   // Format specialties into subject strings
   const subjects = tutor.specialties && Array.isArray(tutor.specialties)
     ? tutor.specialties.map((s: any) => `${s.specialty_type}:${s.specialty_name}`)
@@ -38,7 +54,7 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
     type: 'tutoring',
     price: tutor.hourly_rate || 0,
     rating: 4.5, // Default rating since we don't have ratings yet
-    location: profile.home_address || 'Online',
+    location: formattedAddress,
     image: profile.avatar_url || null,
     availability: availability,
     subjects: subjects,
@@ -67,6 +83,7 @@ export function transformTutorToService(tutor: any, isAuthenticated: boolean, is
     title: serviceData.title,
     school: serviceData.school || "NULL",
     image: serviceData.image || "NULL",
+    location: serviceData.location,
   });
   
   return serviceData;
