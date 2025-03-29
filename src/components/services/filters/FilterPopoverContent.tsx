@@ -18,8 +18,6 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   setSelectedTypes,
   locationFilter,
   setLocationFilter,
-  radiusKm,
-  setRadiusKm,
   priceRange,
   setPriceRange,
   selectedSubjects,
@@ -30,13 +28,8 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   applyFilters,
   closeFilters
 }) => {
-  // Prevent clicks inside the popover from closing it
-  const handleContentClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
-    <div className="flex flex-col h-full max-h-[80vh]" onClick={handleContentClick}>
+    <div className="flex flex-col h-full max-h-[80vh]">
       <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
       
       <ScrollArea className="flex-1 px-4 pb-2 overflow-y-auto">
@@ -49,8 +42,6 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
           <LocationFilter 
             locationFilter={locationFilter}
             setLocationFilter={setLocationFilter}
-            radiusKm={radiusKm}
-            setRadiusKm={setRadiusKm}
           />
 
           <PriceRangeFilter 

@@ -19,8 +19,6 @@ interface ServiceSearchFilterProps {
   setSelectedTypes: (types: ServiceType[]) => void;
   locationFilter: string;
   setLocationFilter: (location: string) => void;
-  radiusKm: number;
-  setRadiusKm: (radius: number) => void;
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
   selectedSubjects: string[];
@@ -39,8 +37,6 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
   setSelectedTypes,
   locationFilter,
   setLocationFilter,
-  radiusKm,
-  setRadiusKm,
   priceRange,
   setPriceRange,
   selectedSubjects,
@@ -52,16 +48,6 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
   clearFilters,
 }) => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
-  
-  // Create a manual close handler that works with our click handlers
-  const handleApplyFilters = () => {
-    applyFilters();
-    setIsFilterOpen(false);
-  };
-
-  const handleClearFilters = () => {
-    clearFilters();
-  };
   
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
@@ -84,16 +70,14 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             setSelectedTypes={setSelectedTypes}
             locationFilter={locationFilter}
             setLocationFilter={setLocationFilter}
-            radiusKm={radiusKm}
-            setRadiusKm={setRadiusKm}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             selectedSubjects={selectedSubjects}
             setSelectedSubjects={setSelectedSubjects}
             selectedAvailability={selectedAvailability}
             setSelectedAvailability={setSelectedAvailability}
-            clearFilters={handleClearFilters}
-            applyFilters={handleApplyFilters}
+            clearFilters={clearFilters}
+            applyFilters={applyFilters}
             closeFilters={() => setIsFilterOpen(false)}
           />
         </PopoverContent>
