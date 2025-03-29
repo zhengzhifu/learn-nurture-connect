@@ -16,6 +16,8 @@ interface ServiceBrowserProps {
   setSelectedTypes: (types: ServiceType[]) => void;
   locationFilter: string;
   setLocationFilter: (location: string) => void;
+  radiusKm: number;
+  setRadiusKm: (radius: number) => void;
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
   selectedSubjects: string[];
@@ -38,6 +40,8 @@ const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
   setSelectedTypes,
   locationFilter,
   setLocationFilter,
+  radiusKm,
+  setRadiusKm,
   priceRange,
   setPriceRange,
   selectedSubjects,
@@ -60,6 +64,8 @@ const ServiceBrowser: React.FC<ServiceBrowserProps> = ({
         setSelectedTypes={setSelectedTypes}
         locationFilter={locationFilter}
         setLocationFilter={setLocationFilter}
+        radiusKm={radiusKm}
+        setRadiusKm={setRadiusKm}
         priceRange={priceRange}
         setPriceRange={setPriceRange}
         selectedSubjects={selectedSubjects}

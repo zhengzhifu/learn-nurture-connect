@@ -1,18 +1,23 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { MapPin } from 'lucide-react';
+import { MapPin, Circle } from 'lucide-react';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
+import { Slider } from '@/components/ui/slider';
 
 interface LocationFilterProps {
   locationFilter: string;
   setLocationFilter: (location: string) => void;
+  radiusKm: number;
+  setRadiusKm: (radius: number) => void;
 }
 
 const LocationFilter: React.FC<LocationFilterProps> = ({
   locationFilter,
-  setLocationFilter
+  setLocationFilter,
+  radiusKm,
+  setRadiusKm
 }) => {
   const handleAddressChange = (addressData: any) => {
     // Prevent event propagation that might close the popover
@@ -25,6 +30,10 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
     onAddressChange: handleAddressChange,
     preventCloseOnSelect: true // Add a flag to indicate we want to prevent closing
   });
+
+  const handleRadiusChange = (value: number[]) => {
+    setRadiusKm(value[0]);
+  };
 
   return (
     <div className="mb-4">
@@ -57,18 +66,39 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
         </div>
         
         {locationFilter && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm">Selected: {locationFilter}</p>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent event from closing the popover
-                setLocationFilter('');
-              }}
-              className="text-xs text-destructive hover:underline"
-            >
-              Clear
-            </button>
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <p className="text-sm">Selected: {locationFilter}</p>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event from closing the popover
+                  setLocationFilter('');
+                }}
+                className="text-xs text-destructive hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+            
+            <div className="mt-4">
+              <Label htmlFor="radius_slider" className="flex items-center mb-2">
+                <Circle className="mr-2 h-4 w-4" />
+                Search radius: {radiusKm} km
+              </Label>
+              <Slider
+                id="radius_slider"
+                min={0.5}
+                max={10}
+                step={0.5}
+                value={[radiusKm]}
+                onValueChange={handleRadiusChange}
+                onClick={(e) => e.stopPropagation()} // Prevent event from closing the popover
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Search for tutors within {radiusKm} km of the selected location
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -33,6 +33,8 @@ const ServiceBrowse: React.FC = () => {
     setSelectedTypes,
     locationFilter,
     setLocationFilter,
+    radiusKm,
+    setRadiusKm,
     priceRange,
     setPriceRange,
     selectedSubjects,
@@ -92,6 +94,8 @@ const ServiceBrowse: React.FC = () => {
           setSelectedTypes={setSelectedTypes}
           locationFilter={locationFilter}
           setLocationFilter={setLocationFilter}
+          radiusKm={radiusKm}
+          setRadiusKm={setRadiusKm}
           priceRange={priceRange}
           setPriceRange={setPriceRange}
           selectedSubjects={selectedSubjects}
