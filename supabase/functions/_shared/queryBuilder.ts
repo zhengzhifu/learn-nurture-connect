@@ -31,7 +31,12 @@ export const buildTutorQuery = (supabase: any, query: string, filterParams: any)
   
   // Apply location filter if provided
   if (filterParams.location && filterParams.location.trim() !== '') {
-    queryBuilder = queryBuilder.ilike('profiles.home_address', `%${filterParams.location}%`);
+    // Use a more intelligent location search that prioritizes exact matches
+    // but also includes partial matches for better results
+    const location = filterParams.location.trim();
+    queryBuilder = queryBuilder.or(
+      `profiles.home_address.ilike.%${location}%,profiles.city.ilike.%${location}%,profiles.state.ilike.%${location}%,profiles.country.ilike.%${location}%`
+    );
   }
   
   // Apply subjects filter if provided

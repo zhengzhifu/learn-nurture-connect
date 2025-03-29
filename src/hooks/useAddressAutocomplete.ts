@@ -18,16 +18,37 @@ export interface AddressData {
 interface UseAddressAutocompleteProps {
   initialAddress: AddressData;
   onAddressChange: (addressData: AddressData) => void;
+  useBrowserLocation?: boolean;
 }
 
 export const useAddressAutocomplete = ({ 
   initialAddress, 
-  onAddressChange 
+  onAddressChange,
+  useBrowserLocation = true
 }: UseAddressAutocompleteProps) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [isLoadingScript, setIsLoadingScript] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  // Try to get the user's location if allowed
+  useEffect(() => {
+    if (useBrowserLocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          console.log('User location detected:', position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.log('Geolocation error:', error.message);
+        }
+      );
+    }
+  }, [useBrowserLocation]);
 
   // Load Google Maps script on mount
   useEffect(() => {
@@ -46,9 +67,23 @@ export const useAddressAutocomplete = ({
   useEffect(() => {
     if (googleLoaded && autocompleteInputRef.current && window.google) {
       try {
+        const options: google.maps.places.AutocompleteOptions = {
+          types: ['address']
+        };
+        
+        // Add location bias if we have the user's location
+        if (userLocation) {
+          options.bounds = new window.google.maps.LatLngBounds(
+            new window.google.maps.LatLng(userLocation.lat - 0.1, userLocation.lng - 0.1),
+            new window.google.maps.LatLng(userLocation.lat + 0.1, userLocation.lng + 0.1)
+          );
+          // Don't strictly restrict to this area, just bias the results
+          options.strictBounds = false;
+        }
+        
         autocompleteRef.current = new window.google.maps.places.Autocomplete(
           autocompleteInputRef.current,
-          { types: ['address'] }
+          options
         );
 
         autocompleteRef.current.addListener('place_changed', () => {
@@ -68,11 +103,12 @@ export const useAddressAutocomplete = ({
         toast.error('Failed to initialize address autocomplete');
       }
     }
-  }, [googleLoaded, onAddressChange]);
+  }, [googleLoaded, onAddressChange, userLocation]);
 
   return {
     autocompleteInputRef,
     isLoadingScript,
-    googleLoaded
+    googleLoaded,
+    userLocation
   };
 };

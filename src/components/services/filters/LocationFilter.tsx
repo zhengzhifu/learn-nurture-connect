@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { MapPin } from 'lucide-react';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
 interface LocationFilterProps {
@@ -19,7 +20,7 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
   };
 
   // Use the same hook that's used in the profile page
-  const { autocompleteInputRef, isLoadingScript, googleLoaded } = useAddressAutocomplete({
+  const { autocompleteInputRef, isLoadingScript, googleLoaded, userLocation } = useAddressAutocomplete({
     initialAddress: { home_address: locationFilter },
     onAddressChange: handleAddressChange
   });
@@ -30,16 +31,24 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
       <div className="space-y-2">
         <div>
           <Label htmlFor="location_filter">Search by location</Label>
-          <Input
-            id="location_filter"
-            ref={autocompleteInputRef}
-            placeholder={isLoadingScript ? "Loading location service..." : "Enter location"}
-            className="w-full"
-            disabled={isLoadingScript}
-          />
+          <div className="relative">
+            <Input
+              id="location_filter"
+              ref={autocompleteInputRef}
+              placeholder={isLoadingScript ? "Loading location service..." : "Enter location"}
+              className="w-full pl-9"
+              disabled={isLoadingScript}
+            />
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
           {isLoadingScript && (
             <p className="text-xs text-muted-foreground mt-1">
               Loading location service...
+            </p>
+          )}
+          {userLocation && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Prioritizing addresses near your location
             </p>
           )}
         </div>
