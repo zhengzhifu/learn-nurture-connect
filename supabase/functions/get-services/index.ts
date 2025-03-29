@@ -9,12 +9,9 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
 
 Deno.serve(async (req) => {
-  // Handle CORS - this is critical for preflight OPTIONS requests
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
-      headers: corsHeaders,
-      status: 200
-    })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {

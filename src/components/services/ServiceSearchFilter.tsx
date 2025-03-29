@@ -53,7 +53,7 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
 }) => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   
-  // Create handlers that work with our popover state
+  // Create a manual close handler that works with our click handlers
   const handleApplyFilters = () => {
     applyFilters();
     setIsFilterOpen(false);
@@ -61,11 +61,6 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
 
   const handleClearFilters = () => {
     clearFilters();
-    // Don't close the popover when clearing filters
-  };
-  
-  const handleCloseFilters = () => {
-    setIsFilterOpen(false);
   };
   
   return (
@@ -99,7 +94,7 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             setSelectedAvailability={setSelectedAvailability}
             clearFilters={handleClearFilters}
             applyFilters={handleApplyFilters}
-            closeFilters={handleCloseFilters}
+            closeFilters={() => setIsFilterOpen(false)}
           />
         </PopoverContent>
       </Popover>
