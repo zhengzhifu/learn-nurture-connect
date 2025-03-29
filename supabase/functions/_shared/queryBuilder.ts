@@ -23,7 +23,7 @@ export function buildTutorQuery(supabase, searchQuery = '', filters = {}) {
         school_id,
         approval_status
       ),
-      specialties:tutor_specialties(
+      specialties(
         specialty_type,
         specialty_name
       ),
@@ -82,27 +82,7 @@ export function buildTutorQuery(supabase, searchQuery = '', filters = {}) {
     
     // Filter by subjects/specialties
     if (filters.subjects && filters.subjects.length > 0) {
-      // Join with tutor_specialties to filter by subjects
-      // This query approach may need optimization for larger datasets
-      const specialtyConditions = filters.subjects.map(subject => {
-        // Parse the subject format: "type:name"
-        let specialtyType, specialtyName;
-        
-        if (subject.includes(':')) {
-          [specialtyType, specialtyName] = subject.split(':');
-        } else {
-          // If not in the expected format, assume it's the specialty name
-          specialtyName = subject;
-        }
-        
-        // Build the filter condition based on available parts
-        if (specialtyType && specialtyName) {
-          return `specialty_type.eq.${specialtyType}.and.specialty_name.eq.${specialtyName}`;
-        } else {
-          return `specialty_name.eq.${specialtyName}`;
-        }
-      });
-      
+      // The table is 'specialties', not 'tutor_specialties'
       baseQuery.filter('specialties.specialty_name', 'in', `(${filters.subjects.join(',')})`);
     }
     
