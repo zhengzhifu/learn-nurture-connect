@@ -49,6 +49,11 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
 }) => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   
+  const handleApplyFilters = () => {
+    applyFilters();
+    setIsFilterOpen(false);
+  };
+  
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
       <SearchBar 
@@ -77,7 +82,7 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             selectedAvailability={selectedAvailability}
             setSelectedAvailability={setSelectedAvailability}
             clearFilters={clearFilters}
-            applyFilters={applyFilters}
+            applyFilters={handleApplyFilters}
             closeFilters={() => setIsFilterOpen(false)}
           />
         </PopoverContent>

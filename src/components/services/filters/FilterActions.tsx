@@ -18,10 +18,7 @@ const FilterActions: React.FC<FilterActionsProps> = ({
       <Button variant="ghost" size="sm" onClick={clearFilters}>
         Clear Filters
       </Button>
-      <Button size="sm" onClick={() => {
-        applyFilters();
-        closeFilters();
-      }}>
+      <Button size="sm" onClick={applyFilters}>
         Apply Filters
       </Button>
     </div>

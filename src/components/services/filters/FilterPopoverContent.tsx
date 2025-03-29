@@ -28,6 +28,12 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   applyFilters,
   closeFilters
 }) => {
+  // Create a wrapper function for applying filters to also close the popover
+  const handleApplyFilters = () => {
+    applyFilters();
+    closeFilters();
+  };
+
   return (
     <div className="flex flex-col h-full max-h-[80vh]">
       <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
@@ -64,7 +70,7 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
       <div className="border-t mt-2 px-4 py-3 bg-background sticky bottom-0">
         <FilterActions 
           clearFilters={clearFilters}
-          applyFilters={applyFilters}
+          applyFilters={handleApplyFilters}
           closeFilters={closeFilters}
         />
       </div>
