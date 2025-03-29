@@ -1,155 +1,118 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
-/**
- * Builds a query for tutors based on search query and filters
- */
 export function buildTutorQuery(supabase, searchQuery = '', filters = {}) {
-  // Start with a base query that joins profiles and tutors
-  let query = supabase
+  console.log("Building base query for tutors...");
+  
+  // Start with a base query that includes all necessary joins
+  const baseQuery = supabase
     .from('tutors')
     .select(`
       id,
       bio,
-      education,
-      years_of_experience,
       hourly_rate,
-      profiles (
-        id,
-        first_name,
-        last_name,
-        user_type,
-        avatar_url,
-        email,
-        phone,
+      years_of_experience,
+      profiles!inner(
+        id, 
+        first_name, 
+        last_name, 
+        email, 
+        phone, 
+        avatar_url, 
         home_address,
-        approval_status,
         school_id,
-        latitude,
-        longitude
+        approval_status
       ),
-      specialties (
-        id,
+      specialties:tutor_specialties(
         specialty_type,
         specialty_name
       ),
-      availability (
-        id,
+      availability:tutor_availability(
         day_of_week,
         start_time,
         end_time
       )
     `);
-
-  // If there's a search query, add a search condition
+  
+  console.log("Base query constructed for tutors");
+  
+  // Apply search query if provided
   if (searchQuery && searchQuery.trim() !== '') {
-    // Split the search query into words for better matching
-    const searchTerms = searchQuery.trim().split(/\s+/).filter(Boolean);
-    
-    // Build an array of search conditions
-    const searchConditions = [];
-    
-    // Add conditions for each term
-    searchTerms.forEach(term => {
-      searchConditions.push(`profiles.first_name.ilike.%${term}%`);
-      searchConditions.push(`profiles.last_name.ilike.%${term}%`);
-      searchConditions.push(`tutors.bio.ilike.%${term}%`);
-      searchConditions.push(`specialties.specialty_name.ilike.%${term}%`);
-    });
-    
-    // Combine conditions with OR
-    if (searchConditions.length > 0) {
-      query = query.or(searchConditions.join(','));
-    }
+    baseQuery.or(`
+      profiles.first_name.ilike.%${searchQuery}%,
+      profiles.last_name.ilike.%${searchQuery}%,
+      bio.ilike.%${searchQuery}%
+    `);
   }
-
+  
   // Apply filters if provided
-  if (filters && Object.keys(filters).length > 0) {
-    console.log("Applying filters:", filters);
-    
-    // Filter by service/tutor types
+  if (filters) {
+    // Filter by service type (currently all tutors are of type 'tutoring')
     if (filters.types && filters.types.length > 0) {
-      query = query.in('specialties.specialty_type', filters.types);
+      // All services in the tutors table are 'tutoring' for now
+      // This is a placeholder for future differentiation of service types
     }
+    
+    // Filter by location
+    if (filters.location && filters.location.trim() !== '') {
+      // Extract address components from the location filter
+      try {
+        // Extract city and state from formatted address if available
+        const locationText = filters.location.toLowerCase();
+        baseQuery.filter('profiles.home_address', 'ilike', `%${locationText}%`);
+      } catch (error) {
+        console.error("Error parsing location filter:", error);
+      }
+    }
+    
+    // Filter by radius - requires geocoding the address and calculating distance
+    // This would normally require PostGIS extension and more complex queries
+    // For now, we're only filtering by address string match
     
     // Filter by price range
-    if (filters.priceRange && filters.priceRange.length === 2) {
+    if (filters.priceRange && Array.isArray(filters.priceRange) && filters.priceRange.length === 2) {
       const [minPrice, maxPrice] = filters.priceRange;
-      query = query.gte('hourly_rate', minPrice).lte('hourly_rate', maxPrice);
+      if (minPrice > 0) {
+        baseQuery.gte('hourly_rate', minPrice);
+      }
+      if (maxPrice < 100) {
+        baseQuery.lte('hourly_rate', maxPrice);
+      }
     }
     
-    // Filter by subjects
+    // Filter by subjects/specialties
     if (filters.subjects && filters.subjects.length > 0) {
-      query = query.in('specialties.specialty_name', filters.subjects);
+      // Join with tutor_specialties to filter by subjects
+      // This query approach may need optimization for larger datasets
+      const specialtyConditions = filters.subjects.map(subject => {
+        // Parse the subject format: "type:name"
+        let specialtyType, specialtyName;
+        
+        if (subject.includes(':')) {
+          [specialtyType, specialtyName] = subject.split(':');
+        } else {
+          // If not in the expected format, assume it's the specialty name
+          specialtyName = subject;
+        }
+        
+        // Build the filter condition based on available parts
+        if (specialtyType && specialtyName) {
+          return `specialty_type.eq.${specialtyType}.and.specialty_name.eq.${specialtyName}`;
+        } else {
+          return `specialty_name.eq.${specialtyName}`;
+        }
+      });
+      
+      baseQuery.filter('specialties.specialty_name', 'in', `(${filters.subjects.join(',')})`);
     }
     
     // Filter by availability
     if (filters.availability && filters.availability.length > 0) {
-      query = query.in('availability.day_of_week', filters.availability);
-    }
-    
-    // Filter by location with radius
-    if (filters.location && filters.location.trim() !== '') {
-      const geocodeResult = await getGeocodedLocation(filters.location);
-      
-      if (geocodeResult && geocodeResult.latitude && geocodeResult.longitude) {
-        const { latitude, longitude } = geocodeResult;
-        const radiusKm = filters.radiusKm || 5; // Default to 5km if not specified
-        
-        console.log(`Searching within ${radiusKm}km of ${latitude}, ${longitude}`);
-        
-        // Use ST_DWithin to find tutors within the specified radius
-        // ST_MakePoint creates a PostGIS point from longitude and latitude
-        // ST_SetSRID sets the spatial reference system to WGS84 (EPSG:4326)
-        // ST_DWithin checks if the distance between points is within the specified radius
-        // The radius is converted from kilometers to meters by multiplying by 1000
-        query = query.filter('profiles.latitude', 'not.is', null)
-                     .filter('profiles.longitude', 'not.is', null)
-                     .filter(`ST_DWithin(
-                       ST_SetSRID(ST_MakePoint(profiles.longitude, profiles.latitude), 4326),
-                       ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326),
-                       ${radiusKm * 1000}
-                     )`);
-      } else {
-        console.log("Geocoding failed for location:", filters.location);
-        // Fall back to simple text matching if geocoding fails
-        query = query.ilike('profiles.home_address', `%${filters.location}%`);
-      }
+      // Filter tutors who are available on the specified days
+      baseQuery.filter('availability.day_of_week', 'in', `(${filters.availability.join(',')})`);
     }
   }
-
-  return query;
-}
-
-/**
- * Helper function to geocode a location string to coordinates
- */
-async function getGeocodedLocation(locationString) {
-  try {
-    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    if (!apiKey) {
-      console.error("GOOGLE_MAPS_API_KEY is not set");
-      return null;
-    }
-    
-    const encodedAddress = encodeURIComponent(locationString);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (data.status === 'OK' && data.results && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return {
-        latitude: location.lat,
-        longitude: location.lng
-      };
-    }
-    
-    console.error("Geocoding API error:", data.status);
-    return null;
-  } catch (error) {
-    console.error("Error geocoding location:", error);
-    return null;
-  }
+  
+  console.log("Query built and ready to execute");
+  return baseQuery;
 }
