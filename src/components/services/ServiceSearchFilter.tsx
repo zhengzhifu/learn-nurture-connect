@@ -49,6 +49,16 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
 }) => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
   
+  // Create a manual close handler that works with our click handlers
+  const handleApplyFilters = () => {
+    applyFilters();
+    setIsFilterOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    clearFilters();
+  };
+  
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-2">
       <SearchBar 
@@ -76,8 +86,8 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             setSelectedSubjects={setSelectedSubjects}
             selectedAvailability={selectedAvailability}
             setSelectedAvailability={setSelectedAvailability}
-            clearFilters={clearFilters}
-            applyFilters={applyFilters}
+            clearFilters={handleClearFilters}
+            applyFilters={handleApplyFilters}
             closeFilters={() => setIsFilterOpen(false)}
           />
         </PopoverContent>

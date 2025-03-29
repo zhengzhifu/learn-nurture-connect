@@ -28,8 +28,13 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   applyFilters,
   closeFilters
 }) => {
+  // Prevent clicks inside the popover from closing it
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="flex flex-col h-full max-h-[80vh]">
+    <div className="flex flex-col h-full max-h-[80vh]" onClick={handleContentClick}>
       <h2 className="text-lg font-semibold mb-4 px-4 pt-4">Filter Services</h2>
       
       <ScrollArea className="flex-1 px-4 pb-2 overflow-y-auto">

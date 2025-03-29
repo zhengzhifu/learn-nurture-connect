@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { loadGoogleMapsScript, parseGooglePlaceResult } from '@/utils/googleMaps';
@@ -19,12 +18,14 @@ interface UseAddressAutocompleteProps {
   initialAddress: AddressData;
   onAddressChange: (addressData: AddressData) => void;
   useBrowserLocation?: boolean;
+  preventCloseOnSelect?: boolean;
 }
 
 export const useAddressAutocomplete = ({ 
   initialAddress, 
   onAddressChange,
-  useBrowserLocation = true
+  useBrowserLocation = true,
+  preventCloseOnSelect = false
 }: UseAddressAutocompleteProps) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [isLoadingScript, setIsLoadingScript] = useState(false);
@@ -96,6 +97,19 @@ export const useAddressAutocomplete = ({
           if (!addressData) return;
 
           console.log('Parsed address data:', addressData);
+          
+          // If we need to prevent closing, we need to stop propagation of the event
+          if (preventCloseOnSelect && autocompleteInputRef.current) {
+            // Focus back on the input to keep the popover open
+            setTimeout(() => {
+              if (autocompleteInputRef.current) {
+                autocompleteInputRef.current.focus();
+                // Immediately blur to prevent keyboard from showing on mobile
+                autocompleteInputRef.current.blur();
+              }
+            }, 0);
+          }
+          
           onAddressChange(addressData);
         });
       } catch (error) {
@@ -103,7 +117,7 @@ export const useAddressAutocomplete = ({
         toast.error('Failed to initialize address autocomplete');
       }
     }
-  }, [googleLoaded, onAddressChange, userLocation]);
+  }, [googleLoaded, onAddressChange, userLocation, preventCloseOnSelect]);
 
   return {
     autocompleteInputRef,

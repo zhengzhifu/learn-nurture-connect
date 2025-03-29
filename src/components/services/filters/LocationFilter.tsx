@@ -15,14 +15,15 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
   setLocationFilter
 }) => {
   const handleAddressChange = (addressData: any) => {
-    // Use formatted address from Google Places
+    // Prevent event propagation that might close the popover
     setLocationFilter(addressData.home_address);
   };
 
   // Use the same hook that's used in the profile page
   const { autocompleteInputRef, isLoadingScript, googleLoaded, userLocation } = useAddressAutocomplete({
     initialAddress: { home_address: locationFilter },
-    onAddressChange: handleAddressChange
+    onAddressChange: handleAddressChange,
+    preventCloseOnSelect: true // Add a flag to indicate we want to prevent closing
   });
 
   return (
@@ -38,6 +39,8 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
               placeholder={isLoadingScript ? "Loading location service..." : "Enter location"}
               className="w-full pl-9"
               disabled={isLoadingScript}
+              // Prevent click event from bubbling up to the parent (popover)
+              onClick={(e) => e.stopPropagation()}
             />
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
@@ -57,7 +60,10 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
           <div className="flex items-center justify-between">
             <p className="text-sm">Selected: {locationFilter}</p>
             <button 
-              onClick={() => setLocationFilter('')}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent event from closing the popover
+                setLocationFilter('');
+              }}
               className="text-xs text-destructive hover:underline"
             >
               Clear
