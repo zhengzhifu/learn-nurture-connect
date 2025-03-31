@@ -1,9 +1,10 @@
 
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { loadGoogleMapsScript, parseGooglePlaceResult } from '@/utils/googleMaps';
 
 export interface AddressData {
-  home_address?: string;
+  home_address: string;
   address_line1?: string;
   address_line2?: string;
   city?: string;
@@ -15,110 +16,95 @@ export interface AddressData {
 }
 
 interface UseAddressAutocompleteProps {
-  initialAddress?: AddressData;
-  onAddressChange?: (addressData: AddressData) => void;
-  preventFormSubmission?: boolean;
-  containerElement?: HTMLElement;
+  initialAddress: AddressData;
+  onAddressChange: (addressData: AddressData) => void;
+  useBrowserLocation?: boolean;
 }
 
 export const useAddressAutocomplete = ({ 
   initialAddress, 
   onAddressChange,
-  preventFormSubmission = false,
-  containerElement
-}: UseAddressAutocompleteProps = {}) => {
-  const autocompleteInputRef = useRef<HTMLInputElement>(null);
-  const [isLoadingScript, setIsLoadingScript] = useState(true);
+  useBrowserLocation = true
+}: UseAddressAutocompleteProps) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
-  
-  useEffect(() => {
-    loadGoogleMapsScript(() => {
-      setIsLoadingScript(false);
-      setGoogleLoaded(true);
-      
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setUserLocation({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            });
-          },
-          (error) => {
-            console.log("Error getting user location:", error);
-          }
-        );
-      }
-    });
-  }, []);
-  
-  useEffect(() => {
-    if (!googleLoaded || !autocompleteInputRef.current) return;
-    
-    try {
-      const options: google.maps.places.AutocompleteOptions = {
-        types: ['address']
-      };
+  const [isLoadingScript, setIsLoadingScript] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const autocompleteInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-      // Create the autocomplete instance first
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        autocompleteInputRef.current,
-        options
-      );
-      
-      // If a container element is provided, bind the dropdown to it
-      if (containerElement && autocomplete) {
-        // Use DOM manipulation to move the dropdown into the container
-        // This is a workaround since the options don't directly support container
-        const observer = new MutationObserver((mutations) => {
-          const pacContainer = document.querySelector('.pac-container');
-          if (pacContainer && !containerElement.contains(pacContainer)) {
-            containerElement.appendChild(pacContainer);
-          }
-        });
-        
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
-      }
-      
-      if (userLocation) {
-        const circle = new window.google.maps.Circle({
-          center: userLocation,
-          radius: 50000
-        });
-        autocomplete.setBounds(circle.getBounds() as google.maps.LatLngBounds);
-      }
-      
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place && place.formatted_address) {
-          const parsedAddress = parseGooglePlaceResult(place);
-          
-          if (parsedAddress && onAddressChange) {
-            onAddressChange(parsedAddress);
-          }
-          
-          if (preventFormSubmission) {
-            setTimeout(() => {
-              if (document.activeElement === autocompleteInputRef.current) {
-                autocompleteInputRef.current?.blur();
-              }
-            }, 0);
-          }
+  // Try to get the user's location if allowed
+  useEffect(() => {
+    if (useBrowserLocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          console.log('User location detected:', position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.log('Geolocation error:', error.message);
         }
-      });
-      
-      if (initialAddress && initialAddress.home_address) {
-        autocompleteInputRef.current.value = initialAddress.home_address;
-      }
-    } catch (error) {
-      console.error('Error setting up Google Places Autocomplete:', error);
+      );
     }
-  }, [googleLoaded, userLocation, initialAddress, onAddressChange, preventFormSubmission, containerElement]);
-  
+  }, [useBrowserLocation]);
+
+  // Load Google Maps script on mount
+  useEffect(() => {
+    const initGoogleMaps = async () => {
+      setIsLoadingScript(true);
+      await loadGoogleMapsScript(() => {
+        setGoogleLoaded(true);
+        setIsLoadingScript(false);
+      });
+    };
+    
+    initGoogleMaps();
+  }, []);
+
+  // Initialize autocomplete when Google Maps is loaded
+  useEffect(() => {
+    if (googleLoaded && autocompleteInputRef.current && window.google) {
+      try {
+        const options: google.maps.places.AutocompleteOptions = {
+          types: ['address']
+        };
+        
+        // Add location bias if we have the user's location
+        if (userLocation) {
+          options.bounds = new window.google.maps.LatLngBounds(
+            new window.google.maps.LatLng(userLocation.lat - 0.1, userLocation.lng - 0.1),
+            new window.google.maps.LatLng(userLocation.lat + 0.1, userLocation.lng + 0.1)
+          );
+          // Don't strictly restrict to this area, just bias the results
+          options.strictBounds = false;
+        }
+        
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          autocompleteInputRef.current,
+          options
+        );
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          if (!autocompleteRef.current) return;
+          
+          const place = autocompleteRef.current.getPlace();
+          console.log('Google Place selected:', place);
+          
+          const addressData = parseGooglePlaceResult(place);
+          if (!addressData) return;
+
+          console.log('Parsed address data:', addressData);
+          onAddressChange(addressData);
+        });
+      } catch (error) {
+        console.error('Error initializing Google Places Autocomplete:', error);
+        toast.error('Failed to initialize address autocomplete');
+      }
+    }
+  }, [googleLoaded, onAddressChange, userLocation]);
+
   return {
     autocompleteInputRef,
     isLoadingScript,

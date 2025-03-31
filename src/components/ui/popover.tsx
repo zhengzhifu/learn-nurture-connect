@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 
@@ -8,27 +7,11 @@ const Popover = PopoverPrimitive.Root
 
 const PopoverTrigger = PopoverPrimitive.Trigger
 
-const PopoverClose = PopoverPrimitive.Close
-
-// Create a custom portal component that doesn't disable scrolling
-const CustomPopoverPortal = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Portal>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Portal> & {
-    container?: HTMLElement | null;
-  }
->(({ container, ...props }, ref) => {
-  return <PopoverPrimitive.Portal container={container} {...props} />
-})
-
-CustomPopoverPortal.displayName = "CustomPopoverPortal"
-
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
-    container?: HTMLElement | null;
-  }
->(({ className, align = "center", sideOffset = 4, container, ...props }, ref) => (
-  <CustomPopoverPortal container={container}>
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+  <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
       align={align}
@@ -39,8 +22,8 @@ const PopoverContent = React.forwardRef<
       )}
       {...props}
     />
-  </CustomPopoverPortal>
+  </PopoverPrimitive.Portal>
 ))
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverClose }
+export { Popover, PopoverTrigger, PopoverContent }
