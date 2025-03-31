@@ -53,6 +53,7 @@ export interface ServiceData {
 export interface ServiceFilters {
   types?: ServiceType[];
   location?: string;
+  locationRadius?: number; // Added radius property for distance filtering
   priceRange?: [number, number];
   subjects?: string[];
   availability?: string[];

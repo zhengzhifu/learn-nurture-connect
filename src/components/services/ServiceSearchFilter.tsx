@@ -19,6 +19,8 @@ interface ServiceSearchFilterProps {
   setSelectedTypes: (types: ServiceType[]) => void;
   locationFilter: string;
   setLocationFilter: (location: string) => void;
+  locationRadius: number;
+  setLocationRadius: (radius: number) => void;
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
   selectedSubjects: string[];
@@ -37,6 +39,8 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
   setSelectedTypes,
   locationFilter,
   setLocationFilter,
+  locationRadius,
+  setLocationRadius,
   priceRange,
   setPriceRange,
   selectedSubjects,
@@ -75,6 +79,8 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             setSelectedTypes={setSelectedTypes}
             locationFilter={locationFilter}
             setLocationFilter={setLocationFilter}
+            locationRadius={locationRadius}
+            setLocationRadius={setLocationRadius}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
             selectedSubjects={selectedSubjects}

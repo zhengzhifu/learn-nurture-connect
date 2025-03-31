@@ -2,17 +2,22 @@
 import React, { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { MapPin } from 'lucide-react';
 import { useAddressAutocomplete } from '@/hooks/useAddressAutocomplete';
 
 interface LocationFilterProps {
   locationFilter: string;
   setLocationFilter: (location: string) => void;
+  locationRadius: number;
+  setLocationRadius: (radius: number) => void;
 }
 
 const LocationFilter: React.FC<LocationFilterProps> = ({
   locationFilter,
-  setLocationFilter
+  setLocationFilter,
+  locationRadius,
+  setLocationRadius
 }) => {
   const handleAddressChange = (addressData: any) => {
     // Use formatted address from Google Places
@@ -54,15 +59,34 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
         </div>
         
         {locationFilter && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm">Selected: {locationFilter}</p>
-            <button 
-              onClick={() => setLocationFilter('')}
-              className="text-xs text-destructive hover:underline"
-            >
-              Clear
-            </button>
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <p className="text-sm">Selected: {locationFilter}</p>
+              <button 
+                onClick={() => setLocationFilter('')}
+                className="text-xs text-destructive hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Radius slider that appears when a location is selected */}
+            <div className="mt-3 space-y-2">
+              <Label htmlFor="radius_slider">Distance radius: {locationRadius} miles</Label>
+              <Slider
+                id="radius_slider"
+                min={1}
+                max={50}
+                step={1}
+                value={[locationRadius]}
+                onValueChange={(values) => setLocationRadius(values[0])}
+                className="py-2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Show services within {locationRadius} miles of selected location
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>

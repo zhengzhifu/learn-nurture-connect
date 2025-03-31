@@ -18,6 +18,8 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   setSelectedTypes,
   locationFilter,
   setLocationFilter,
+  locationRadius,
+  setLocationRadius,
   priceRange,
   setPriceRange,
   selectedSubjects,
@@ -48,6 +50,8 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
           <LocationFilter 
             locationFilter={locationFilter}
             setLocationFilter={setLocationFilter}
+            locationRadius={locationRadius}
+            setLocationRadius={setLocationRadius}
           />
 
           <PriceRangeFilter 
