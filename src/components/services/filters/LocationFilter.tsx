@@ -27,7 +27,8 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
   // Use the same hook that's used in the profile page
   const { autocompleteInputRef, isLoadingScript, googleLoaded, userLocation } = useAddressAutocomplete({
     initialAddress: { home_address: locationFilter },
-    onAddressChange: handleAddressChange
+    onAddressChange: handleAddressChange,
+    preventFormSubmission: true // Add this to prevent form submission/popover closing
   });
 
   return (
@@ -43,6 +44,12 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
               placeholder={isLoadingScript ? "Loading location service..." : "Enter location"}
               className="w-full pl-9"
               disabled={isLoadingScript}
+              // Prevent the enter key from submitting any parent forms
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
             />
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
