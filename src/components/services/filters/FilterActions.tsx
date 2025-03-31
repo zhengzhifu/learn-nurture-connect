@@ -14,11 +14,15 @@ const FilterActions: React.FC<FilterActionsProps> = ({
   closeFilters
 }) => {
   return (
-    <div className="flex justify-between mt-6">
-      <Button variant="ghost" size="sm" onClick={clearFilters}>
+    <div className="flex justify-between w-full">
+      <Button variant="outline" onClick={clearFilters}>
         Clear Filters
       </Button>
-      <Button size="sm" onClick={applyFilters}>
+      <Button 
+        variant="default" 
+        className="bg-primary text-primary-foreground"
+        onClick={applyFilters}
+      >
         Apply Filters
       </Button>
     </div>
