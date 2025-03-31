@@ -11,6 +11,7 @@ import FilterActions from './FilterActions';
 
 interface FilterPopoverContentProps extends FilterProps {
   closeFilters: () => void;
+  popoverContainerRef: React.RefObject<HTMLDivElement>;
 }
 
 const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
@@ -28,7 +29,8 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
   setSelectedAvailability,
   clearFilters,
   applyFilters,
-  closeFilters
+  closeFilters,
+  popoverContainerRef
 }) => {
   // Create a wrapper function for applying filters to also close the popover
   const handleApplyFilters = () => {
@@ -52,6 +54,7 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
             setLocationFilter={setLocationFilter}
             locationRadius={locationRadius}
             setLocationRadius={setLocationRadius}
+            popoverContainerRef={popoverContainerRef}
           />
 
           <PriceRangeFilter 

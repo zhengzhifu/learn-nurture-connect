@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { loadGoogleMapsScript, parseGooglePlaceResult } from '@/utils/googleMaps';
 
@@ -17,12 +18,14 @@ interface UseAddressAutocompleteProps {
   initialAddress?: AddressData;
   onAddressChange?: (addressData: AddressData) => void;
   preventFormSubmission?: boolean;
+  containerElement?: HTMLElement;
 }
 
 export const useAddressAutocomplete = ({ 
   initialAddress, 
   onAddressChange,
-  preventFormSubmission = false
+  preventFormSubmission = false,
+  containerElement
 }: UseAddressAutocompleteProps = {}) => {
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
   const [isLoadingScript, setIsLoadingScript] = useState(true);
@@ -54,9 +57,18 @@ export const useAddressAutocomplete = ({
     if (!googleLoaded || !autocompleteInputRef.current) return;
     
     try {
+      const options: google.maps.places.AutocompleteOptions = {
+        types: ['address']
+      };
+
+      // If a container element is provided, bind the autocomplete to it
+      if (containerElement) {
+        options.container = containerElement;
+      }
+
       const autocomplete = new window.google.maps.places.Autocomplete(
         autocompleteInputRef.current,
-        { types: ['address'] }
+        options
       );
       
       if (userLocation) {
@@ -92,7 +104,7 @@ export const useAddressAutocomplete = ({
     } catch (error) {
       console.error('Error setting up Google Places Autocomplete:', error);
     }
-  }, [googleLoaded, userLocation, initialAddress, onAddressChange, preventFormSubmission]);
+  }, [googleLoaded, userLocation, initialAddress, onAddressChange, preventFormSubmission, containerElement]);
   
   return {
     autocompleteInputRef,

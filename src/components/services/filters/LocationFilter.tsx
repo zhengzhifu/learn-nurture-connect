@@ -11,13 +11,15 @@ interface LocationFilterProps {
   setLocationFilter: (location: string) => void;
   locationRadius: number;
   setLocationRadius: (radius: number) => void;
+  popoverContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
 const LocationFilter: React.FC<LocationFilterProps> = ({
   locationFilter,
   setLocationFilter,
   locationRadius,
-  setLocationRadius
+  setLocationRadius,
+  popoverContainerRef
 }) => {
   const handleAddressChange = (addressData: any) => {
     // Use formatted address from Google Places
@@ -28,7 +30,8 @@ const LocationFilter: React.FC<LocationFilterProps> = ({
   const { autocompleteInputRef, isLoadingScript, googleLoaded, userLocation } = useAddressAutocomplete({
     initialAddress: { home_address: locationFilter },
     onAddressChange: handleAddressChange,
-    preventFormSubmission: true // Add this to prevent form submission/popover closing
+    preventFormSubmission: true, // Add this to prevent form submission/popover closing
+    containerElement: popoverContainerRef?.current || undefined
   });
 
   return (

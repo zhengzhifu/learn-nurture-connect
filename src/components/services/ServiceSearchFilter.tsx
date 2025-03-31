@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +52,8 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
   clearFilters,
 }) => {
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  // Create a ref for the popover container
+  const popoverContainerRef = useRef<HTMLDivElement | null>(null);
   
   const handleApplyFilters = () => {
     applyFilters();
@@ -66,33 +68,37 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
         onSearch={onSearch}
       />
 
-      <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] md:w-[380px] p-0" align="end" side="bottom">
-          <FilterPopoverContent 
-            selectedTypes={selectedTypes}
-            setSelectedTypes={setSelectedTypes}
-            locationFilter={locationFilter}
-            setLocationFilter={setLocationFilter}
-            locationRadius={locationRadius}
-            setLocationRadius={setLocationRadius}
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-            selectedSubjects={selectedSubjects}
-            setSelectedSubjects={setSelectedSubjects}
-            selectedAvailability={selectedAvailability}
-            setSelectedAvailability={setSelectedAvailability}
-            clearFilters={clearFilters}
-            applyFilters={handleApplyFilters}
-            closeFilters={() => setIsFilterOpen(false)}
-          />
-        </PopoverContent>
-      </Popover>
+      {/* Popover container div for handling Google Places autocomplete */}
+      <div ref={popoverContainerRef} className="relative">
+        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] md:w-[380px] p-0" align="end" side="bottom" container={popoverContainerRef.current}>
+            <FilterPopoverContent 
+              selectedTypes={selectedTypes}
+              setSelectedTypes={setSelectedTypes}
+              locationFilter={locationFilter}
+              setLocationFilter={setLocationFilter}
+              locationRadius={locationRadius}
+              setLocationRadius={setLocationRadius}
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+              selectedSubjects={selectedSubjects}
+              setSelectedSubjects={setSelectedSubjects}
+              selectedAvailability={selectedAvailability}
+              setSelectedAvailability={setSelectedAvailability}
+              clearFilters={clearFilters}
+              applyFilters={handleApplyFilters}
+              closeFilters={() => setIsFilterOpen(false)}
+              popoverContainerRef={popoverContainerRef}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 };
