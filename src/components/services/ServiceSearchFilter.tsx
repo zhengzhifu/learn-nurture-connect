@@ -70,7 +70,11 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
 
       {/* Popover container div for handling Google Places autocomplete */}
       <div ref={popoverContainerRef} className="relative">
-        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <Popover 
+          open={isFilterOpen} 
+          onOpenChange={setIsFilterOpen}
+          modal={true} // Make it modal to prevent closing on outside clicks
+        >
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
