@@ -13,6 +13,7 @@ export const useServiceBrowse = () => {
   
   const [selectedTypes, setSelectedTypes] = useState<ServiceType[]>([]);
   const [locationFilter, setLocationFilter] = useState('');
+  const [locationRadius, setLocationRadius] = useState(10); // Default radius of 10 miles
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
@@ -28,6 +29,7 @@ export const useServiceBrowse = () => {
   const activeFilters: ServiceFilters = {
     types: selectedTypes,
     location: locationFilter,
+    locationRadius: locationFilter ? locationRadius : undefined,
     priceRange: priceRange,
     subjects: selectedSubjects,
     availability: selectedAvailability,
@@ -71,6 +73,7 @@ export const useServiceBrowse = () => {
   const clearFilters = useCallback(() => {
     setSelectedTypes([]);
     setLocationFilter('');
+    setLocationRadius(10); // Reset to default radius
     setPriceRange([0, 100]);
     setSelectedSubjects([]);
     setSelectedAvailability([]);
@@ -91,6 +94,8 @@ export const useServiceBrowse = () => {
     setSelectedTypes,
     locationFilter,
     setLocationFilter,
+    locationRadius,
+    setLocationRadius,
     priceRange,
     setPriceRange,
     selectedSubjects,
