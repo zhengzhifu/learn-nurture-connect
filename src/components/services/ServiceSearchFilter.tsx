@@ -3,10 +3,10 @@ import React from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { ServiceType } from '@/types/service';
 import { ServiceFilters } from '@/services/api/serviceClient';
 import SearchBar from './filters/SearchBar';
@@ -66,14 +66,14 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
         onSearch={onSearch}
       />
 
-      <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <PopoverTrigger asChild>
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DialogTrigger asChild>
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] md:w-[380px] p-0" align="end" side="bottom">
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[500px] p-0">
           <FilterPopoverContent 
             selectedTypes={selectedTypes}
             setSelectedTypes={setSelectedTypes}
@@ -91,8 +91,8 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
             applyFilters={handleApplyFilters}
             closeFilters={() => setIsFilterOpen(false)}
           />
-        </PopoverContent>
-      </Popover>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
