@@ -1,8 +1,7 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { loadGoogleMapsScript, parseGooglePlaceResult } from '@/utils/googleMaps';
 
-interface AddressData {
+export interface AddressData {
   home_address?: string;
   address_line1?: string;
   address_line2?: string;
@@ -30,13 +29,11 @@ export const useAddressAutocomplete = ({
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
   
-  // Initialize Google Maps script
   useEffect(() => {
     loadGoogleMapsScript(() => {
       setIsLoadingScript(false);
       setGoogleLoaded(true);
       
-      // Try to get user's location for better autocomplete results
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -53,7 +50,6 @@ export const useAddressAutocomplete = ({
     });
   }, []);
   
-  // Initialize autocomplete when Google Maps is loaded
   useEffect(() => {
     if (!googleLoaded || !autocompleteInputRef.current) return;
     
@@ -63,16 +59,14 @@ export const useAddressAutocomplete = ({
         { types: ['address'] }
       );
       
-      // Bias the autocomplete results to the user's location if available
       if (userLocation) {
         const circle = new window.google.maps.Circle({
           center: userLocation,
-          radius: 50000 // 50km radius
+          radius: 50000
         });
         autocomplete.setBounds(circle.getBounds() as google.maps.LatLngBounds);
       }
       
-      // Set up the place_changed event listener
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         if (place && place.formatted_address) {
@@ -82,10 +76,8 @@ export const useAddressAutocomplete = ({
             onAddressChange(parsedAddress);
           }
           
-          // Prevent form submission when selecting from dropdown
           if (preventFormSubmission) {
             setTimeout(() => {
-              // This prevents the enter key from submitting the form
               if (document.activeElement === autocompleteInputRef.current) {
                 autocompleteInputRef.current?.blur();
               }
@@ -94,14 +86,12 @@ export const useAddressAutocomplete = ({
         }
       });
       
-      // Fill in the input field with the initial address if provided
       if (initialAddress && initialAddress.home_address) {
         autocompleteInputRef.current.value = initialAddress.home_address;
       }
     } catch (error) {
       console.error('Error setting up Google Places Autocomplete:', error);
     }
-    
   }, [googleLoaded, userLocation, initialAddress, onAddressChange, preventFormSubmission]);
   
   return {
@@ -111,4 +101,3 @@ export const useAddressAutocomplete = ({
     userLocation
   };
 };
-
