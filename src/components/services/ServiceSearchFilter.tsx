@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,7 +72,7 @@ const ServiceSearchFilter: React.FC<ServiceSearchFilterProps> = ({
         <Popover 
           open={isFilterOpen} 
           onOpenChange={setIsFilterOpen}
-          modal={true} // Make it modal to prevent closing on outside clicks
+          modal={true}
         >
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm">

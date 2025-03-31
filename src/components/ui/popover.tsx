@@ -10,13 +10,25 @@ const PopoverTrigger = PopoverPrimitive.Trigger
 
 const PopoverClose = PopoverPrimitive.Close
 
+// Create a custom portal component that doesn't disable scrolling
+const CustomPopoverPortal = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Portal>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Portal> & {
+    container?: HTMLElement | null;
+  }
+>(({ container, ...props }, ref) => {
+  return <PopoverPrimitive.Portal container={container} {...props} />
+})
+
+CustomPopoverPortal.displayName = "CustomPopoverPortal"
+
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
     container?: HTMLElement | null;
   }
 >(({ className, align = "center", sideOffset = 4, container, ...props }, ref) => (
-  <PopoverPrimitive.Portal container={container}>
+  <CustomPopoverPortal container={container}>
     <PopoverPrimitive.Content
       ref={ref}
       align={align}
@@ -27,7 +39,7 @@ const PopoverContent = React.forwardRef<
       )}
       {...props}
     />
-  </PopoverPrimitive.Portal>
+  </CustomPopoverPortal>
 ))
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
