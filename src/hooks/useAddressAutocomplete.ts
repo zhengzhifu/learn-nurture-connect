@@ -61,15 +61,28 @@ export const useAddressAutocomplete = ({
         types: ['address']
       };
 
-      // If a container element is provided, bind the autocomplete to it
-      if (containerElement) {
-        options.container = containerElement;
-      }
-
+      // Create the autocomplete instance first
       const autocomplete = new window.google.maps.places.Autocomplete(
         autocompleteInputRef.current,
         options
       );
+      
+      // If a container element is provided, bind the dropdown to it
+      if (containerElement && autocomplete) {
+        // Use DOM manipulation to move the dropdown into the container
+        // This is a workaround since the options don't directly support container
+        const observer = new MutationObserver((mutations) => {
+          const pacContainer = document.querySelector('.pac-container');
+          if (pacContainer && !containerElement.contains(pacContainer)) {
+            containerElement.appendChild(pacContainer);
+          }
+        });
+        
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      }
       
       if (userLocation) {
         const circle = new window.google.maps.Circle({
